@@ -9,14 +9,11 @@ workflow INPUT_CHECK {
 
     switch(source) {
         case 'fastq': // fastq ready for alignment
-            println "samplesheet: $samplesheet, source: $source" // Print the inputs
             SAMPLESHEET_CHECK ( samplesheet, source )
             .csv
-            .view { item -> println "SAMPLESHEET_CHECK output: $item" } // Print the output
             .splitCsv ( header:true, sep:',' )
             .map { create_fastq_channel(it) }
             .set { reads }
-            println "Reads: $reads" // Print the reads
             break;
         case 'dedupe_bam': // dedupe bam ready for grouped crosslink/peak analysis
             SAMPLESHEET_CHECK ( samplesheet, source )
@@ -35,13 +32,12 @@ workflow INPUT_CHECK {
 
 // Function to get list of [ meta, [ fastq ] ]
 def create_fastq_channel(LinkedHashMap row) {
-    println "Row: $row" // Print the row
     def meta = [:]
     meta.id         = row.sample_name
     meta.group      = row.group_name
     meta.control    = row.input_name
-    meta.fastq      = row.fastq
-    println "Meta: $meta" // Print the meta
+    meta.single_end = true
+
     // Check fastq files exist
     def array = []
     if (!file(row.fastq).exists()) {
@@ -49,6 +45,7 @@ def create_fastq_channel(LinkedHashMap row) {
     }
     array = [ meta, [ file(row.fastq) ] ]
     return array
+
 }
 
 
@@ -58,7 +55,6 @@ def create_dedupe_bam_channel(LinkedHashMap row) {
     meta.id            = row.sample_name
     meta.group         = row.group_name
     meta.control       = row.input_name
-    meta.dedupe_bam    = row.dedupe_bam
 
     // Check fastq files exist
     def array = []
@@ -67,4 +63,6 @@ def create_dedupe_bam_channel(LinkedHashMap row) {
     }
     array = [ meta, [ file(row.dedupe_bam) ] ]
     return array
+
+    // Check if grouping needs to happen
 }

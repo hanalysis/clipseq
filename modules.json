@@ -120,6 +120,11 @@
                         "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
                         "installed_by": ["bam_sort_stats_samtools"]
                     },
+                    "samtools/merge": {
+                        "branch": "master",
+                        "git_sha": "8d8f0ae52d6c9342bd41c33dda0b74b07e32153d",
+                        "installed_by": ["modules"]
+                    },
                     "samtools/sort": {
                         "branch": "master",
                         "git_sha": "a0f7be95788366c1923171e358da7d049eb440f9",
@@ -132,7 +137,7 @@
                     },
                     "star/align": {
                         "branch": "master",
-                        "git_sha": "57d75dbac06812c59798a48585032f6e50bb1914",
+                        "git_sha": "a21faa6a3481af92a343a10926f59c189a2c16c9",
                         "installed_by": ["modules"]
                     },
                     "star/genomegenerate": {
@@ -147,7 +152,7 @@
                     },
                     "umicollapse": {
                         "branch": "master",
-                        "git_sha": "aacf5cdfbcdb3baf9dba2eca89d000e35567337b",
+                        "git_sha": "b97197968ac12dde2463fa54541f6350c46f2035",
                         "installed_by": ["modules"]
                     },
                     "umitools/extract": {

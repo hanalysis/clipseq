@@ -27,7 +27,8 @@ workflow BAM_DEDUP_SAMTOOLS_UMICOLLAPSE {
     // MODULE: UMI-tools collapse
     //
     UMICOLLAPSE (
-        bam_bai 
+        bam_bai,
+        'bam' 
     )
     ch_versions = ch_versions.mix(UMICOLLAPSE.out.versions)
 

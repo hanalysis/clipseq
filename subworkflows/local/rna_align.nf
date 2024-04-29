@@ -27,7 +27,7 @@ workflow RNA_ALIGN {
 
     main:
     ch_versions = Channel.empty()
-
+    ch_gtf = gtf.first() //for some reason it comes in as a queue channel so need to convert to value channel
     //
     // MODULE: Align reads to ncrna genome
     //
@@ -46,10 +46,11 @@ workflow RNA_ALIGN {
     //
     // MODULE: Align reads that did not align to the ncrna genome to the primary genome
     //
+
     STAR_ALIGN (
         BOWTIE_ALIGN.out.fastq,
-        star_index.map { it[1] },
-        gtf.map { it[1] },
+        star_index,
+        gtf,
         false,
         '',
         ''

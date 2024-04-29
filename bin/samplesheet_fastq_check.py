@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
 import os
-import sys
 import errno
 import argparse
 import platform
 import pandas as pd
+import shutil
 
 print("Starting Python script")
 
@@ -149,22 +149,16 @@ def check_samplesheet(process_name, file_in, file_out):
     unique_samples = set(df['sample_name'].unique())
     unique_groups = set(df['group_name'].unique())
     for index, row in df.iterrows():
-        if row['input_name'] not in unique_samples and row['input_name'] not in unique_groups:
-            print_error(
-                f"Row {index + 2}: input_name '{row['input_name']}' must refer to either another sample_name or group_name in the samplesheet."
-                )
-            return
+        if row['input_name'] is not None and row['input_name'] != "" and not pd.isna(row['input_name']): 
+            if row['input_name'] not in unique_samples and row['input_name'] not in unique_groups:
+                print_error(
+                    f"Row {index + 2}: input_name '{row['input_name']}' must refer to either another sample_name or group_name in the samplesheet."
+                    )
+                return
 
 
-    ## Write validated samplesheet with appropriate columns
-    if len(sample_run_dict) > 0:
-        out_dir = os.path.dirname(file_out)
-        make_dir(out_dir)
-        with open(file_out, "w") as fout:
-            fout.write(",".join(HEADER) + "\n")
-            for sample in sorted(sample_run_dict.keys()):
-                fout.write(",".join([sample_id] + sample_info) + "\n")
-
+    ## Write validated samplesheet
+    shutil.copy(file_in, file_out)
 
 if __name__ == "__main__":
     # Allows switching between nextflow templating and standalone python running using arguments

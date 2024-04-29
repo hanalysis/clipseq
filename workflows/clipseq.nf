@@ -113,8 +113,10 @@ include { CALC_CROSSLINKS as CALC_TRANSCRIPT_CROSSLINKS  } from '../subworkflows
 // MODULE: Installed directly from nf-core/modules
 //
 
+include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_GENOME          } from '../modules/nf-core/samtools/merge/main'
 include { SAMTOOLS_SORT as SAMTOOLS_SORT_FILT_TRANSCRIPT   } from '../modules/nf-core/samtools/sort/main'
 include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_FILT_TRANSCRIPT } from '../modules/nf-core/samtools/index/main'
+include { SAMTOOLS_INDEX as SAMTOOLS_GENOME_GROUP_INDEX    } from '../modules/nf-core/samtools/index/main'
 include { MULTIQC                                          } from '../modules/nf-core/multiqc/main'
 include { CLIPPY as CLIPPY_GENOME                          } from "../modules/nf-core/clippy/main"
 include { CLIPPY as CLIPPY_TRANSCRIPTOME                   } from "../modules/nf-core/clippy/main"
@@ -245,7 +247,7 @@ workflow CLIPSEQ {
         ch_regions_filt_gtf           = PREPARE_GENOME.out.regions_filt_gtf
         ch_regions_resolved_gtf       = PREPARE_GENOME.out.regions_resolved_gtf
         ch_regions_resolved_gtf_genic = PREPARE_GENOME.out.regions_resolved_gtf_genic
-        ch_genome_index        = PREPARE_GENOME.out.genome_index
+        ch_genome_index               = PREPARE_GENOME.out.genome_index
         ch_ncrna_genome_index         = PREPARE_GENOME.out.ncrna_index
     }
 
@@ -259,15 +261,15 @@ workflow CLIPSEQ {
             params.source
         )
         ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-        ch_fastq    = INPUT_CHECK.out.fastq
+        ch_fastq    = INPUT_CHECK.out.reads
     }
-    //EXAMPLE CHANNEL STRUCT: [[id:h3k27me3_R1, group:h3k27me3, replicate:1, single_end:true], [FASTQ]]
-    //ch_fastq | view
+    //EXAMPLE CHANNEL STRUCT: [[sample_name:h3k27me3_R1, group_name:h3k27me3, input_name:input, single_end:true, fastq:dsgsgh.fq.gz], [FASTQ]]
+    // ch_fastq | view
 
     //
     // SUBWORKFLOW: Extract UMI, trim and run b4 and after fastqc
     //
-    if(params.run_preprocessing) {
+    if(params.source == "fastq" & params.run_preprocessing) {
         FASTQ_FASTQC_UMITOOLS_TRIMGALORE (
             ch_fastq,
             params.skip_fastqc,
@@ -297,7 +299,7 @@ workflow CLIPSEQ {
     ch_genome_idxstats = Channel.empty()
     ch_transcript_bam  = Channel.empty()
     ch_transcript_bai  = Channel.empty()
-    if(params.run_alignment) {
+    if(params.source == "fastq" & params.run_alignment) {
         RNA_ALIGN (
             ch_fastq,
             ch_ncrna_genome_index,
@@ -320,7 +322,7 @@ workflow CLIPSEQ {
     }
     //ch_genome_bam | view
 
-    if(params.run_filtering) {
+    if(params.source == "fastq" & params.run_filtering) {
         //
         // CHANNEL: Combine bam and bai files on id
         //
@@ -357,7 +359,7 @@ workflow CLIPSEQ {
     ch_trans_idxstats = Channel.empty()
     ch_genome_umi_log = Channel.empty()
     ch_trans_umi_log  = Channel.empty()
-    if(params.run_dedup) {
+    if(params.source == "fastq" & params.run_dedup) {
         //
         // CHANNEL: Combine bam and bai files on id
         //
@@ -401,6 +403,54 @@ workflow CLIPSEQ {
         ch_genome_idxstats = TRANS_DEDUP.out.idxstats
         ch_trans_umi_log   = TRANS_DEDUP.out.umi_log
     }
+
+
+    //
+    // GROUPING: At this point, if groups have been specified, then we need to merge corresponding BAM files
+    //
+
+    // ch_genome_bam.branch {
+    //     hasGroup: it[0].group  // Branch condition for samples with a group
+    //     noGroup: it[0].group == ''  // Branch condition for samples without a group
+    // }.set { ch_branches }  // Capture branching result into ch_branches
+
+    // ch_branches.hasGroup
+    //     .map { item ->
+    //         def meta = item[0]
+    //         def bam = item[1]
+    //         return [meta.group, meta, bam]
+    //     }
+    //     .groupTuple(by: 0)
+    //     .map { tuple ->
+    //         def group = tuple[0]
+    //         def items = tuple[1]
+    //         def bam = tuple[2]
+
+    //         def newMeta = [:]
+    //         newMeta.id = group
+    //         newMeta.group = group
+    //         newMeta.control = items[0].control
+    //         newMeta.single_end = true
+
+    //         return [newMeta, bam]
+    //     }.set { ch_grouped_genome_bam }
+
+    // SAMTOOLS_MERGE_GENOME (
+    //     ch_grouped_genome_bam,
+    //     ch_fasta,
+    //     ch_fasta_fai
+    // )
+    // ch_versions = ch_versions.mix(SAMTOOLS_MERGE_GENOME.out.versions)
+    // ch_grouped_genome_bam = SAMTOOLS_MERGE_GENOME.out.bam
+
+    // // merge with the noGroup branch
+    // ch_grouped_genome_bam.concat(ch_branches.noGroup).set { ch_genome_bam }
+
+    // SAMTOOLS_GENOME_GROUP_INDEX (
+    //     ch_genome_bam
+    // )
+    // ch_versions = ch_versions.mix(SAMTOOLS_GENOME_GROUP_INDEX.out.versions)
+    // ch_genome_bai = SAMTOOLS_GENOME_GROUP_INDEX.out.bai
 
     ch_genome_crosslink_bed           = Channel.empty()
     ch_genome_crosslink_coverage      = Channel.empty()
