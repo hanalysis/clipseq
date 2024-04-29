@@ -294,9 +294,6 @@ workflow CLIPSEQ {
     ch_genome_log      = Channel.empty()
     ch_genome_bam      = Channel.empty()
     ch_genome_bai      = Channel.empty()
-    ch_genome_stats    = Channel.empty()
-    ch_genome_flagstat = Channel.empty()
-    ch_genome_idxstats = Channel.empty()
     ch_transcript_bam  = Channel.empty()
     ch_transcript_bai  = Channel.empty()
     if(params.source == "fastq" & params.run_alignment) {
@@ -314,9 +311,6 @@ workflow CLIPSEQ {
         ch_genome_log       = RNA_ALIGN.out.genome_log_final
         ch_genome_bam       = RNA_ALIGN.out.genome_bam
         ch_genome_bai       = RNA_ALIGN.out.genome_bai
-        ch_genome_stats     = RNA_ALIGN.out.genome_stats
-        ch_genome_flagstat  = RNA_ALIGN.out.genome_flagstat
-        ch_genome_idxstats  = RNA_ALIGN.out.genome_idxstats
         ch_transcript_bam   = RNA_ALIGN.out.transcript_bam
         ch_transcript_bai   = RNA_ALIGN.out.transcript_bai
     }
@@ -354,9 +348,6 @@ workflow CLIPSEQ {
         ch_transcript_bai = SAMTOOLS_INDEX_FILT_TRANSCRIPT.out.bai
     }
 
-    ch_trans_stats    = Channel.empty()
-    ch_trans_flagstat = Channel.empty()
-    ch_trans_idxstats = Channel.empty()
     ch_genome_umi_log = Channel.empty()
     ch_trans_umi_log  = Channel.empty()
     if(params.source == "fastq" & params.run_dedup) {
@@ -383,9 +374,6 @@ workflow CLIPSEQ {
         ch_versions        = ch_versions.mix(GENOME_DEDUP.out.versions)
         ch_genome_bam      = GENOME_DEDUP.out.bam
         ch_genome_bai      = GENOME_DEDUP.out.bai
-        ch_genome_stats    = GENOME_DEDUP.out.stats
-        ch_genome_flagstat = GENOME_DEDUP.out.flagstat
-        ch_genome_idxstats = GENOME_DEDUP.out.idxstats
         ch_genome_umi_log  = GENOME_DEDUP.out.umi_log
 
         //
@@ -398,9 +386,6 @@ workflow CLIPSEQ {
         ch_versions        = ch_versions.mix(TRANS_DEDUP.out.versions)
         ch_transcript_bam  = TRANS_DEDUP.out.bam
         ch_transcript_bai  = TRANS_DEDUP.out.bai
-        ch_genome_stats    = TRANS_DEDUP.out.stats
-        ch_genome_flagstat = TRANS_DEDUP.out.flagstat
-        ch_genome_idxstats = TRANS_DEDUP.out.idxstats
         ch_trans_umi_log   = TRANS_DEDUP.out.umi_log
     }
 
