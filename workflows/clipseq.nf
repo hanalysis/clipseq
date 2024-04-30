@@ -393,49 +393,63 @@ workflow CLIPSEQ {
     //
     // GROUPING: At this point, if groups have been specified, then we need to merge corresponding BAM files
     //
+    // ch_genome_bam.view { item -> println("Pre-branch: $item") }
 
-    // ch_genome_bam.branch {
-    //     hasGroup: it[0].group  // Branch condition for samples with a group
-    //     noGroup: it[0].group == ''  // Branch condition for samples without a group
-    // }.set { ch_branches }  // Capture branching result into ch_branches
+    ch_genome_bam.branch {
+        hasGroup: it[0].group  // Branch condition for samples with a group
+        noGroup: it[0].group == ''  // Branch condition for samples without a group
+    }.set { ch_branches }  // Capture branching result into ch_branches
 
-    // ch_branches.hasGroup
-    //     .map { item ->
-    //         def meta = item[0]
-    //         def bam = item[1]
-    //         return [meta.group, meta, bam]
-    //     }
-    //     .groupTuple(by: 0)
-    //     .map { tuple ->
-    //         def group = tuple[0]
-    //         def items = tuple[1]
-    //         def bam = tuple[2]
+    // After branching
+    //ch_branches.hasGroup.view { item -> "Has group: $item" }
+    //ch_branches.noGroup.view { item -> "No group: $item" }
 
-    //         def newMeta = [:]
-    //         newMeta.id = group
-    //         newMeta.group = group
-    //         newMeta.control = items[0].control
-    //         newMeta.single_end = true
+    ch_branches.hasGroup
+        .map { item ->
+            def meta = item[0]
+            def bam = item[1]
+            return [meta.group, meta, bam]
+        }
+        .groupTuple(by: 0)
+        .map { tuple ->
+            def group = tuple[0]
+            def items = tuple[1]
+            def bam = tuple[2]
 
-    //         return [newMeta, bam]
-    //     }.set { ch_grouped_genome_bam }
+            def newMeta = [:]
+            newMeta.id = group
+            newMeta.group = group
+            newMeta.control = items[0].control
+            newMeta.single_end = true
 
-    // SAMTOOLS_MERGE_GENOME (
-    //     ch_grouped_genome_bam,
-    //     ch_fasta,
-    //     ch_fasta_fai
-    // )
-    // ch_versions = ch_versions.mix(SAMTOOLS_MERGE_GENOME.out.versions)
-    // ch_grouped_genome_bam = SAMTOOLS_MERGE_GENOME.out.bam
+            return [newMeta, bam]
+        }
+        //.view { "Grouped and remapped: $it" }
+        .set { ch_grouped_genome_bam }
 
-    // // merge with the noGroup branch
-    // ch_grouped_genome_bam.concat(ch_branches.noGroup).set { ch_genome_bam }
+    SAMTOOLS_MERGE_GENOME (
+        ch_grouped_genome_bam,
+        ch_fasta,
+        ch_fasta_fai
+    )
+    ch_versions = ch_versions.mix(SAMTOOLS_MERGE_GENOME.out.versions)
+    ch_grouped_genome_bam = SAMTOOLS_MERGE_GENOME.out.bam
 
-    // SAMTOOLS_GENOME_GROUP_INDEX (
-    //     ch_genome_bam
-    // )
-    // ch_versions = ch_versions.mix(SAMTOOLS_GENOME_GROUP_INDEX.out.versions)
-    // ch_genome_bai = SAMTOOLS_GENOME_GROUP_INDEX.out.bai
+    //ch_grouped_genome_bam.view { item -> "Grouped genome BAM: $item" }
+
+    // merge with the noGroup branch
+    ch_grouped_genome_bam.concat(ch_branches.noGroup).set { ch_genome_peakcalling_bam }
+    //ch_genome_bam.view { item -> "Grouped genome BAM and non-grouped BAMs: $item" }
+
+    SAMTOOLS_GENOME_GROUP_INDEX (
+        ch_genome_peakcalling_bam
+    )
+    ch_versions = ch_versions.mix(SAMTOOLS_GENOME_GROUP_INDEX.out.versions)
+    ch_genome_peakcalling_bai = SAMTOOLS_GENOME_GROUP_INDEX.out.bai
+
+
+
+    //ch_genome_bai.view { item -> "Grouped genome BAI and non-grouped BAIs: $item" }
 
     ch_genome_crosslink_bed           = Channel.empty()
     ch_genome_crosslink_coverage      = Channel.empty()
@@ -448,7 +462,7 @@ workflow CLIPSEQ {
         // SUBWORKFLOW: Run crosslink calculation for  genome
         //
         CALC_GENOME_CROSSLINKS (
-            ch_genome_bam,
+            ch_genome_peakcalling_bam,
             ch_fasta_fai
         )
         ch_versions                       = ch_versions.mix(CALC_GENOME_CROSSLINKS.out.versions)
@@ -610,32 +624,32 @@ workflow CLIPSEQ {
             }
         }
 
-        if('pureclip' in callers) {
-            ch_pureclip_input_bam = ch_genome_bam.combine(Channel.of(ch_dummy_file))
-            ch_pureclip_input_bai = ch_genome_bai.combine(Channel.of(ch_dummy_file2))
+        // if('pureclip' in callers) {
+        //     ch_pureclip_input_bam = ch_genome_bam.combine(Channel.of(ch_dummy_file))
+        //     ch_pureclip_input_bai = ch_genome_bai.combine(Channel.of(ch_dummy_file2))
 
-            PURECLIP( 
-                ch_pureclip_input_bam,
-                ch_pureclip_input_bai,
-                ch_fasta,
-                false
-            )
-        }
+        //     PURECLIP( 
+        //         ch_pureclip_input_bam,
+        //         ch_pureclip_input_bai,
+        //         ch_fasta,
+        //         false
+        //     )
+        // }
 
-        ch_versions                        = ch_versions.mix(PURECLIP.out.versions)
-        ch_pureclip_genome_crosslinks      = PURECLIP.out.crosslinks
-        ch_pureclip_genome_peaks           = PURECLIP.out.peaks
+        // ch_versions                        = ch_versions.mix(PURECLIP.out.versions)
+        // ch_pureclip_genome_crosslinks      = PURECLIP.out.crosslinks
+        // ch_pureclip_genome_peaks           = PURECLIP.out.peaks
 
-        if(params.run_peka) {
-            PEKA_PURECLIP(
-                ch_pureclip_genome_peaks,
-                ch_genome_crosslink_bed,
-                ch_fasta.collect{ it[1] },
-                ch_fasta_fai.collect{ it[1] },
-                ch_regions_resolved_gtf.collect{ it[1] }
-            )
-            ch_versions = ch_versions.mix(PEKA_PURECLIP.out.versions)
-        }
+        // if(params.run_peka) {
+        //     PEKA_PURECLIP(
+        //         ch_pureclip_genome_peaks,
+        //         ch_genome_crosslink_bed,
+        //         ch_fasta.collect{ it[1] },
+        //         ch_fasta_fai.collect{ it[1] },
+        //         ch_regions_resolved_gtf.collect{ it[1] }
+        //     )
+        //     ch_versions = ch_versions.mix(PEKA_PURECLIP.out.versions)
+        // }
 
     }
 

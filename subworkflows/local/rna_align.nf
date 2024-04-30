@@ -10,6 +10,8 @@ include { STAR_ALIGN                             } from '../../modules/nf-core/s
 include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_COORD } from '../../modules/nf-core/samtools/index/main'
 include { SAMTOOLS_SORT as SAMTOOLS_SORT_TRANS   } from '../../modules/nf-core/samtools/sort/main'
 include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_TRANS } from '../../modules/nf-core/samtools/index/main'
+include { SAMTOOLS_SORT as SAMTOOLS_SORT_NCRNA  } from '../../modules/nf-core/samtools/sort/main'
+include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_NCRNA } from '../../modules/nf-core/samtools/index/main'
 
 //
 // SUBWORKFLOWS
@@ -40,8 +42,11 @@ workflow RNA_ALIGN {
     //
     // SUBWORKFLOW: Sort, index BAM file and run samtools stats, flagstat and idxstats
     //
-    BAM_SORT_STATS_SAMTOOLS_NCRNA ( BOWTIE_ALIGN.out.bam, fasta )
-    ch_versions = ch_versions.mix(BAM_SORT_STATS_SAMTOOLS_NCRNA.out.versions)
+    SAMTOOLS_SORT_NCRNA( BOWTIE_ALIGN.out.bam )
+    SAMTOOLS_INDEX_NCRNA( SAMTOOLS_SORT_NCRNA.out.bam )
+
+    ch_versions = ch_versions.mix(SAMTOOLS_SORT_NCRNA.out.versions)
+    ch_versions = ch_versions.mix(SAMTOOLS_INDEX_NCRNA.out.versions)
 
     //
     // MODULE: Align reads that did not align to the ncrna genome to the primary genome
@@ -50,7 +55,7 @@ workflow RNA_ALIGN {
     STAR_ALIGN (
         BOWTIE_ALIGN.out.fastq,
         star_index,
-        gtf,
+        ch_gtf,
         false,
         '',
         ''
@@ -77,10 +82,6 @@ workflow RNA_ALIGN {
                     [ meta, bam, csi ]
                 }
         }
-    //
-    // MODULE: Calc stats on coord reads
-    //
-    BAM_STATS_SAMTOOLS( ch_coord_bam_bai, fasta )
 
     //
     // MODULE: Sort and index transcript based BAM file
@@ -91,20 +92,14 @@ workflow RNA_ALIGN {
     ch_versions = ch_versions.mix(SAMTOOLS_INDEX_TRANS.out.versions)
 
     emit:
-    ncrna_bam        = BAM_SORT_STATS_SAMTOOLS_NCRNA.out.bam      // channel: [ val(meta), [ bam ] ]
-    ncrna_bai        = BAM_SORT_STATS_SAMTOOLS_NCRNA.out.bai      // channel: [ val(meta), [ bai ] ]
-    ncrna_stats      = BAM_SORT_STATS_SAMTOOLS_NCRNA.out.stats    // channel: [ val(meta), [ stats ] ]
-    ncrna_flagstat   = BAM_SORT_STATS_SAMTOOLS_NCRNA.out.flagstat // channel: [ val(meta), [ flagstat ] ]
-    ncrna_idxstats   = BAM_SORT_STATS_SAMTOOLS_NCRNA.out.idxstats // channel: [ val(meta), [ idxstats ] ]
+    ncrna_bam        = SAMTOOLS_SORT_NCRNA.out.bam      // channel: [ val(meta), [ bam ] ]
+    ncrna_bai        = SAMTOOLS_INDEX_NCRNA.out.bai      // channel: [ val(meta), [ bai ] ]
     ncrna_log        = BOWTIE_ALIGN.out.log                       // channel: [ val(meta), [ txt ] ]
 
     genome_log       = STAR_ALIGN.out.log                         // channel: [ val(meta), [ txt ] ]
     genome_log_final = STAR_ALIGN.out.log_final                   // channel: [ val(meta), [ txt ] ]
     genome_bam       = STAR_ALIGN.out.bam_sorted                  // channel: [ val(meta), [ bam ] ]
     genome_bai       = SAMTOOLS_INDEX_COORD.out.bai               // channel: [ val(meta), [ bai ] ]
-    genome_stats     = BAM_STATS_SAMTOOLS.out.stats               // channel: [ val(meta), [ stats ] ]
-    genome_flagstat  = BAM_STATS_SAMTOOLS.out.flagstat            // channel: [ val(meta), [ flagstat ] ]
-    genome_idxstats  = BAM_STATS_SAMTOOLS.out.idxstats            // channel: [ val(meta), [ idxstats ] ]
 
     transcript_bam   = SAMTOOLS_SORT_TRANS.out.bam                // channel: [ val(meta), [ bam ] ]
     transcript_bai   = SAMTOOLS_INDEX_TRANS.out.bai               // channel: [ val(meta), [ bai ] ]
