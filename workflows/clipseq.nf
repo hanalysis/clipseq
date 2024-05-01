@@ -127,7 +127,8 @@ include { GUNZIP as GUNZIP_PEAKS_SIGXLS                    } from "../modules/nf
 include { GUNZIP as GUNZIP_ICOUNTMINI_PEAKS                } from "../modules/nf-core/gunzip/main"
 include { PARACLU as PARACLU_GENOME                        } from "../modules/nf-core/paraclu/main"
 include { PARACLU as PARACLU_TRANSCRIPTOME                 } from "../modules/nf-core/paraclu/main"
-include { PURECLIP                                         } from '../modules/nf-core/pureclip/main'
+include { PURECLIP as PURECLIP_WITH_CONTROL                } from '../modules/nf-core/pureclip/main'
+include { PURECLIP as PURECLIP_NO_CONTROL                  } from '../modules/nf-core/pureclip/main'
 include { PEKA as PEKA_ICOUNT                              } from '../modules/nf-core/peka/main'
 include { PEKA as PEKA_CLIPPY                              } from '../modules/nf-core/peka/main'
 include { PEKA as PEKA_PARACLU                             } from '../modules/nf-core/peka/main'
@@ -439,7 +440,7 @@ workflow CLIPSEQ {
 
     // merge with the noGroup branch
     ch_grouped_genome_bam.concat(ch_branches.noGroup).set { ch_genome_peakcalling_bam }
-    //ch_genome_bam.view { item -> "Grouped genome BAM and non-grouped BAMs: $item" }
+    ch_genome_peakcalling_bam.view { item -> "Grouped genome BAM and non-grouped BAMs: $item" }
 
     SAMTOOLS_GENOME_GROUP_INDEX (
         ch_genome_peakcalling_bam
@@ -449,7 +450,7 @@ workflow CLIPSEQ {
 
 
 
-    //ch_genome_bai.view { item -> "Grouped genome BAI and non-grouped BAIs: $item" }
+    //ch_genome_peakcalling_bai.view { item -> "Grouped genome BAI and non-grouped BAIs: $item" }
 
     ch_genome_crosslink_bed           = Channel.empty()
     ch_genome_crosslink_coverage      = Channel.empty()
@@ -624,33 +625,101 @@ workflow CLIPSEQ {
             }
         }
 
-        // if('pureclip' in callers) {
-        //     ch_pureclip_input_bam = ch_genome_bam.combine(Channel.of(ch_dummy_file))
-        //     ch_pureclip_input_bai = ch_genome_bai.combine(Channel.of(ch_dummy_file2))
+        if('pureclip' in callers) {
+            // Combine ch_genome_peakcalling_bam and ch_genome_peakcalling_bai correctly
+            ch_genome_peakcalling = ch_genome_peakcalling_bam.join(ch_genome_peakcalling_bai, by: 0)
 
-        //     PURECLIP( 
-        //         ch_pureclip_input_bam,
-        //         ch_pureclip_input_bai,
-        //         ch_fasta,
-        //         false
-        //     )
-        // }
+            // Print initial channel contents for debugging
+            // ch_genome_peakcalling.view { item -> "Initial ch_genome_peakcalling item: $item" }
+            
+            ch_genome_peakcalling
+                .branch { meta, bam, bai -> 
+                    control:     meta.control
+                    no_control: !meta.control
+                }
+                .set { result }
 
-        // ch_versions                        = ch_versions.mix(PURECLIP.out.versions)
-        // ch_pureclip_genome_crosslinks      = PURECLIP.out.crosslinks
-        // ch_pureclip_genome_peaks           = PURECLIP.out.peaks
+            ch_genome_peakcalling
+                .map{ meta, bam, bai -> [meta.id, bam, bai]
+                }.set{ ch_genome_peakcalling_withid }
 
-        // if(params.run_peka) {
-        //     PEKA_PURECLIP(
-        //         ch_pureclip_genome_peaks,
-        //         ch_genome_crosslink_bed,
-        //         ch_fasta.collect{ it[1] },
-        //         ch_fasta_fai.collect{ it[1] },
-        //         ch_regions_resolved_gtf.collect{ it[1] }
-        //     )
-        //     ch_versions = ch_versions.mix(PEKA_PURECLIP.out.versions)
-        // }
+            result.control
+                .map{ meta, bam, bai -> [meta.control, bam, bai, meta]
+                }.set{ ch_genome_peakcalling_withControlid }   
 
+            ch_temp_pureclip_input = ch_genome_peakcalling_withControlid.join(ch_genome_peakcalling_withid, by: 0) 
+            // Structure is now [ControlID, IPBam, IPBai, IPMeta, Controlbam, Controlbai]
+
+            // Check structure is what we expect
+            //ch_temp_pureclip_input.view { item -> "Initial pureclip input merge channel: $item" }
+
+            // Run PURECLIP for samples with control
+            // reminder of input channel structure:
+            //    tuple val(meta), path(ipbam), path(controlbam)
+            //    tuple val(meta), path(ipbai), path(controlbai)
+            //    tuple val(meta2), path(genome_fasta)
+            //    val input_control
+            ch_temp_pureclip_input
+                .map{ ControlID, IPBam, IPBai, IPMeta, Controlbam, Controlbai -> [IPMeta, IPBam, Controlbam ]}
+                .set{ ch_pureclip_bams_withcontrol }
+            
+            ch_temp_pureclip_input
+                .map{ ControlID, IPBam, IPBai, IPMeta, Controlbam, Controlbai -> [IPMeta, IPBai, Controlbai ]}
+                .set{ ch_pureclip_bais_withcontrol }
+
+            PURECLIP_WITH_CONTROL(
+                ch_pureclip_bams_withcontrol,
+                ch_pureclip_bais_withcontrol,
+                ch_fasta,
+                true
+            )
+            
+            // Run PURECLIP for samples without control
+            result.no_control
+                .map{ meta, bam, bai -> [meta, bam, [] ]}
+                .set{ ch_pureclip_bams_nocontrol }
+            
+            result.no_control
+                .map{ meta, bam, bai -> [meta, bai, [] ]}
+                .set{ ch_pureclip_bais_nocontrol }
+
+            PURECLIP_NO_CONTROL(
+                ch_pureclip_bams_nocontrol,
+                ch_pureclip_bais_nocontrol,
+                ch_fasta,
+                false
+            )
+
+            // Outputs from PURECLIP processes collected
+            ch_versions                        = ch_versions.mix(PURECLIP_WITH_CONTROL.out.versions)
+            ch_versions                        = ch_versions.mix(PURECLIP_NO_CONTROL.out.versions)
+            ch_pureclip_genome_crosslinks      = PURECLIP_WITH_CONTROL.out.crosslinks.mix(PURECLIP_NO_CONTROL.out.crosslinks)
+            ch_pureclip_genome_peaks           = PURECLIP_WITH_CONTROL.out.peaks.mix(PURECLIP_NO_CONTROL.out.peaks)
+
+            if(params.run_peka) {
+                // Need to make sure crosslinks and peaks are matched up correctly
+                // After all the mixing
+                ch_pureclip_genome_peaks.join(ch_genome_crosslink_bed, by: 0)
+                    .set{ temp_matched_channel }
+                
+                temp_matched_channel
+                    .map{ meta, peaks, crosslinks -> [meta, peaks] }
+                    .set{ ch_pureclip_genome_peaks_matched }
+                
+                temp_matched_channel
+                    .map{ meta, peaks, crosslinks -> [meta, crosslinks] }
+                    .set{ ch_genome_crosslink_bed_matched }
+            
+                PEKA_PURECLIP(
+                    ch_pureclip_genome_peaks_matched,
+                    ch_genome_crosslink_bed_matched,
+                    ch_fasta.collect{ it[1] },
+                    ch_fasta_fai.collect{ it[1] },
+                    ch_regions_resolved_gtf.collect{ it[1] }
+                )
+                ch_versions = ch_versions.mix(PEKA_PURECLIP.out.versions)
+            }
+        }
     }
 
     if(params.run_reporting) {
