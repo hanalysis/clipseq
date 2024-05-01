@@ -18,7 +18,6 @@ include { BAM_STATS_SAMTOOLS } from '../../subworkflows/nf-core/bam_stats_samtoo
 workflow BAM_DEDUP_SAMTOOLS_UMICOLLAPSE {
     take:
     bam_bai // channel: [ val(meta), [ bam ], [ bai/csi ] ]
-    fasta   // channel: [ val(meta), [ fasta/fa ]
 
     main:
     ch_versions = Channel.empty()

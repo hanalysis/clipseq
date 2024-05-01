@@ -325,7 +325,6 @@ workflow CLIPSEQ {
             ch_longest_transcript,
             ch_longest_transcript_gtf,
             ch_longest_transcript_fai,
-            ch_fasta,
             callers,
             ch_paraclu_mincluster
         )
@@ -352,8 +351,7 @@ workflow CLIPSEQ {
         // SUBWORKFLOW: Run umi deduplication on genome-level alignments
         //
         GENOME_DEDUP (
-            ch_genome_bam_bai,
-            ch_fasta
+            ch_genome_bam_bai
         )
         ch_versions        = ch_versions.mix(GENOME_DEDUP.out.versions)
         ch_genome_bam      = GENOME_DEDUP.out.bam
@@ -411,7 +409,7 @@ workflow CLIPSEQ {
 
     // merge with the noGroup branch
     ch_grouped_genome_bam.concat(ch_branches.noGroup).set { ch_genome_peakcalling_bam }
-    ch_genome_peakcalling_bam.view { item -> "Grouped genome BAM and non-grouped BAMs: $item" }
+    //ch_genome_peakcalling_bam.view { item -> "Grouped genome BAM and non-grouped BAMs: $item" }
 
     SAMTOOLS_GENOME_GROUP_INDEX (
         ch_genome_peakcalling_bam
