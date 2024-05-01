@@ -88,7 +88,7 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 //
 // MODULE: Local modules
 //
-include { SAMTOOLS_SIMPLE_VIEW as FILTER_TRANSCRIPTS } from '../modules/local/samtools_simple_view'
+
 include { DUMP_SOFTWARE_VERSIONS                     } from '../modules/local/dump_software_versions'
 include { CLIPQC                                     } from '../modules/local/clipqc'
 
@@ -99,9 +99,9 @@ include { PREPARE_GENOME                                 } from '../subworkflows
 include { INPUT_CHECK                                    } from '../subworkflows/local/input_check'
 include { RNA_ALIGN                                      } from '../subworkflows/local/rna_align'
 include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as GENOME_DEDUP } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
-include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as TRANS_DEDUP  } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
+include { TRANSCRIPTOME_PROCESSING                       } from '../subworkflows/local/transcriptome_processing'
 include { CALC_CROSSLINKS as CALC_GENOME_CROSSLINKS      } from '../subworkflows/local/calc_crosslinks'
-include { CALC_CROSSLINKS as CALC_TRANSCRIPT_CROSSLINKS  } from '../subworkflows/local/calc_crosslinks'
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -114,19 +114,18 @@ include { CALC_CROSSLINKS as CALC_TRANSCRIPT_CROSSLINKS  } from '../subworkflows
 //
 
 include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_GENOME          } from '../modules/nf-core/samtools/merge/main'
-include { SAMTOOLS_SORT as SAMTOOLS_SORT_FILT_TRANSCRIPT   } from '../modules/nf-core/samtools/sort/main'
-include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_FILT_TRANSCRIPT } from '../modules/nf-core/samtools/index/main'
+
 include { SAMTOOLS_INDEX as SAMTOOLS_GENOME_GROUP_INDEX    } from '../modules/nf-core/samtools/index/main'
 include { MULTIQC                                          } from '../modules/nf-core/multiqc/main'
 include { CLIPPY as CLIPPY_GENOME                          } from "../modules/nf-core/clippy/main"
-include { CLIPPY as CLIPPY_TRANSCRIPTOME                   } from "../modules/nf-core/clippy/main"
+
 include { ICOUNTMINI_SIGXLS                                } from "../modules/nf-core/icountmini/sigxls/main"
 include { ICOUNTMINI_PEAKS                                 } from "../modules/nf-core/icountmini/peaks/main"
 include { GUNZIP as GUNZIP_ICOUNTMINI_SIGXLS               } from "../modules/nf-core/gunzip/main"
 include { GUNZIP as GUNZIP_PEAKS_SIGXLS                    } from "../modules/nf-core/gunzip/main"
 include { GUNZIP as GUNZIP_ICOUNTMINI_PEAKS                } from "../modules/nf-core/gunzip/main"
 include { PARACLU as PARACLU_GENOME                        } from "../modules/nf-core/paraclu/main"
-include { PARACLU as PARACLU_TRANSCRIPTOME                 } from "../modules/nf-core/paraclu/main"
+
 include { PURECLIP as PURECLIP_WITH_CONTROL                } from '../modules/nf-core/pureclip/main'
 include { PURECLIP as PURECLIP_NO_CONTROL                  } from '../modules/nf-core/pureclip/main'
 include { PEKA as PEKA_ICOUNT                              } from '../modules/nf-core/peka/main'
@@ -303,7 +302,8 @@ workflow CLIPSEQ {
             ch_ncrna_genome_index,
             ch_genome_index,
             ch_filtered_gtf,
-            ch_fasta
+            ch_fasta,
+            params.skip_transcriptome
         )
         ch_versions         = ch_versions.mix(RNA_ALIGN.out.versions)
         ch_ncrna_bam        = RNA_ALIGN.out.ncrna_bam
@@ -317,40 +317,29 @@ workflow CLIPSEQ {
     }
     //ch_genome_bam | view
 
-    if(params.source == "fastq" & params.run_filtering) {
-        //
-        // CHANNEL: Combine bam and bai files on id
-        //
-        ch_transcript_bam_bai = ch_transcript_bam
-            .map { row -> [row[0].id, row ].flatten()}
-            .join ( ch_transcript_bai.map { row -> [row[0].id, row ].flatten()} )
-            .map { row -> [row[1], row[2], row[4]] }
-        //ch_transcript_bam_bai | view
-
-        //
-        // MODULE: Filter transcriptome bam on longest transcripts
-        //
-        FILTER_TRANSCRIPTS (
-            ch_transcript_bam_bai,
-            [],
-            ch_longest_transcript
+    ch_paraclu_mincluster = Channel.value(params.paraclu_minValue)
+    if(!params.skip_transcriptome) {
+        TRANSCRIPTOME_PROCESSING(
+            ch_transcript_bam,
+            ch_transcript_bai,
+            ch_longest_transcript,
+            ch_longest_transcript_gtf,
+            ch_longest_transcript_fai,
+            ch_fasta,
+            callers,
+            ch_paraclu_mincluster
         )
-        ch_versions = ch_versions.mix(FILTER_TRANSCRIPTS.out.versions)
-
-        //
-        // SUBWORKFLOW: sort, index filtered bam
-        //
-        SAMTOOLS_SORT_FILT_TRANSCRIPT ( FILTER_TRANSCRIPTS.out.bam )
-        ch_versions       = ch_versions.mix(SAMTOOLS_SORT_FILT_TRANSCRIPT.out.versions)
-        ch_transcript_bam = SAMTOOLS_SORT_FILT_TRANSCRIPT.out.bam
-
-        SAMTOOLS_INDEX_FILT_TRANSCRIPT ( SAMTOOLS_SORT_FILT_TRANSCRIPT.out.bam )
-        ch_versions       = ch_versions.mix(SAMTOOLS_INDEX_FILT_TRANSCRIPT.out.versions)
-        ch_transcript_bai = SAMTOOLS_INDEX_FILT_TRANSCRIPT.out.bai
+        ch_versions                      = ch_versions.mix(TRANSCRIPTOME_PROCESSING.out.versions)
+        ch_transcript_bam                = TRANSCRIPTOME_PROCESSING.out.transcript_dedupe_bam
+        ch_transcript_bai                = TRANSCRIPTOME_PROCESSING.out.transcript_dedupe_bai
+        ch_trans_crosslink_bed           = TRANSCRIPTOME_PROCESSING.out.crosslink_bed 
+        ch_trans_crosslink_coverage      = TRANSCRIPTOME_PROCESSING.out.crosslink_coverage
+        ch_trans_crosslink_coverage_norm = TRANSCRIPTOME_PROCESSING.out.crosslink_coverage_norm
+        ch_clippy_transcriptome_peaks    = TRANSCRIPTOME_PROCESSING.out.clippy_peaks
+        ch_paraclu_transcriptome_peaks   = TRANSCRIPTOME_PROCESSING.out.paraclu_peaks
     }
 
     ch_genome_umi_log = Channel.empty()
-    ch_trans_umi_log  = Channel.empty()
     if(params.source == "fastq" & params.run_dedup) {
         //
         // CHANNEL: Combine bam and bai files on id
@@ -359,12 +348,6 @@ workflow CLIPSEQ {
             .map { row -> [row[0].id, row ].flatten()}
             .join ( ch_genome_bai.map { row -> [row[0].id, row ].flatten()} )
             .map { row -> [row[1], row[2], row[4]] }
-
-        ch_transcript_bam_bai = ch_transcript_bam
-            .map { row -> [row[0].id, row ].flatten()}
-            .join ( ch_transcript_bai.map { row -> [row[0].id, row ].flatten()} )
-            .map { row -> [row[1], row[2], row[4]] }
-
         //
         // SUBWORKFLOW: Run umi deduplication on genome-level alignments
         //
@@ -376,18 +359,6 @@ workflow CLIPSEQ {
         ch_genome_bam      = GENOME_DEDUP.out.bam
         ch_genome_bai      = GENOME_DEDUP.out.bai
         ch_genome_umi_log  = GENOME_DEDUP.out.umi_log
-
-        //
-        // SUBWORKFLOW: Run umi deduplication on transcript-level alignments
-        //
-        TRANS_DEDUP (
-            ch_transcript_bam_bai,
-            ch_fasta
-        )
-        ch_versions        = ch_versions.mix(TRANS_DEDUP.out.versions)
-        ch_transcript_bam  = TRANS_DEDUP.out.bam
-        ch_transcript_bai  = TRANS_DEDUP.out.bai
-        ch_trans_umi_log   = TRANS_DEDUP.out.umi_log
     }
 
 
@@ -455,9 +426,6 @@ workflow CLIPSEQ {
     ch_genome_crosslink_bed           = Channel.empty()
     ch_genome_crosslink_coverage      = Channel.empty()
     ch_genome_crosslink_coverage_norm = Channel.empty()
-    ch_trans_crosslink_bed            = Channel.empty()
-    ch_trans_crosslink_coverage       = Channel.empty()
-    ch_trans_crosslink_coverage_norm  = Channel.empty()
     if(params.run_crosslinking) {
         //
         // SUBWORKFLOW: Run crosslink calculation for  genome
@@ -480,30 +448,16 @@ workflow CLIPSEQ {
             ch_genome_crosslink_bed,
             ch_regions_resolved_gtf.collect{ it[1] }
         )
-
-        //
-        // SUBWORKFLOW: Run crosslink calculation for transcripts
-        //
-        CALC_TRANSCRIPT_CROSSLINKS (
-            ch_transcript_bam,
-            ch_longest_transcript_fai.map{ [[id:it.baseName], it] }
-        )
-        ch_versions                      = ch_versions.mix(CALC_TRANSCRIPT_CROSSLINKS.out.versions)
-        ch_trans_crosslink_bed           = CALC_TRANSCRIPT_CROSSLINKS.out.bed
-        ch_trans_crosslink_coverage      = CALC_TRANSCRIPT_CROSSLINKS.out.coverage
-        ch_trans_crosslink_coverage_norm = CALC_TRANSCRIPT_CROSSLINKS.out.coverage_norm
     }
 
     //
     // SUBWORKFLOW: Run peakcalling on genome
     //
     ch_clippy_genome_peaks          = Channel.empty()
-    ch_clippy_transcriptome_peaks   = Channel.empty()
     ch_icountmini_sigxls_gz         = Channel.empty()
     ch_icountmini_peaks_gz          = Channel.empty()
     ch_icountmini_sigxls            = Channel.empty()
     ch_paraclu_genome_peaks         = Channel.empty()
-    ch_paraclu_transcriptome_peaks  = Channel.empty()
 
     if(params.run_peakcalling) {
 
@@ -516,15 +470,6 @@ workflow CLIPSEQ {
             )
             
             ch_clippy_genome_peaks           = CLIPPY_GENOME.out.peaks
-
-            CLIPPY_TRANSCRIPTOME (
-                ch_trans_crosslink_bed,
-                ch_longest_transcript_gtf,
-                ch_longest_transcript_fai
-            )
-            
-            ch_clippy_transcriptome_peaks    = CLIPPY_TRANSCRIPTOME.out.peaks
-            ch_versions                      = ch_versions.mix(CLIPPY_GENOME.out.versions)
 
             if(params.run_peka) {
                 PEKA_CLIPPY (
@@ -595,7 +540,7 @@ workflow CLIPSEQ {
 
         }
 
-        ch_paraclu_mincluster = Channel.value(params.paraclu_minValue)
+        
 
         if('paraclu' in callers) {
 
@@ -604,14 +549,8 @@ workflow CLIPSEQ {
                 ch_paraclu_mincluster
             )
 
-            ch_versions                      = ch_versions.mix(CALC_TRANSCRIPT_CROSSLINKS.out.versions)
+            ch_versions                      = ch_versions.mix(PARACLU_GENOME.out.versions)
             ch_paraclu_genome_peaks          = PARACLU_GENOME.out.bed
-
-            PARACLU_TRANSCRIPTOME (
-                ch_trans_crosslink_bed,
-                ch_paraclu_mincluster
-            )
-            ch_paraclu_transcriptome_peaks          = PARACLU_TRANSCRIPTOME.out.bed
 
             if(params.run_peka) {
                 PEKA_PARACLU(
