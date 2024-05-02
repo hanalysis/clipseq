@@ -89,18 +89,21 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 // MODULE: Local modules
 //
 
-include { DUMP_SOFTWARE_VERSIONS                     } from '../modules/local/dump_software_versions'
-include { CLIPQC                                     } from '../modules/local/clipqc'
+include { DUMP_SOFTWARE_VERSIONS                                          } from '../modules/local/dump_software_versions'
+include { CLIPQC                                                          } from '../modules/local/clipqc'
+include { GET_CROSSLINKS as CALC_GENOME_CROSSLINKS_INDIVIDUAL             } from '../modules/local/get_crosslinks'
+include { GET_CROSSLINKS as CALC_GENOME_CROSSLINKS_INDIVIDUAL_HASGROUP    } from '../modules/local/get_crosslinks'
+include { GET_CROSSLINKS as CALC_GENOME_CROSSLINKS_GROUP_HASGROUP         } from '../modules/local/get_crosslinks'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { PREPARE_GENOME                                 } from '../subworkflows/local/prepare_genome'
-include { INPUT_CHECK                                    } from '../subworkflows/local/input_check'
-include { RNA_ALIGN                                      } from '../subworkflows/local/rna_align'
-include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as GENOME_DEDUP } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
-include { TRANSCRIPTOME_PROCESSING                       } from '../subworkflows/local/transcriptome_processing'
-include { CALC_CROSSLINKS as CALC_GENOME_CROSSLINKS      } from '../subworkflows/local/calc_crosslinks'
+include { PREPARE_GENOME                                                  } from '../subworkflows/local/prepare_genome'
+include { INPUT_CHECK                                                     } from '../subworkflows/local/input_check'
+include { RNA_ALIGN                                                       } from '../subworkflows/local/rna_align'
+include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as GENOME_DEDUP                  } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
+include { TRANSCRIPTOME_PROCESSING                                        } from '../subworkflows/local/transcriptome_processing'
+
 
 
 /*
@@ -332,8 +335,6 @@ workflow CLIPSEQ {
         ch_transcript_bam                = TRANSCRIPTOME_PROCESSING.out.transcript_dedupe_bam
         ch_transcript_bai                = TRANSCRIPTOME_PROCESSING.out.transcript_dedupe_bai
         ch_trans_crosslink_bed           = TRANSCRIPTOME_PROCESSING.out.crosslink_bed 
-        ch_trans_crosslink_coverage      = TRANSCRIPTOME_PROCESSING.out.crosslink_coverage
-        ch_trans_crosslink_coverage_norm = TRANSCRIPTOME_PROCESSING.out.crosslink_coverage_norm
         ch_clippy_transcriptome_peaks    = TRANSCRIPTOME_PROCESSING.out.clippy_peaks
         ch_paraclu_transcriptome_peaks   = TRANSCRIPTOME_PROCESSING.out.paraclu_peaks
     }
@@ -368,13 +369,18 @@ workflow CLIPSEQ {
     ch_genome_bam.branch {
         hasGroup: it[0].group  // Branch condition for samples with a group
         noGroup: it[0].group == ''  // Branch condition for samples without a group
-    }.set { ch_branches }  // Capture branching result into ch_branches
+    }.set { ch_bam_branches }  // Capture branching result into ch_branches
+
+    ch_genome_bai.branch {
+        hasGroup: it[0].group  // Branch condition for samples with a group
+        noGroup: it[0].group == ''  // Branch condition for samples without a group
+    }.set { ch_bai_branches }  // Capture branching result into ch_branches
 
     // After branching
-    //ch_branches.hasGroup.view { item -> "Has group: $item" }
-    //ch_branches.noGroup.view { item -> "No group: $item" }
+    // ch_branches.hasGroup.view { item -> "Has group: $item" }
+    // ch_branches.noGroup.view { item -> "No group: $item" }
 
-    ch_branches.hasGroup
+    ch_bam_branches.hasGroup
         .map { item ->
             def meta = item[0]
             def bam = item[1]
@@ -408,7 +414,7 @@ workflow CLIPSEQ {
     //ch_grouped_genome_bam.view { item -> "Grouped genome BAM: $item" }
 
     // merge with the noGroup branch
-    ch_grouped_genome_bam.concat(ch_branches.noGroup).set { ch_genome_peakcalling_bam }
+    ch_grouped_genome_bam.concat(ch_bam_branches.noGroup).set { ch_genome_peakcalling_bam }
     //ch_genome_peakcalling_bam.view { item -> "Grouped genome BAM and non-grouped BAMs: $item" }
 
     SAMTOOLS_GENOME_GROUP_INDEX (
@@ -426,16 +432,39 @@ workflow CLIPSEQ {
     ch_genome_crosslink_coverage_norm = Channel.empty()
     if(params.run_crosslinking) {
         //
-        // SUBWORKFLOW: Run crosslink calculation for  genome
+        // SUBWORKFLOW: Run crosslink calculation for samples without a group
         //
-        CALC_GENOME_CROSSLINKS (
-            ch_genome_peakcalling_bam,
+        CALC_GENOME_CROSSLINKS_INDIVIDUAL (
+            ch_bam_branches.noGroup.join(ch_bai_branches.noGroup),
             ch_fasta_fai
         )
-        ch_versions                       = ch_versions.mix(CALC_GENOME_CROSSLINKS.out.versions)
-        ch_genome_crosslink_bed           = CALC_GENOME_CROSSLINKS.out.bed
-        ch_genome_crosslink_coverage      = CALC_GENOME_CROSSLINKS.out.coverage
-        ch_genome_crosslink_coverage_norm = CALC_GENOME_CROSSLINKS.out.coverage_norm
+        ch_versions                        = ch_versions.mix(CALC_GENOME_CROSSLINKS_INDIVIDUAL.out.versions)
+        ch_genome_crosslink_INDIVIDUAL_bed = CALC_GENOME_CROSSLINKS_INDIVIDUAL.out.bed
+
+        //
+        // SUBWORKFLOW: Run crosslink calculation for samples WITH A GROUP indidivually, these won't be processed further
+        //
+        CALC_GENOME_CROSSLINKS_INDIVIDUAL_HASGROUP (
+            ch_bam_branches.hasGroup.join(ch_bai_branches.hasGroup),
+            ch_fasta_fai
+        )
+        ch_versions = ch_versions.mix(CALC_GENOME_CROSSLINKS_INDIVIDUAL_HASGROUP.out.versions)
+
+        //
+        // SUBWORKFLOW: Run crosslink calculation for samples WITH A GROUP AS A GROUP
+        //
+        
+        CALC_GENOME_CROSSLINKS_GROUP_HASGROUP (
+            ch_grouped_genome_bam.join(ch_genome_peakcalling_bai),
+            ch_fasta_fai
+        )
+        ch_versions                            = ch_versions.mix(CALC_GENOME_CROSSLINKS_GROUP_HASGROUP.out.versions)
+        ch_genome_crosslink_GROUP_HASGROUP_bed = CALC_GENOME_CROSSLINKS_GROUP_HASGROUP.out.bed
+
+        //
+        // Combine crosslinking results for moving forwards
+        //
+        ch_genome_crosslink_bed = ch_genome_crosslink_INDIVIDUAL_bed.mix(ch_genome_crosslink_GROUP_HASGROUP_bed)
 
         ICOUNTMINI_SUMMARY (
             ch_genome_crosslink_bed,

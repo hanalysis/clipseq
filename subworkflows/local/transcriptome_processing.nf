@@ -1,12 +1,14 @@
-include { SAMTOOLS_SIMPLE_VIEW as FILTER_TRANSCRIPTS            } from '../../modules/local/samtools_simple_view'
-include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as TRANS_DEDUP         } from './bam_dedup_samtools_umicollapse'
-include { CALC_CROSSLINKS as CALC_TRANSCRIPT_CROSSLINKS         } from './calc_crosslinks'
-include { SAMTOOLS_SORT as SAMTOOLS_SORT_FILT_TRANSCRIPT        } from '../../modules/nf-core/samtools/sort/main'
-include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_FILT_TRANSCRIPT      } from '../../modules/nf-core/samtools/index/main'
-include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_TRANSCRIPTOME        } from '../../modules/nf-core/samtools/merge/main'
-include { SAMTOOLS_INDEX as SAMTOOLS_TRANSCRIPTOME_GROUP_INDEX  } from '../../modules/nf-core/samtools/index/main'
-include { CLIPPY as CLIPPY_TRANSCRIPTOME                        } from "../../modules/nf-core/clippy/main"
-include { PARACLU as PARACLU_TRANSCRIPTOME                      } from "../../modules/nf-core/paraclu/main"
+include { SAMTOOLS_SIMPLE_VIEW as FILTER_TRANSCRIPTS                          } from '../../modules/local/samtools_simple_view'
+include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as TRANS_DEDUP                       } from './bam_dedup_samtools_umicollapse'
+include { GET_CROSSLINKS as CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL             } from '../../modules/local/get_crosslinks'
+include { GET_CROSSLINKS as CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL_HASGROUP    } from '../../modules/local/get_crosslinks'
+include { GET_CROSSLINKS as CALC_TRANSCRIPT_CROSSLINKS_GROUP_HASGROUP         } from '../../modules/local/get_crosslinks'
+include { SAMTOOLS_SORT as SAMTOOLS_SORT_FILT_TRANSCRIPT                      } from '../../modules/nf-core/samtools/sort/main'
+include { SAMTOOLS_INDEX as SAMTOOLS_INDEX_FILT_TRANSCRIPT                    } from '../../modules/nf-core/samtools/index/main'
+include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_TRANSCRIPTOME                      } from '../../modules/nf-core/samtools/merge/main'
+include { SAMTOOLS_INDEX as SAMTOOLS_TRANSCRIPTOME_GROUP_INDEX                } from '../../modules/nf-core/samtools/index/main'
+include { CLIPPY as CLIPPY_TRANSCRIPTOME                                      } from "../../modules/nf-core/clippy/main"
+include { PARACLU as PARACLU_TRANSCRIPTOME                                    } from "../../modules/nf-core/paraclu/main"
 
 
 
@@ -86,13 +88,18 @@ workflow TRANSCRIPTOME_PROCESSING {
     ch_transcript_bam.branch {
         hasGroup: it[0].group  // Branch condition for samples with a group
         noGroup: it[0].group == ''  // Branch condition for samples without a group
-    }.set { ch_branches }  // Capture branching result into ch_branches
+    }.set { ch_bam_branches }  // Capture branching result into ch_branches
+
+    ch_transcript_bai.branch {
+        hasGroup: it[0].group  // Branch condition for samples with a group
+        noGroup: it[0].group == ''  // Branch condition for samples without a group
+    }.set { ch_bai_branches }  // Capture branching result into ch_branches
 
     // After branching
     //ch_branches.hasGroup.view { item -> "Has group: $item" }
     //ch_branches.noGroup.view { item -> "No group: $item" }
 
-    ch_branches.hasGroup
+    ch_bam_branches.hasGroup
         .map { item ->
             def meta = item[0]
             def bam = item[1]
@@ -126,7 +133,7 @@ workflow TRANSCRIPTOME_PROCESSING {
     //ch_grouped_transcript_bam.view { item -> "Grouped transcript BAM: $item" }
 
     // merge with the noGroup branch
-    ch_grouped_transcript_bam.concat(ch_branches.noGroup).set { ch_transcript_peakcalling_bam }
+    ch_grouped_transcript_bam.concat(ch_bam_branches.noGroup).set { ch_transcript_peakcalling_bam }
     //ch_genome_peakcalling_bam.view { item -> "Grouped genome BAM and non-grouped BAMs: $item" }
 
     SAMTOOLS_TRANSCRIPTOME_GROUP_INDEX (
@@ -139,14 +146,32 @@ workflow TRANSCRIPTOME_PROCESSING {
         //
         // SUBWORKFLOW: Run crosslink calculation for transcripts
         //
-        CALC_TRANSCRIPT_CROSSLINKS (
-            ch_transcript_peakcalling_bam,
+        CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL (
+            ch_bam_branches.noGroup.join(ch_bai_branches.noGroup),
             ch_longest_transcript_fai.map{ [[id:it.baseName], it] }
         )
-        ch_versions                      = ch_versions.mix(CALC_TRANSCRIPT_CROSSLINKS.out.versions)
-        ch_trans_crosslink_bed           = CALC_TRANSCRIPT_CROSSLINKS.out.bed
-        ch_trans_crosslink_coverage      = CALC_TRANSCRIPT_CROSSLINKS.out.coverage
-        ch_trans_crosslink_coverage_norm = CALC_TRANSCRIPT_CROSSLINKS.out.coverage_norm
+        ch_versions                       = ch_versions.mix(CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL.out.versions)
+        ch_trans_crosslink_INDIVIDUAL_bed = CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL.out.bed
+
+        CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL_HASGROUP (
+            ch_bam_branches.hasGroup.join(ch_bai_branches.hasGroup),
+            ch_longest_transcript_fai.map{ [[id:it.baseName], it] }
+        )
+        ch_versions                                   = ch_versions.mix(CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL_HASGROUP.out.versions)
+        ch_trans_crosslink_INDIVIDUAL_HASGROUP_bed    = CALC_TRANSCRIPT_CROSSLINKS_INDIVIDUAL_HASGROUP.out.bed
+
+        CALC_TRANSCRIPT_CROSSLINKS_GROUP_HASGROUP (
+            ch_grouped_transcript_bam.join(ch_transcript_peakcalling_bai),
+            ch_longest_transcript_fai.map{ [[id:it.baseName], it] }
+        )
+        ch_versions                            = ch_versions.mix(CALC_TRANSCRIPT_CROSSLINKS_GROUP_HASGROUP.out.versions)
+        ch_trans_crosslink_GROUP_HASGROUP_bed  = CALC_TRANSCRIPT_CROSSLINKS_GROUP_HASGROUP.out.bed
+
+        //
+        // Combine crosslinking results for moving forwards
+        //
+        ch_trans_crosslink_bed = ch_trans_crosslink_INDIVIDUAL_bed.mix(ch_trans_crosslink_GROUP_HASGROUP_bed)
+        
     }
 
 
@@ -180,8 +205,6 @@ workflow TRANSCRIPTOME_PROCESSING {
     transcript_dedupe_bai   = ch_transcript_peakcalling_bai      // channel: [ val(meta), [ bai ] ]
 
     crosslink_bed           = ch_trans_crosslink_bed             // channel: [ val(meta), [ bed ] ] 
-    crosslink_coverage      = ch_trans_crosslink_coverage        // channel: [ val(meta), [ bedGraph ] ] 
-    crosslink_coverage_norm = ch_trans_crosslink_coverage_norm   // channel: [ val(meta), [ bedGraph ] ] 
 
     clippy_peaks            = ch_clippy_transcriptome_peaks      // channel: [ val(meta), [ bed ] ]
     paraclu_peaks           = ch_paraclu_transcriptome_peaks     // channel: [ val(meta), [ bed ] ]
