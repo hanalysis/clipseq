@@ -95,6 +95,7 @@ include { GET_CROSSLINKS as CALC_GENOME_CROSSLINKS_INDIVIDUAL             } from
 include { GET_CROSSLINKS as CALC_GENOME_CROSSLINKS_INDIVIDUAL_HASGROUP    } from '../modules/local/get_crosslinks'
 include { GET_CROSSLINKS as CALC_GENOME_CROSSLINKS_GROUP_HASGROUP         } from '../modules/local/get_crosslinks'
 include { LINUX_COMMAND as CONSENSUS_CROSSLINKS_REORDER_BED         } from '../modules/local/linux_command'
+include { GET_CONSENSUS_COUNTS         } from '../modules/local/consensus_count_table'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -120,6 +121,7 @@ include { TRANSCRIPTOME_PROCESSING                                        } from
 include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_GENOME          } from '../modules/nf-core/samtools/merge/main'
 include { BEDTOOLS_GROUPBY as CONSENSUS_CROSSLINKS_BEDTOOLS_GROUPBY                                 } from '../modules/nf-core/bedtools/groupby/main'
 include { BEDTOOLS_SORT as CONSENSUS_CROSSLINKS_BEDTOOLS_SORT                                     } from '../modules/nf-core/bedtools/sort/main'
+include { BEDTOOLS_MAP as CLIPPY_CONSENSUS_MAP                                     } from '../modules/nf-core/bedtools/map/main'
 include { CAT_CAT as CONSENSUS_CROSSLINKS_CAT_CAT                                         } from '../modules/nf-core/cat/cat/main'
 include { SAMTOOLS_INDEX as SAMTOOLS_GENOME_GROUP_INDEX    } from '../modules/nf-core/samtools/index/main'
 include { MULTIQC                                          } from '../modules/nf-core/multiqc/main'
@@ -488,9 +490,9 @@ workflow CLIPSEQ {
         if(params.consensus_peak){
             // Merge all xls into one file
             // want to use indivdual crosslinking files
-            ch_consensus_crosslinks = CALC_GENOME_CROSSLINKS_INDIVIDUAL_HASGROUP.out.bed.mix(CALC_GENOME_CROSSLINKS_INDIVIDUAL.out.bed)
+            ch_all_crosslinks = CALC_GENOME_CROSSLINKS_INDIVIDUAL_HASGROUP.out.bed.mix(CALC_GENOME_CROSSLINKS_INDIVIDUAL.out.bed)
 
-            ch_consensus_crosslinks
+            ch_all_crosslinks
                 .collect { it[1] }
                 .map { crosslinks -> [[id:"allXL"], crosslinks]}
                 .set { ch_consensus_crosslinks_bed }
@@ -548,6 +550,29 @@ workflow CLIPSEQ {
                     ch_consensus_crosslinks_final_bed,
                     ch_filtered_gtf.collect{ it[1] },
                     ch_fasta_fai.collect{ it[1] }
+                )
+
+                CLIPPY_GENOME_CONSENSUS.out.peaks
+                    .combine(ch_all_crosslinks)
+                    .map{ meta1, consensuspeaks, meta2, crosslink -> [meta2, consensuspeaks, crosslink] }
+                    .set { ch_clippy_consensus_map }
+                
+                ch_clippy_consensus_map.view { item -> "consensus for bedtools map: $item" }
+
+                CLIPPY_CONSENSUS_MAP (
+                    ch_clippy_consensus_map,
+                    ch_fasta_fai
+                )
+
+                CLIPPY_CONSENSUS_MAP.out.mapped
+                    .collect { it[1] }
+                    .map { crosslinks -> [[id:"allXL"], crosslinks]}
+                .set { ch_mapped_xls }
+
+                GET_CONSENSUS_COUNTS (
+                    ch_mapped_xls,
+                    ch_regions_resolved_gtf,
+                    "Clippy_Consensus_AllCounts.tsv"
                 )
             }
 
@@ -621,6 +646,7 @@ workflow CLIPSEQ {
                 CONSENSUS_ICOUNTMINI_PEAKS (
                     ch_consensus_peaks_input
                 )
+                ch_consensus_peaks = CONSENSUS_ICOUNTMINI_PEAKS.out.peaks
                 CONSENSUS_GUNZIP_ICOUNTMINI_SIGXLS (
                     CONSENSUS_ICOUNTMINI_SIGXLS.out.sigxls
                 )
@@ -659,6 +685,7 @@ workflow CLIPSEQ {
                     ch_consensus_crosslinks_final_bed,
                     ch_paraclu_mincluster
                 )
+                ch_consensus_peaks = PARACLU_GENOME_CONSENSUS.out.bed
             }
 
             if(params.run_peka) {
