@@ -94,6 +94,7 @@ include { CLIPQC                                                          } from
 include { GET_CROSSLINKS as CALC_GENOME_CROSSLINKS_INDIVIDUAL             } from '../modules/local/get_crosslinks'
 include { GET_CROSSLINKS as CALC_GENOME_CROSSLINKS_INDIVIDUAL_HASGROUP    } from '../modules/local/get_crosslinks'
 include { GET_CROSSLINKS as CALC_GENOME_CROSSLINKS_GROUP_HASGROUP         } from '../modules/local/get_crosslinks'
+include { LINUX_COMMAND as CONSENSUS_CROSSLINKS_REORDER_BED         } from '../modules/local/linux_command'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -117,17 +118,25 @@ include { TRANSCRIPTOME_PROCESSING                                        } from
 //
 
 include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_GENOME          } from '../modules/nf-core/samtools/merge/main'
-
+include { BEDTOOLS_GROUPBY as CONSENSUS_CROSSLINKS_BEDTOOLS_GROUPBY                                 } from '../modules/nf-core/bedtools/groupby/main'
+include { BEDTOOLS_SORT as CONSENSUS_CROSSLINKS_BEDTOOLS_SORT                                     } from '../modules/nf-core/bedtools/sort/main'
+include { CAT_CAT as CONSENSUS_CROSSLINKS_CAT_CAT                                         } from '../modules/nf-core/cat/cat/main'
 include { SAMTOOLS_INDEX as SAMTOOLS_GENOME_GROUP_INDEX    } from '../modules/nf-core/samtools/index/main'
 include { MULTIQC                                          } from '../modules/nf-core/multiqc/main'
 include { CLIPPY as CLIPPY_GENOME                          } from "../modules/nf-core/clippy/main"
+include { CLIPPY as CLIPPY_GENOME_CONSENSUS                          } from "../modules/nf-core/clippy/main"
 
 include { ICOUNTMINI_SIGXLS                                } from "../modules/nf-core/icountmini/sigxls/main"
 include { ICOUNTMINI_PEAKS                                 } from "../modules/nf-core/icountmini/peaks/main"
 include { GUNZIP as GUNZIP_ICOUNTMINI_SIGXLS               } from "../modules/nf-core/gunzip/main"
-include { GUNZIP as GUNZIP_PEAKS_SIGXLS                    } from "../modules/nf-core/gunzip/main"
 include { GUNZIP as GUNZIP_ICOUNTMINI_PEAKS                } from "../modules/nf-core/gunzip/main"
+
+include { ICOUNTMINI_SIGXLS as CONSENSUS_ICOUNTMINI_SIGXLS                                } from "../modules/nf-core/icountmini/sigxls/main"
+include { ICOUNTMINI_PEAKS as CONSENSUS_ICOUNTMINI_PEAKS                                 } from "../modules/nf-core/icountmini/peaks/main"
+include { GUNZIP as CONSENSUS_GUNZIP_ICOUNTMINI_SIGXLS               } from "../modules/nf-core/gunzip/main"
+include { GUNZIP as CONSENSUS_GUNZIP_ICOUNTMINI_PEAKS                } from "../modules/nf-core/gunzip/main"
 include { PARACLU as PARACLU_GENOME                        } from "../modules/nf-core/paraclu/main"
+include { PARACLU as PARACLU_GENOME_CONSENSUS                        } from "../modules/nf-core/paraclu/main"
 
 include { PURECLIP as PURECLIP_WITH_CONTROL                } from '../modules/nf-core/pureclip/main'
 include { PURECLIP as PURECLIP_NO_CONTROL                  } from '../modules/nf-core/pureclip/main'
@@ -475,6 +484,42 @@ workflow CLIPSEQ {
             ch_genome_crosslink_bed,
             ch_regions_resolved_gtf.collect{ it[1] }
         )
+
+        if(params.consensus_peak){
+            // Merge all xls into one file
+            // want to use indivdual crosslinking files
+            ch_consensus_crosslinks = CALC_GENOME_CROSSLINKS_INDIVIDUAL_HASGROUP.out.bed.mix(CALC_GENOME_CROSSLINKS_INDIVIDUAL.out.bed)
+
+            ch_consensus_crosslinks
+                .collect { it[1] }
+                .map { crosslinks -> [[id:"allXL"], crosslinks]}
+                .set { ch_consensus_crosslinks_bed }
+
+            //ch_consensus_crosslinks_bed.view { item -> "consensus crosslinks: $item" }
+
+            CONSENSUS_CROSSLINKS_CAT_CAT(
+                ch_consensus_crosslinks_bed
+            )
+
+            CONSENSUS_CROSSLINKS_BEDTOOLS_SORT(
+                CONSENSUS_CROSSLINKS_CAT_CAT.out.file_out,
+                []
+            )
+            // sum the counts to remove repeat entries
+            CONSENSUS_CROSSLINKS_BEDTOOLS_GROUPBY(
+                CONSENSUS_CROSSLINKS_BEDTOOLS_SORT.out.sorted,
+                5
+            )
+
+            CONSENSUS_CROSSLINKS_REORDER_BED(
+                CONSENSUS_CROSSLINKS_BEDTOOLS_GROUPBY.out.bed,
+                [],
+                false
+            )
+
+            ch_consensus_crosslinks_final_bed = CONSENSUS_CROSSLINKS_REORDER_BED.out.file
+
+        }
     }
 
     //
@@ -497,6 +542,14 @@ workflow CLIPSEQ {
             )
             
             ch_clippy_genome_peaks           = CLIPPY_GENOME.out.peaks
+
+            if(params.consensus_peak){
+                CLIPPY_GENOME_CONSENSUS (
+                    ch_consensus_crosslinks_final_bed,
+                    ch_filtered_gtf.collect{ it[1] },
+                    ch_fasta_fai.collect{ it[1] }
+                )
+            }
 
             if(params.run_peka) {
                 PEKA_CLIPPY (
@@ -554,6 +607,28 @@ workflow CLIPSEQ {
             ch_versions                      = ch_versions.mix(GUNZIP_ICOUNTMINI_PEAKS.out.versions)
             ch_icountmini_peaks              = GUNZIP_ICOUNTMINI_PEAKS.out.gunzip
 
+            if(params.consensus_peak){
+                CONSENSUS_ICOUNTMINI_SIGXLS (
+                    ch_consensus_crosslinks_final_bed,
+                    ch_seg_resolved_gtf.collect{ it[1]}
+                )
+                // CHANNEL: Create combined channel of input crosslinks and sigxls
+                ch_consensus_peaks_input = ch_consensus_crosslinks_final_bed
+                    .map{ [ it[0].id, it[0], it[1] ] }
+                    .join( CONSENSUS_ICOUNTMINI_SIGXLS.out.sigxls.map{ [ it[0].id, it[0], it[1] ] } )
+                    .map { [ it[1], it[2], it[4] ] }
+                //EXAMPLE CHANNEL STRUCT: [ [id:test], BED(crosslinks), BED(sigxls) ]
+                CONSENSUS_ICOUNTMINI_PEAKS (
+                    ch_consensus_peaks_input
+                )
+                CONSENSUS_GUNZIP_ICOUNTMINI_SIGXLS (
+                    CONSENSUS_ICOUNTMINI_SIGXLS.out.sigxls
+                )
+                CONSENSUS_GUNZIP_ICOUNTMINI_PEAKS (
+                    CONSENSUS_ICOUNTMINI_PEAKS.out.peaks
+                )
+            }
+
             if(params.run_peka) {
                 PEKA_ICOUNT (
                     ch_icountmini_peaks,
@@ -578,6 +653,13 @@ workflow CLIPSEQ {
 
             ch_versions                      = ch_versions.mix(PARACLU_GENOME.out.versions)
             ch_paraclu_genome_peaks          = PARACLU_GENOME.out.bed
+
+            if(params.consensus_peak){
+                PARACLU_GENOME_CONSENSUS (
+                    ch_consensus_crosslinks_final_bed,
+                    ch_paraclu_mincluster
+                )
+            }
 
             if(params.run_peka) {
                 PEKA_PARACLU(

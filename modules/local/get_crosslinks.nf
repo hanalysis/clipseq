@@ -25,7 +25,7 @@ process GET_CROSSLINKS {
     bedtools shift -m 1 -p -1 -i dedup.bed -g $fai > shifted.bed
     bedtools genomecov -dz -strand + -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{print \$1, \$2, \$2+1, ".", \$3, "+"}' > pos.bed
     bedtools genomecov -dz -strand - -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{print \$1, \$2, \$2+1, ".", \$3, "-"}' > neg.bed
-    cat pos.bed neg.bed | sort -k1,1 -k2,2n > ${prefix}.xl.bed
+    cat pos.bed neg.bed | sort -k1,1 -k2,2n -k3,3 -k6,6 > ${prefix}.xl.bed
     cat ${prefix}.xl.bed | awk '{OFS = "\t"}{if (\$6 == "+") {print \$1, \$2, \$3, \$5} else {print \$1, \$2, \$3, -\$5}}' > ${prefix}.xl.bedgraph
     TOTAL_VARIABLE=`cat ${prefix}.xl.bed | awk \'BEGIN {total=0} {total=total+\$5} END {print total}\'`
     cat ${prefix}.xl.bed | awk -v total=\$TOTAL_VARIABLE \'{printf "%s\\t%i\\t%i\\t%s\\t%f\\t%s\\n", \$1, \$2, \$3, \$4, 1000000*\$5/total, \$6}\' | awk \'{OFS = "\t"}{if (\$6 == "+") {print \$1, \$2, \$3, \$5} else {print \$1, \$2, \$3, -\$5}}\' | sort -k1,1 -k2,2n > ${prefix}.xl.CPMnorm.bedgraph

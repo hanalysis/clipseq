@@ -15,9 +15,29 @@
                         "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
                         "installed_by": ["modules"]
                     },
+                    "bedtools/groupby": {
+                        "branch": "master",
+                        "git_sha": "3b248b84694d1939ac4bb33df84bf6233a34d668",
+                        "installed_by": ["modules"]
+                    },
+                    "bedtools/map": {
+                        "branch": "master",
+                        "git_sha": "3b248b84694d1939ac4bb33df84bf6233a34d668",
+                        "installed_by": ["modules"]
+                    },
+                    "bedtools/merge": {
+                        "branch": "master",
+                        "git_sha": "a5377837fe9013bde89de8689829e83e84086536",
+                        "installed_by": ["modules"]
+                    },
                     "bedtools/shift": {
                         "branch": "master",
                         "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
+                        "installed_by": ["modules"]
+                    },
+                    "bedtools/sort": {
+                        "branch": "master",
+                        "git_sha": "571a5feac4c9ce0a8df0bc15b94230e7f3e8db47",
                         "installed_by": ["modules"]
                     },
                     "bowtie/align": {
@@ -28,6 +48,11 @@
                     "bowtie/build": {
                         "branch": "master",
                         "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
+                        "installed_by": ["modules"]
+                    },
+                    "cat/cat": {
+                        "branch": "master",
+                        "git_sha": "9437e6053dccf4aafa022bfd6e7e9de67e625af8",
                         "installed_by": ["modules"]
                     },
                     "cat/fastq": {
