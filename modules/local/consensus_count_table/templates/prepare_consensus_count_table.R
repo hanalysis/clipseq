@@ -32,7 +32,7 @@ process_tsv <- function(file) {
   df$PeakID <- apply(df[, 1:4], 1, paste, collapse = "_")
   count_column <- df[, 7, drop = FALSE]
   colnames(count_column) <- sub("\\.[^.]*$", "", basename(file))  # Rename column to the base name of the file
-  df <- data.frame(PeakID = df$PeakID, count_column, chr = df[, 1], start = df[, 2], end = df[, 3], strand = df[, 4])
+  df <- data.frame(PeakID = df$PeakID, count_column, chr = df[, 1], start = df[, 2], end = df[, 3], strand = df[, 6])
   
   return(df)
 }

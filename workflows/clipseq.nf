@@ -94,8 +94,8 @@ include { CLIPQC                                                          } from
 include { GET_CROSSLINKS as CALC_GENOME_CROSSLINKS_INDIVIDUAL             } from '../modules/local/get_crosslinks'
 include { GET_CROSSLINKS as CALC_GENOME_CROSSLINKS_INDIVIDUAL_HASGROUP    } from '../modules/local/get_crosslinks'
 include { GET_CROSSLINKS as CALC_GENOME_CROSSLINKS_GROUP_HASGROUP         } from '../modules/local/get_crosslinks'
-include { LINUX_COMMAND as CONSENSUS_CROSSLINKS_REORDER_BED         } from '../modules/local/linux_command'
-include { GET_CONSENSUS_COUNTS         } from '../modules/local/consensus_count_table'
+include { LINUX_COMMAND as CONSENSUS_CROSSLINKS_REORDER_BED               } from '../modules/local/linux_command'
+
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -105,7 +105,9 @@ include { INPUT_CHECK                                                     } from
 include { RNA_ALIGN                                                       } from '../subworkflows/local/rna_align'
 include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as GENOME_DEDUP                  } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
 include { TRANSCRIPTOME_PROCESSING                                        } from '../subworkflows/local/transcriptome_processing'
-
+include { CONSENSUS_PEAK_TABLE as CLIPPY_CONSENSUS_PEAK_TABLE             } from '../subworkflows/local/consensus_peak_table'
+include { CONSENSUS_PEAK_TABLE as PARACLU_CONSENSUS_PEAK_TABLE             } from '../subworkflows/local/consensus_peak_table'
+include { CONSENSUS_PEAK_TABLE as ICOUNT_CONSENSUS_PEAK_TABLE             } from '../subworkflows/local/consensus_peak_table'
 
 
 /*
@@ -542,8 +544,8 @@ workflow CLIPSEQ {
                 ch_filtered_gtf.collect{ it[1] },
                 ch_fasta_fai.collect{ it[1] }
             )
-            
-            ch_clippy_genome_peaks           = CLIPPY_GENOME.out.peaks
+            ch_versions             = ch_versions.mix(CLIPPY_GENOME.out.versions)
+            ch_clippy_genome_peaks  = CLIPPY_GENOME.out.peaks
 
             if(params.consensus_peak){
                 CLIPPY_GENOME_CONSENSUS (
@@ -551,29 +553,15 @@ workflow CLIPSEQ {
                     ch_filtered_gtf.collect{ it[1] },
                     ch_fasta_fai.collect{ it[1] }
                 )
-
-                CLIPPY_GENOME_CONSENSUS.out.peaks
-                    .combine(ch_all_crosslinks)
-                    .map{ meta1, consensuspeaks, meta2, crosslink -> [meta2, consensuspeaks, crosslink] }
-                    .set { ch_clippy_consensus_map }
-                
-                ch_clippy_consensus_map.view { item -> "consensus for bedtools map: $item" }
-
-                CLIPPY_CONSENSUS_MAP (
-                    ch_clippy_consensus_map,
-                    ch_fasta_fai
-                )
-
-                CLIPPY_CONSENSUS_MAP.out.mapped
-                    .collect { it[1] }
-                    .map { crosslinks -> [[id:"allXL"], crosslinks]}
-                .set { ch_mapped_xls }
-
-                GET_CONSENSUS_COUNTS (
-                    ch_mapped_xls,
+        
+                CLIPPY_CONSENSUS_PEAK_TABLE (
+                    ch_all_crosslinks,
+                    CLIPPY_GENOME_CONSENSUS.out.peaks,
+                    ch_fasta_fai,
                     ch_regions_resolved_gtf,
                     "Clippy_Consensus_AllCounts.tsv"
                 )
+                ch_versions = ch_versions.mix(CLIPPY_CONSENSUS_PEAK_TABLE.out.versions)
             }
 
             if(params.run_peka) {
@@ -653,6 +641,14 @@ workflow CLIPSEQ {
                 CONSENSUS_GUNZIP_ICOUNTMINI_PEAKS (
                     CONSENSUS_ICOUNTMINI_PEAKS.out.peaks
                 )
+                ICOUNT_CONSENSUS_PEAK_TABLE (
+                    ch_all_crosslinks,
+                    CONSENSUS_GUNZIP_ICOUNTMINI_PEAKS.out.gunzip,
+                    ch_fasta_fai,
+                    ch_regions_resolved_gtf,
+                    "iCount-Mini_Consensus_AllCounts.tsv"
+                )
+                ch_versions = ch_versions.mix(ICOUNT_CONSENSUS_PEAK_TABLE.out.versions)
             }
 
             if(params.run_peka) {
@@ -685,11 +681,19 @@ workflow CLIPSEQ {
                     ch_consensus_crosslinks_final_bed,
                     ch_paraclu_mincluster
                 )
-                ch_consensus_peaks = PARACLU_GENOME_CONSENSUS.out.bed
+
+                PARACLU_CONSENSUS_PEAK_TABLE (
+                    ch_all_crosslinks,
+                    PARACLU_GENOME_CONSENSUS.out.bed,
+                    ch_fasta_fai,
+                    ch_regions_resolved_gtf,
+                    "Paraclu_Consensus_AllCounts.tsv"
+                )
+                ch_versions = ch_versions.mix(PARACLU_CONSENSUS_PEAK_TABLE.out.versions)
             }
 
             if(params.run_peka) {
-                PEKA_PARACLU(
+                PEKA_PARACLU (
                     ch_paraclu_genome_peaks,
                     ch_genome_crosslink_bed,
                     ch_fasta.collect{ it[1] },
