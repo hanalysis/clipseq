@@ -91,23 +91,26 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 
 include { DUMP_SOFTWARE_VERSIONS                                          } from '../modules/local/dump_software_versions'
 include { CLIPQC                                                          } from '../modules/local/clipqc'
-include { GET_CROSSLINKS as CALC_GENOME_CROSSLINKS_INDIVIDUAL             } from '../modules/local/get_crosslinks'
-include { GET_CROSSLINKS as CALC_GENOME_CROSSLINKS_INDIVIDUAL_HASGROUP    } from '../modules/local/get_crosslinks'
-include { GET_CROSSLINKS as CALC_GENOME_CROSSLINKS_GROUP_HASGROUP         } from '../modules/local/get_crosslinks'
 include { LINUX_COMMAND as CONSENSUS_CROSSLINKS_REORDER_BED               } from '../modules/local/linux_command'
+include { MERGE_SUMMARY                                                   } from '../modules/local/merge_summary'
 
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { PREPARE_GENOME                                                  } from '../subworkflows/local/prepare_genome'
-include { INPUT_CHECK                                                     } from '../subworkflows/local/input_check'
-include { RNA_ALIGN                                                       } from '../subworkflows/local/rna_align'
-include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as GENOME_DEDUP                  } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
-include { TRANSCRIPTOME_PROCESSING                                        } from '../subworkflows/local/transcriptome_processing'
-include { CONSENSUS_PEAK_TABLE as CLIPPY_CONSENSUS_PEAK_TABLE             } from '../subworkflows/local/consensus_peak_table'
-include { CONSENSUS_PEAK_TABLE as PARACLU_CONSENSUS_PEAK_TABLE             } from '../subworkflows/local/consensus_peak_table'
-include { CONSENSUS_PEAK_TABLE as ICOUNT_CONSENSUS_PEAK_TABLE             } from '../subworkflows/local/consensus_peak_table'
+include { PREPARE_GENOME                                                        } from '../subworkflows/local/prepare_genome'
+include { INPUT_CHECK                                                           } from '../subworkflows/local/input_check'
+include { RNA_ALIGN                                                             } from '../subworkflows/local/rna_align'
+include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as GENOME_UNIQUE_DEDUP                 } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
+include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as GENOME_MULTI_DEDUP                  } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
+include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as NCRNA_DEDUP                         } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
+include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as NCRNA_K1_DEDUP                      } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
+include { RESOLVE_GROUPS_AND_CROSSLINKS as GENOME_RESOLVE_GROUPS_AND_CROSSLINKS } from '../subworkflows/local/resolve_groupings_and_crosslinks'
+include { RESOLVE_GROUPS_AND_CROSSLINKS as NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS  } from '../subworkflows/local/resolve_groupings_and_crosslinks'
+include { TRANSCRIPTOME_PROCESSING                                              } from '../subworkflows/local/transcriptome_processing'
+include { CONSENSUS_PEAK_TABLE as CLIPPY_CONSENSUS_PEAK_TABLE                   } from '../subworkflows/local/consensus_peak_table'
+include { CONSENSUS_PEAK_TABLE as PARACLU_CONSENSUS_PEAK_TABLE                  } from '../subworkflows/local/consensus_peak_table'
+include { CONSENSUS_PEAK_TABLE as ICOUNT_CONSENSUS_PEAK_TABLE                   } from '../subworkflows/local/consensus_peak_table'
 
 
 /*
@@ -120,43 +123,42 @@ include { CONSENSUS_PEAK_TABLE as ICOUNT_CONSENSUS_PEAK_TABLE             } from
 // MODULE: Installed directly from nf-core/modules
 //
 
-include { SAMTOOLS_MERGE as SAMTOOLS_MERGE_GENOME          } from '../modules/nf-core/samtools/merge/main'
-include { BEDTOOLS_GROUPBY as CONSENSUS_CROSSLINKS_BEDTOOLS_GROUPBY                                 } from '../modules/nf-core/bedtools/groupby/main'
-include { BEDTOOLS_SORT as CONSENSUS_CROSSLINKS_BEDTOOLS_SORT                                     } from '../modules/nf-core/bedtools/sort/main'
-include { BEDTOOLS_MAP as CLIPPY_CONSENSUS_MAP                                     } from '../modules/nf-core/bedtools/map/main'
-include { CAT_CAT as CONSENSUS_CROSSLINKS_CAT_CAT                                         } from '../modules/nf-core/cat/cat/main'
-include { SAMTOOLS_INDEX as SAMTOOLS_GENOME_GROUP_INDEX    } from '../modules/nf-core/samtools/index/main'
-include { MULTIQC                                          } from '../modules/nf-core/multiqc/main'
-include { CLIPPY as CLIPPY_GENOME                          } from "../modules/nf-core/clippy/main"
-include { CLIPPY as CLIPPY_GENOME_CONSENSUS                          } from "../modules/nf-core/clippy/main"
 
-include { ICOUNTMINI_SIGXLS                                } from "../modules/nf-core/icountmini/sigxls/main"
-include { ICOUNTMINI_PEAKS                                 } from "../modules/nf-core/icountmini/peaks/main"
-include { GUNZIP as GUNZIP_ICOUNTMINI_SIGXLS               } from "../modules/nf-core/gunzip/main"
-include { GUNZIP as GUNZIP_ICOUNTMINI_PEAKS                } from "../modules/nf-core/gunzip/main"
+include { BEDTOOLS_GROUPBY as CONSENSUS_CROSSLINKS_BEDTOOLS_GROUPBY } from '../modules/nf-core/bedtools/groupby/main'
+include { BEDTOOLS_SORT as CONSENSUS_CROSSLINKS_BEDTOOLS_SORT       } from '../modules/nf-core/bedtools/sort/main'
+include { BEDTOOLS_MAP as CLIPPY_CONSENSUS_MAP                      } from '../modules/nf-core/bedtools/map/main'
+include { CAT_CAT as CONSENSUS_CROSSLINKS_CAT_CAT                   } from '../modules/nf-core/cat/cat/main'
+include { MULTIQC                                                   } from '../modules/nf-core/multiqc/main'
+include { CLIPPY as CLIPPY_GENOME                                   } from "../modules/nf-core/clippy/main"
+include { CLIPPY as CLIPPY_GENOME_CONSENSUS                         } from "../modules/nf-core/clippy/main"
 
-include { ICOUNTMINI_SIGXLS as CONSENSUS_ICOUNTMINI_SIGXLS                                } from "../modules/nf-core/icountmini/sigxls/main"
-include { ICOUNTMINI_PEAKS as CONSENSUS_ICOUNTMINI_PEAKS                                 } from "../modules/nf-core/icountmini/peaks/main"
-include { GUNZIP as CONSENSUS_GUNZIP_ICOUNTMINI_SIGXLS               } from "../modules/nf-core/gunzip/main"
-include { GUNZIP as CONSENSUS_GUNZIP_ICOUNTMINI_PEAKS                } from "../modules/nf-core/gunzip/main"
-include { PARACLU as PARACLU_GENOME                        } from "../modules/nf-core/paraclu/main"
-include { PARACLU as PARACLU_GENOME_CONSENSUS                        } from "../modules/nf-core/paraclu/main"
+include { ICOUNTMINI_SIGXLS                                         } from "../modules/nf-core/icountmini/sigxls/main"
+include { ICOUNTMINI_PEAKS                                          } from "../modules/nf-core/icountmini/peaks/main"
+include { GUNZIP as GUNZIP_ICOUNTMINI_SIGXLS                        } from "../modules/nf-core/gunzip/main"
+include { GUNZIP as GUNZIP_ICOUNTMINI_PEAKS                         } from "../modules/nf-core/gunzip/main"
 
-include { PURECLIP as PURECLIP_WITH_CONTROL                } from '../modules/nf-core/pureclip/main'
-include { PURECLIP as PURECLIP_NO_CONTROL                  } from '../modules/nf-core/pureclip/main'
-include { PEKA as PEKA_ICOUNT                              } from '../modules/nf-core/peka/main'
-include { PEKA as PEKA_CLIPPY                              } from '../modules/nf-core/peka/main'
-include { PEKA as PEKA_PARACLU                             } from '../modules/nf-core/peka/main'
-include { PEKA as PEKA_PURECLIP                            } from '../modules/nf-core/peka/main'
-include { ICOUNTMINI_SUMMARY                               } from '../modules/nf-core/icountmini/summary/main'
-include { ICOUNTMINI_METAGENE                              } from '../modules/nf-core/icountmini/metagene/main'
+include { ICOUNTMINI_SIGXLS as CONSENSUS_ICOUNTMINI_SIGXLS          } from "../modules/nf-core/icountmini/sigxls/main"
+include { ICOUNTMINI_PEAKS as CONSENSUS_ICOUNTMINI_PEAKS            } from "../modules/nf-core/icountmini/peaks/main"
+include { GUNZIP as CONSENSUS_GUNZIP_ICOUNTMINI_SIGXLS              } from "../modules/nf-core/gunzip/main"
+include { GUNZIP as CONSENSUS_GUNZIP_ICOUNTMINI_PEAKS               } from "../modules/nf-core/gunzip/main"
+include { PARACLU as PARACLU_GENOME                                 } from "../modules/nf-core/paraclu/main"
+include { PARACLU as PARACLU_GENOME_CONSENSUS                       } from "../modules/nf-core/paraclu/main"
+
+include { PURECLIP as PURECLIP_WITH_CONTROL                         } from '../modules/nf-core/pureclip/main'
+include { PURECLIP as PURECLIP_NO_CONTROL                           } from '../modules/nf-core/pureclip/main'
+include { PEKA as PEKA_ICOUNT                                       } from '../modules/nf-core/peka/main'
+include { PEKA as PEKA_CLIPPY                                       } from '../modules/nf-core/peka/main'
+include { PEKA as PEKA_PARACLU                                      } from '../modules/nf-core/peka/main'
+include { PEKA as PEKA_PURECLIP                                     } from '../modules/nf-core/peka/main'
+include { ICOUNTMINI_SUMMARY                                        } from '../modules/nf-core/icountmini/summary/main'
+include { ICOUNTMINI_METAGENE                                       } from '../modules/nf-core/icountmini/metagene/main'
 
 
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
 //
 
-include { FASTQ_FASTQC_UMITOOLS_TRIMGALORE } from '../subworkflows/nf-core/fastq_fastqc_umitools_trimgalore/main'
+include { FASTQ_FASTQC_UMITOOLS_TRIMGALORE                          } from '../subworkflows/nf-core/fastq_fastqc_umitools_trimgalore/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -304,14 +306,6 @@ workflow CLIPSEQ {
     //
     // SUBWORKFLOW: Align reads to ncrna and primary genomes
     //
-    ch_ncrna_bam       = Channel.empty()
-    ch_ncrna_bai       = Channel.empty()
-    ch_ncrna_log       = Channel.empty()
-    ch_genome_log      = Channel.empty()
-    ch_genome_bam      = Channel.empty()
-    ch_genome_bai      = Channel.empty()
-    ch_transcript_bam  = Channel.empty()
-    ch_transcript_bai  = Channel.empty()
     if(params.source == "fastq" & params.run_alignment) {
         RNA_ALIGN (
             ch_fastq,
@@ -321,23 +315,27 @@ workflow CLIPSEQ {
             ch_fasta,
             params.skip_transcriptome
         )
-        ch_versions         = ch_versions.mix(RNA_ALIGN.out.versions)
-        ch_ncrna_bam        = RNA_ALIGN.out.ncrna_bam
-        ch_ncrna_bai        = RNA_ALIGN.out.ncrna_bai
-        ch_ncrna_log        = RNA_ALIGN.out.ncrna_log
-        ch_genome_log       = RNA_ALIGN.out.genome_log_final
-        ch_genome_bam       = RNA_ALIGN.out.genome_bam
-        ch_genome_bai       = RNA_ALIGN.out.genome_bai
-        ch_transcript_bam   = RNA_ALIGN.out.transcript_bam
-        ch_transcript_bai   = RNA_ALIGN.out.transcript_bai
+        ch_versions                = ch_versions.mix(RNA_ALIGN.out.versions)
+        ch_ncrna_bam               = RNA_ALIGN.out.ncrna_bam
+        ch_ncrna_bai               = RNA_ALIGN.out.ncrna_bai
+        ch_ncrna_log               = RNA_ALIGN.out.ncrna_log
+        ch_ncrna_k1_bam            = RNA_ALIGN.out.ncrna_k1_bam
+        ch_ncrna_k1_bai            = RNA_ALIGN.out.ncrna_k1_bai
+        ch_genome_log              = RNA_ALIGN.out.genome_log_final
+        ch_genome_unique_bam       = RNA_ALIGN.out.genome_unique_bam
+        ch_genome_unique_bai       = RNA_ALIGN.out.genome_unique_bai
+        ch_genome_multi_bam        = RNA_ALIGN.out.genome_multi_bam
+        ch_genome_multi_bai        = RNA_ALIGN.out.genome_multi_bai
+        ch_transcript_unique_bam   = RNA_ALIGN.out.transcript_unique_bam
+        ch_transcript_unique_bai   = RNA_ALIGN.out.transcript_unique_bai
     }
     //ch_genome_bam | view
 
     ch_paraclu_mincluster = Channel.value(params.paraclu_minValue)
     if(!params.skip_transcriptome) {
         TRANSCRIPTOME_PROCESSING(
-            ch_transcript_bam,
-            ch_transcript_bai,
+            ch_transcript_unique_bam,
+            ch_transcript_unique_bai,
             ch_longest_transcript,
             ch_longest_transcript_gtf,
             ch_longest_transcript_fai,
@@ -352,147 +350,114 @@ workflow CLIPSEQ {
         ch_paraclu_transcriptome_peaks   = TRANSCRIPTOME_PROCESSING.out.paraclu_peaks
     }
 
-    ch_genome_umi_log = Channel.empty()
+    //ch_genome_umi_log = Channel.empty()
+  
+    // DEDUPLICATION //
     if(params.source == "fastq" & params.run_dedup) {
-        //
-        // CHANNEL: Combine bam and bai files on id
-        //
-        ch_genome_bam_bai = ch_genome_bam
+        // PREPARE CHANNELS
+        ch_genome_unique_bam_bai = ch_genome_unique_bam
             .map { row -> [row[0].id, row ].flatten()}
-            .join ( ch_genome_bai.map { row -> [row[0].id, row ].flatten()} )
+            .join ( ch_genome_unique_bai.map { row -> [row[0].id, row ].flatten()} )
             .map { row -> [row[1], row[2], row[4]] }
-        //
-        // SUBWORKFLOW: Run umi deduplication on genome-level alignments
-        //
-        GENOME_DEDUP (
-            ch_genome_bam_bai
+
+        ch_genome_multi_bam_bai = ch_genome_multi_bam
+            .map { row -> [row[0].id, row ].flatten()}
+            .join ( ch_genome_multi_bai.map { row -> [row[0].id, row ].flatten()} )
+            .map { row -> [row[1], row[2], row[4]] }
+
+        ch_ncrna_bam_bai = ch_ncrna_bam
+            .map { row -> [row[0].id, row ].flatten()}
+            .join ( ch_ncrna_bai.map { row -> [row[0].id, row ].flatten()} )
+            .map { row -> [row[1], row[2], row[4]] }
+
+        ch_ncrna_k1_bam_bai = ch_ncrna_k1_bam
+            .map { row -> [row[0].id, row ].flatten()}
+            .join ( ch_ncrna_k1_bai.map { row -> [row[0].id, row ].flatten()} )
+            .map { row -> [row[1], row[2], row[4]] }
+
+        /*
+        * SUBWORKFLOW: Run umi deduplication on alignments
+        */
+        GENOME_UNIQUE_DEDUP (
+            ch_genome_unique_bam_bai
         )
-        ch_versions        = ch_versions.mix(GENOME_DEDUP.out.versions)
-        ch_genome_bam      = GENOME_DEDUP.out.bam
-        ch_genome_bai      = GENOME_DEDUP.out.bai
-        ch_genome_umi_log  = GENOME_DEDUP.out.umi_log
+        ch_versions   = ch_versions.mix(GENOME_UNIQUE_DEDUP.out.versions)
+        ch_genome_unique_dedupe_bam = GENOME_UNIQUE_DEDUP.out.bam
+        ch_genome_unique_dedupe_bai = GENOME_UNIQUE_DEDUP.out.bai
+        //ch_umi_log    = GENOME_UNIQUE_DEDUP.out.umi_log
+
+        GENOME_MULTI_DEDUP (
+            ch_genome_multi_bam_bai
+        )
+        ch_versions   = ch_versions.mix(GENOME_MULTI_DEDUP.out.versions)
+
+        NCRNA_DEDUP (
+            ch_ncrna_bam_bai
+        )
+        ch_versions   = ch_versions.mix(NCRNA_DEDUP.out.versions)
+
+        NCRNA_K1_DEDUP (
+            ch_ncrna_k1_bam_bai
+        )
+        ch_versions     = ch_versions.mix(NCRNA_K1_DEDUP.out.versions)
+        ch_ncrna_k1_bam = NCRNA_K1_DEDUP.out.bam
+        ch_ncrna_k1_bai = NCRNA_K1_DEDUP.out.bai
+        //ch_umi_log      = NCRNA_K1_DEDUP.out.umi_log
     }
 
-
     //
-    // GROUPING: At this point, if groups have been specified, then we need to merge corresponding BAM files
+    // RESOLVE GROUPS AND GET CROSSLINKS: At this point, if groups have been specified, then we need to merge corresponding BAM files
     //
     // ch_genome_bam.view { item -> println("Pre-branch: $item") }
-
-    ch_genome_bam.branch {
-        hasGroup: it[0].group  // Branch condition for samples with a group
-        noGroup: it[0].group == ''  // Branch condition for samples without a group
-    }.set { ch_bam_branches }  // Capture branching result into ch_branches
-
-    ch_genome_bai.branch {
-        hasGroup: it[0].group  // Branch condition for samples with a group
-        noGroup: it[0].group == ''  // Branch condition for samples without a group
-    }.set { ch_bai_branches }  // Capture branching result into ch_branches
-
-    // After branching
-    // ch_branches.hasGroup.view { item -> "Has group: $item" }
-    // ch_branches.noGroup.view { item -> "No group: $item" }
-
-    ch_bam_branches.hasGroup
-        .map { item ->
-            def meta = item[0]
-            def bam = item[1]
-            return [meta.group, meta, bam]
-        }
-        .groupTuple(by: 0)
-        .map { tuple ->
-            def group = tuple[0]
-            def items = tuple[1]
-            def bam = tuple[2]
-
-            def newMeta = [:]
-            newMeta.id = group
-            newMeta.group = group
-            newMeta.control = items[0].control
-            newMeta.single_end = true
-
-            return [newMeta, bam]
-        }
-        //.view { "Grouped and remapped: $it" }
-        .set { ch_grouped_genome_bam }
-
-    SAMTOOLS_MERGE_GENOME (
-        ch_grouped_genome_bam,
-        ch_fasta,
-        ch_fasta_fai
-    )
-    ch_versions = ch_versions.mix(SAMTOOLS_MERGE_GENOME.out.versions)
-    ch_grouped_genome_bam = SAMTOOLS_MERGE_GENOME.out.bam
-
-    //ch_grouped_genome_bam.view { item -> "Grouped genome BAM: $item" }
-
-    // merge with the noGroup branch
-    ch_grouped_genome_bam.concat(ch_bam_branches.noGroup).set { ch_genome_peakcalling_bam }
-    //ch_genome_peakcalling_bam.view { item -> "Grouped genome BAM and non-grouped BAMs: $item" }
-
-    SAMTOOLS_GENOME_GROUP_INDEX (
-        ch_genome_peakcalling_bam
-    )
-    ch_versions = ch_versions.mix(SAMTOOLS_GENOME_GROUP_INDEX.out.versions)
-    ch_genome_peakcalling_bai = SAMTOOLS_GENOME_GROUP_INDEX.out.bai
-
-
-
-    //ch_genome_peakcalling_bai.view { item -> "Grouped genome BAI and non-grouped BAIs: $item" }
-
-    ch_genome_crosslink_bed           = Channel.empty()
-    ch_genome_crosslink_coverage      = Channel.empty()
-    ch_genome_crosslink_coverage_norm = Channel.empty()
     if(params.run_crosslinking) {
-        //
-        // SUBWORKFLOW: Run crosslink calculation for samples without a group
-        //
-        CALC_GENOME_CROSSLINKS_INDIVIDUAL (
-            ch_bam_branches.noGroup.join(ch_bai_branches.noGroup),
+        GENOME_RESOLVE_GROUPS_AND_CROSSLINKS(
+            ch_genome_unique_dedupe_bam ,
+            ch_genome_unique_dedupe_bai ,
+            ch_fasta,
             ch_fasta_fai
         )
-        ch_versions                        = ch_versions.mix(CALC_GENOME_CROSSLINKS_INDIVIDUAL.out.versions)
-        ch_genome_crosslink_INDIVIDUAL_bed = CALC_GENOME_CROSSLINKS_INDIVIDUAL.out.bed
+        ch_versions                                  = ch_versions.mix(GENOME_RESOLVE_GROUPS_AND_CROSSLINKS.out.versions)
+        ch_genome_crosslink_group_resolved_bed       = GENOME_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_group_resolved
+        ch_genome_crosslink_INDIVIDUAL_bed           = GENOME_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_INDIVIDUAL
+        ch_genome_crosslink_INDIVIDUAL_HASGROUP_bed  = GENOME_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_INDIVIDUAL_HASGROUP
+        ch_genome_crosslink_GROUP_HASGROUP_bed       = GENOME_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_GROUP_HASGROUP
+        ch_genome_peakcalling_bam                    = GENOME_RESOLVE_GROUPS_AND_CROSSLINKS.out.genome_peakcalling_bam
+        ch_genome_peakcalling_bai                    = GENOME_RESOLVE_GROUPS_AND_CROSSLINKS.out.genome_peakcalling_bai
 
-        //
-        // SUBWORKFLOW: Run crosslink calculation for samples WITH A GROUP indidivually, these won't be processed further
-        //
-        CALC_GENOME_CROSSLINKS_INDIVIDUAL_HASGROUP (
-            ch_bam_branches.hasGroup.join(ch_bai_branches.hasGroup),
-            ch_fasta_fai
+        NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS(
+            ch_ncrna_k1_bam,
+            ch_ncrna_k1_bai,
+            ch_ncrna_fasta,
+            ch_ncrna_fasta_fai
         )
-        ch_versions = ch_versions.mix(CALC_GENOME_CROSSLINKS_INDIVIDUAL_HASGROUP.out.versions)
-
-        //
-        // SUBWORKFLOW: Run crosslink calculation for samples WITH A GROUP AS A GROUP
-        //
-        
-        CALC_GENOME_CROSSLINKS_GROUP_HASGROUP (
-            ch_grouped_genome_bam.join(ch_genome_peakcalling_bai),
-            ch_fasta_fai
-        )
-        ch_versions                            = ch_versions.mix(CALC_GENOME_CROSSLINKS_GROUP_HASGROUP.out.versions)
-        ch_genome_crosslink_GROUP_HASGROUP_bed = CALC_GENOME_CROSSLINKS_GROUP_HASGROUP.out.bed
-
-        //
-        // Combine crosslinking results for moving forwards
-        //
-        ch_genome_crosslink_bed = ch_genome_crosslink_INDIVIDUAL_bed.mix(ch_genome_crosslink_GROUP_HASGROUP_bed)
+        ch_versions                                    = ch_versions.mix(NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.versions)
+        ch_ncrna_k1_crosslink_group_resolved_bed       = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_group_resolved
+        ch_ncrna_k1_crosslink_INDIVIDUAL_bed           = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_INDIVIDUAL
+        ch_ncrna_k1_crosslink_INDIVIDUAL_HASGROUP_bed  = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_INDIVIDUAL_HASGROUP
+        ch_ncrna_k1_crosslink_GROUP_HASGROUP_bed       = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_GROUP_HASGROUP
 
         ICOUNTMINI_SUMMARY (
-            ch_genome_crosslink_bed,
+            ch_genome_crosslink_group_resolved_bed,
             ch_regions_resolved_gtf.collect{ it[1] }
         )
 
+        MERGE_SUMMARY (
+            ICOUNTMINI_SUMMARY.out.summary_type,
+            ICOUNTMINI_SUMMARY.out.summary_subtype,
+            ICOUNTMINI_SUMMARY.out.summary_gene,
+            ch_ncrna_k1_crosslink_group_resolved_bed
+        )
+        ch_versions = ch_versions.mix(MERGE_SUMMARY.out.versions)
+
         ICOUNTMINI_METAGENE (
-            ch_genome_crosslink_bed,
+            ch_genome_crosslink_group_resolved_bed,
             ch_regions_resolved_gtf.collect{ it[1] }
         )
 
         if(params.consensus_peak){
             // Merge all xls into one file
             // want to use indivdual crosslinking files
-            ch_all_crosslinks = CALC_GENOME_CROSSLINKS_INDIVIDUAL_HASGROUP.out.bed.mix(CALC_GENOME_CROSSLINKS_INDIVIDUAL.out.bed)
+            ch_all_crosslinks = ch_genome_crosslink_INDIVIDUAL_HASGROUP_bed.mix(ch_genome_crosslink_INDIVIDUAL_bed)
 
             ch_all_crosslinks
                 .collect { it[1] }
@@ -540,7 +505,7 @@ workflow CLIPSEQ {
         if('clippy' in callers) {
 
             CLIPPY_GENOME (
-                ch_genome_crosslink_bed,
+                ch_genome_crosslink_group_resolved_bed,
                 ch_filtered_gtf.collect{ it[1] },
                 ch_fasta_fai.collect{ it[1] }
             )
@@ -567,7 +532,7 @@ workflow CLIPSEQ {
             if(params.run_peka) {
                 PEKA_CLIPPY (
                     ch_clippy_genome_peaks,
-                    ch_genome_crosslink_bed,
+                    ch_genome_crosslink_group_resolved_bed,
                     ch_fasta.collect{ it[1] },
                     ch_fasta_fai.collect{ it[1] },
                     ch_regions_resolved_gtf.collect{ it[1] }
@@ -580,7 +545,7 @@ workflow CLIPSEQ {
         if('icount' in callers) {
 
             ICOUNTMINI_SIGXLS (
-                ch_genome_crosslink_bed,
+                ch_genome_crosslink_group_resolved_bed,
                 ch_seg_resolved_gtf.collect{ it[1]}
                 
             )
@@ -589,7 +554,7 @@ workflow CLIPSEQ {
             ch_icountmini_sigxls_gz          = ICOUNTMINI_SIGXLS.out.sigxls
 
             // CHANNEL: Create combined channel of input crosslinks and sigxls
-            ch_peaks_input = ch_genome_crosslink_bed
+            ch_peaks_input = ch_genome_crosslink_group_resolved_bed
                 .map{ [ it[0].id, it[0], it[1] ] }
                 .join( ICOUNTMINI_SIGXLS.out.sigxls.map{ [ it[0].id, it[0], it[1] ] } )
                 .map { [ it[1], it[2], it[4] ] }
@@ -603,18 +568,14 @@ workflow CLIPSEQ {
             ch_icountmini_peaks_gz           = ICOUNTMINI_PEAKS.out.peaks
 
             GUNZIP_ICOUNTMINI_SIGXLS (
-
                 ch_icountmini_sigxls_gz
-
             )
 
             ch_versions                      = ch_versions.mix(GUNZIP_ICOUNTMINI_SIGXLS.out.versions)
             ch_icountmini_sigxls             = GUNZIP_ICOUNTMINI_SIGXLS.out.gunzip
 
             GUNZIP_ICOUNTMINI_PEAKS (
-
                 ch_icountmini_peaks_gz
-
             )
 
             ch_versions                      = ch_versions.mix(GUNZIP_ICOUNTMINI_PEAKS.out.versions)
@@ -654,7 +615,7 @@ workflow CLIPSEQ {
             if(params.run_peka) {
                 PEKA_ICOUNT (
                     ch_icountmini_peaks,
-                    ch_genome_crosslink_bed,
+                    ch_genome_crosslink_group_resolved_bed,
                     ch_fasta.collect{ it[1] },
                     ch_fasta_fai.collect{ it[1] },
                     ch_regions_resolved_gtf.collect{ it[1] }
@@ -669,7 +630,7 @@ workflow CLIPSEQ {
         if('paraclu' in callers) {
 
             PARACLU_GENOME (
-                ch_genome_crosslink_bed,
+                ch_genome_crosslink_group_resolved_bed,
                 ch_paraclu_mincluster
             )
 
@@ -695,7 +656,7 @@ workflow CLIPSEQ {
             if(params.run_peka) {
                 PEKA_PARACLU (
                     ch_paraclu_genome_peaks,
-                    ch_genome_crosslink_bed,
+                    ch_genome_crosslink_group_resolved_bed,
                     ch_fasta.collect{ it[1] },
                     ch_fasta_fai.collect{ it[1] },
                     ch_regions_resolved_gtf.collect{ it[1] }
@@ -778,7 +739,7 @@ workflow CLIPSEQ {
             if(params.run_peka) {
                 // Need to make sure crosslinks and peaks are matched up correctly
                 // After all the mixing
-                ch_pureclip_genome_peaks.join(ch_genome_crosslink_bed, by: 0)
+                ch_pureclip_genome_peaks.join(ch_genome_crosslink_group_resolved_bed, by: 0)
                     .set{ temp_matched_channel }
                 
                 temp_matched_channel
