@@ -64,9 +64,9 @@ PHO92_C,PHO92,HNRNPC,https://github.com/luslab/test-datasets/raw/clipseq/v_2_0/f
 HNRNPC,,,https://github.com/luslab/test-datasets/raw/clipseq/v_2_0/fastq/ERR3988069-yeast-quarter.fastq.gz
 ```
 
-Each row represents a fastq file (single-end). If multiple rows have the same sample_name, group_name and input_name then their fastqs will be concatenated at the beginning of the pipeline (eg. in the case of a sample that was resequenced and so has multiple fastq files). If multiple rows have different sample_names but the same group_name and input_name, then the crosslinks for these samples will be merged and peaks and downstream analyses will be run on the grouped crosslinks.
+Each row represents a fastq file (single-end). If multiple rows have the same `sample_name`, `group_name` and `input_name` then their fastqs will be concatenated at the beginning of the pipeline (eg. in the case of a sample that was resequenced and so has multiple fastq files). If multiple rows have different `sample_name`s but the same `group_name` and `input_name`, then the crosslinks for these samples will be merged and peaks and downstream analyses will be run on the grouped crosslinks.
 
-The input_name is used for providing input data, currently the only peak caller we support that can use input data is PureCLIP. The input_name can be a sample_name or a group_name. 
+The `input_name` is used for providing input data, currently the only peak caller we support that can use input data is PureCLIP. The `input_name` must match either a `sample_name` or a `group_name`. 
 
 
 
