@@ -26,23 +26,22 @@
 
 By default, the pipeline currently performs the following:
 
-1. Adapter and quality trimming ([`Cutadapt`]())
-2. Pre-mapping to e.g. rRNA and tRNA sequences (`Bowtie 2`)
+1. Adapter and quality trimming (`TrimGalore!`)
+2. Pre-mapping to e.g. rRNA and tRNA sequences (`Bowtie`)
 3. Genome mapping (`STAR`)
 4. UMI-based deduplication (`UMI-tools`)
 5. Crosslink identification (`BEDTools`)
 6. Bedgraph coverage track generation (`BEDTools`)
-7. Peak calling (multiple options):
+7. Crosslink summaries over RNA types (`iCount Summary`)
+8. Crosslink metagene profiles (`iCount Metagene`)
+9. Peak calling (multiple options):
     - `iCount`
     - `Paraclu`
     - `PureCLIP`
-    - `Piranha`
-8. Motif detection (`DREME`)
-9. Quality control:
-    - Sequencing quality control (`FastQC`)
-    - Library complexity (`Preseq`)
-    - Regional distribution (`RSeQC`)
-10. Overall pipeline run and QC summaries and peak calling comparisons (`MultiQC`)
+    - `Clippy`
+10. Consensus peak output, ie. grouping all crosslinks, calling peaks and reporting a table with individual sample counts over consensus peaks. Useful as an input for differential binding analyses.
+10. Motif detection (`PEKA`)
+11. Overall pipeline run and QC summaries and peak calling comparisons (`MultiQC`)
 
 ## Usage
 
@@ -51,30 +50,31 @@ By default, the pipeline currently performs the following:
 > to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline)
 > with `-profile test` before running the workflow on actual data.
 
-<!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
-     Explain what rows and columns represent. For instance (please edit as appropriate):
+
 
 First, prepare a samplesheet with your input data that looks as follows:
 
 `samplesheet.csv`:
 
 ```csv
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+sample_name,group_name,input_name,fastq
+PHO92_A,PHO92,HNRNPC,https://github.com/luslab/test-datasets/raw/clipseq/v_2_0/fastq/ERR3988069-yeast-quarter.fastq.gz
+PHO92_B,PHO92,HNRNPC,https://github.com/luslab/test-datasets/raw/clipseq/v_2_0/fastq/ERR3988069-yeast-quarter.fastq.gz
+PHO92_C,PHO92,HNRNPC,https://github.com/luslab/test-datasets/raw/clipseq/v_2_0/fastq/ERR3988069-yeast-quarter.fastq.gz
+HNRNPC,,,https://github.com/luslab/test-datasets/raw/clipseq/v_2_0/fastq/ERR3988069-yeast-quarter.fastq.gz
 ```
 
-Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
+Each row represents a fastq file (single-end). If multiple rows have the same sample_name, group_name and input_name then their fastqs will be concatenated at the beginning of the pipeline (eg. in the case of a sample that was resequenced and so has multiple fastq files). If multiple rows have different sample_names but the same group_name and input_name, then the crosslinks for these samples will be merged and peaks and downstream analyses will be run on the grouped crosslinks.
 
--->
+The input_name is used for providing input data, currently the only peak caller we support that can use input data is PureCLIP. The input_name can be a sample_name or a group_name. 
+
+
 
 Now, you can run the pipeline using:
-
-<!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
 
 ```bash
 nextflow run nf-core/clipseq \
    -profile test, <docker/singularity/.../institute> \
-   --input samplesheet.csv \
    --outdir <OUTDIR>
 ```
 
@@ -90,6 +90,10 @@ For more details, please refer to the [usage documentation](https://nf-co.re/cli
 To see the the results of a test run with a full size dataset refer to the [results](https://nf-co.re/clipseq/results) tab on the nf-core website pipeline page.
 For more details about the output files and reports, please refer to the
 [output documentation](https://nf-co.re/clipseq/output).
+
+## A note on paired-end reads
+
+The pipeline currently does not support paired-end reads, as in our experience alignment using both reads when available doesn't improve analysis of CLIP data. When recieving CLIP data sequenced paired-end, we recommend running the pipeline with the read containing the crosslink and ensuring the crosslink_position parameter is set appropriately. If you have evidence to the contrary please do get in touch and let us know, or if you are working on a new variant protocol where paired-end alignment is important please do reach out. 
 
 ## Credits
 
