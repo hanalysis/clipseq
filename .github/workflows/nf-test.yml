@@ -64,10 +64,11 @@ jobs:
           - "only_peakcalling_icount"
           - "only_peakcalling_paraclu"
           - "only_peakcalling_paraclu_clippy"
-        include:
-          - test: test_full_small
-            profile: docker
-            tag: "full_small_only_input_primary"
+        # do not include outdated samplesheets
+        #include:
+        #  - test: test_full_small
+        #    profile: docker
+        #    tag: "full_small_only_input_primary"
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v3
