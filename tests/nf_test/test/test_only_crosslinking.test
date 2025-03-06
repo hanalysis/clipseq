@@ -19,9 +19,9 @@ nextflow_pipeline {
             assert new File("$outputDir/04_crosslinks/PHO92_A.genome.xl.bedgraph").exists()
             assert new File("$outputDir/04_crosslinks/PHO92_A.genome.xl.CPMnorm.bedgraph").exists()
 
-            assert new File("$outputDir/04_crosslinks/grouped_crosslinks/PHO92.genome.xl.bed").exists()
-            assert new File("$outputDir/04_crosslinks/rouped_crosslinks/PHO92.genome.xl.bedgraph").exists()
-            assert new File("$outputDir/04_crosslinks/rouped_crosslinks/PHO92.genome.xl.CPMnorm.bedgraph").exists()
+            assert new File("$outputDir/04_crosslinks/grouped_crosslinks/PHO92_grouped.genome.xl.bed").exists()
+            assert new File("$outputDir/04_crosslinks/rouped_crosslinks/PHO92_grouped.genome.xl.bedgraph").exists()
+            assert new File("$outputDir/04_crosslinks/rouped_crosslinks/PHO92_grouped.genome.xl.CPMnorm.bedgraph").exists()
 
             assert new File("$outputDir/04_crosslinks/icountmini_summaries/PHO92.summary_gene_premapadjusted.tsv").exists()
             assert new File("$outputDir/04_crosslinks/icountmini_summaries/PHO92.summary_subtype_premapadjusted.tsv").exists()
