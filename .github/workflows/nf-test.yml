@@ -56,8 +56,6 @@ jobs:
           - "only_preprocessing_skip_trimming"
           - "only_alignment_primary"
           - "only_alignment_false_outputs"
-          - "only_filtering_primary"
-          - "only_filtering_false_outputs"
           - "only_dedup_primary"
           - "only_crosslinking_primary"
           - "only_peakcalling_primary"
