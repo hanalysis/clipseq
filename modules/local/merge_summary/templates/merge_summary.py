@@ -15,31 +15,34 @@ def dump_versions(process_name):
         out_f.write("    python: " + platform.python_version() + "\n")
         out_f.write("    pandas: " + pd.__version__ + "\n")
 
+
 def extract_cdna_from_bed(file_path):
     # Read the file into a DataFrame
-    df = pd.read_csv(file_path, sep='\t', header=None)
+    df = pd.read_csv(file_path, sep="\t", header=None)
     # Sum the values in the 5th column (index 4)
     total_sum = df[4].sum()
     return total_sum
 
+
 def adjust_summary_file(file_path, number_cdnas_premapped):
     # Read the file into a DataFrame
-    df = pd.read_csv(file_path, sep='\t', header=0)
+    df = pd.read_csv(file_path, sep="\t", header=0)
     # Add the new values
     new_row = ["premapped RNA", "NA", number_cdnas_premapped, 0]
     # Append the new row using loc indexer
     df.loc[len(df)] = new_row
     # Correct the percentages
     # Calculate the total cDNA #
-    total_cDNA = df['cDNA #'].sum()
+    total_cDNA = df["cDNA #"].sum()
     # Update the cDNA % column
-    df['cDNA %'] = (df['cDNA #'] / total_cDNA) * 100
+    df["cDNA %"] = (df["cDNA #"] / total_cDNA) * 100
     # Create the output file name
     base_name, extension = os.path.splitext(os.path.basename(file_path))
     output_file = base_name + "_premapadjusted" + extension
     print(f"Saving to: {output_file}")  # Debugging
     # Write the updated DataFrame to the new file
-    df.to_csv(output_file, sep='\t', index=False)
+    df.to_csv(output_file, sep="\t", index=False)
+
 
 def main(processname, subtype, type, gene, cdna):
     # Dump version file
@@ -52,6 +55,7 @@ def main(processname, subtype, type, gene, cdna):
     adjust_summary_file(type, number_cdnas_premapped)
     adjust_summary_file(subtype, number_cdnas_premapped)
     adjust_summary_file(gene, number_cdnas_premapped)
+
 
 if __name__ == "__main__":
     # Allows switching between nextflow templating and standalone python running using arguments
