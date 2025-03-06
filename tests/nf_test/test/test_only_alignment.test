@@ -16,15 +16,15 @@ nextflow_pipeline {
             assert workflow.success
 
             // NCRNA
-            assert new File("$outputDir/02_alignment/ncrna/PHO92_A.sorted.bam").exists()
-            assert new File("$outputDir/02_alignment/ncrna/PHO92_A.sorted.bam.bai").exists()
-            assert new File("$outputDir/02_alignment/ncrna/samtools_stats/PHO92_A.flagstat").exists()
-            assert new File("$outputDir/02_alignment/ncrna/unmapped/PHO92_A.unmapped.fastq.gz").exists()
+            assert new File("$outputDir/02_alignment/ncrna/PHO92_A_ncrna.sorted.bam").exists()
+            assert new File("$outputDir/02_alignment/ncrna/PHO92_A_ncrna.sorted.bam.bai").exists()
+            assert new File("$outputDir/02_alignment/ncrna/unmapped/PHO92_A_ncrna.unmapped.fastq.gz").exists()
 
             // GENOME
-            assert new File("$outputDir/02_alignment/genome/PHO92_A.Aligned.sortedByCoord.out.bam").exists()
-            assert new File("$outputDir/02_alignment/genome/PHO92_A.Aligned.sortedByCoord.out.bam.bai").exists()
-            assert new File("$outputDir/02_alignment/genome/samtools_stats/PHO92_A.flagstat").exists()
+            assert new File("$outputDir/02_alignment/genome/PHO92_A_multiMapped.Aligned.sortedByCoord.out.bam").exists()
+            assert new File("$outputDir/02_alignment/genome/PHO92_A_multiMapped.Aligned.sortedByCoord.out.bam.bai").exists()
+            assert new File("$outputDir/02_alignment/genome/PHO92_A_uniqueMapped.bam").exists()
+            assert new File("$outputDir/02_alignment/genome/PHO92_A_uniqueMapped.bam.bai").exists()
         }
     }
 
@@ -43,15 +43,15 @@ nextflow_pipeline {
             assert workflow.success
 
             // NCRNA
-            assert !(new File("$outputDir/02_alignment/ncrna/PHO92_A.sorted.bam").exists())
-            assert !(new File("$outputDir/02_alignment/ncrna/PHO92_A.sorted.bam.bai").exists())
-            assert new File("$outputDir/02_alignment/ncrna/samtools_stats/PHO92_A.flagstat").exists()
-            assert !(new File("$outputDir/02_alignment/ncrna/unmapped/PHO92_A.unmapped.fastq.gz").exists())
+            assert !(new File("$outputDir/02_alignment/ncrna/PHO92_A_ncrna.sorted.bam").exists())
+            assert !(new File("$outputDir/02_alignment/ncrna/PHO92_A_ncrna.sorted.bam.bai").exists())
+            assert !(new File("$outputDir/02_alignment/ncrna/unmapped/PHO92_A_ncrna.unmapped.fastq.gz").exists())
 
             // GENOME
-            assert !(new File("$outputDir/02_alignment/genome/PHO92_A.Aligned.sortedByCoord.out.bam").exists())
-            assert !(new File("$outputDir/02_alignment/genome/PHO92_A.Aligned.sortedByCoord.out.bam.bai").exists())
-            assert new File("$outputDir/02_alignment/genome/samtools_stats/PHO92_A.flagstat").exists()
+            assert !(new File("$outputDir/02_alignment/genome/PHO92_A_multiMapped.Aligned.sortedByCoord.out.bam").exists())
+            assert !(new File("$outputDir/02_alignment/genome/PHO92_A_multiMapped.Aligned.sortedByCoord.out.bam.bai").exists())
+            assert !(new File("$outputDir/02_alignment/genome/PHO92_A_uniqueMapped.bam").exists())
+            assert !(new File("$outputDir/02_alignment/genome/PHO92_A_uniqueMapped.bam.bai").exists())
         }
     }
 }
