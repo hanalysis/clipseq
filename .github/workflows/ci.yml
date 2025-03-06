@@ -41,7 +41,7 @@ jobs:
         if: matrix.profile == 'singularity'
         uses: eWaterCycle/setup-singularity@v7
         with:
-          singularity-version: 3.11.4
+          singularity-version: 4.0.1
 
       - name: Set up Singularity cache
         if: matrix.profile == 'singularity'
@@ -52,7 +52,7 @@ jobs:
       - name: Run pipeline with test data
         run: |
           if [[ ${{ matrix.profile }} == 'singularity' ]]; then
-            nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.profile }},${{ matrix.test }} --outdir ./results -with-singularity --no-home
+            nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.profile }},${{ matrix.test }} --outdir ./results -with-singularity --singularity-oci
           else
             nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.profile }},${{ matrix.test }} --outdir ./results
           fi
