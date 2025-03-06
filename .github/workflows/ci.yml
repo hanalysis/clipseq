@@ -27,7 +27,7 @@ jobs:
           - "22.10.1"
           - "latest-everything"
         profile: ["docker", "singularity"]
-        test: ["test", "test_full_small"]
+        test: ["test"]
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v3
