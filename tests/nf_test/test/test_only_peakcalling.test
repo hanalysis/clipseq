@@ -16,19 +16,19 @@ nextflow_pipeline {
             assert workflow.success
 
             // clippy
-            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
-            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
-            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
-            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/PHO92_A.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/PHO92_A.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/PHO92_A.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/PHO92_A.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
             // icount
-            assert new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.sigxls.bed").exists()
-            assert new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.peaks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/icountmini/PHO92_A.sigxls.bed").exists()
+            assert new File("$outputDir/05_peakcalling/icountmini/PHO92_A.peaks.bed").exists()
             // paraclu
-            assert new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.genome.peaks.clustered.simplified.bed").exists()
-            assert new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.transcriptome.peaks.clustered.simplified.bed").exists()
+            assert new File("$outputDir/05_peakcalling/paraclu/PHO92_A.genome.peaks.clustered.simplified.bed").exists()
+            assert new File("$outputDir/05_peakcalling/paraclu/PHO92_A.transcriptome.peaks.clustered.simplified.bed").exists()
             // pureclip
-            assert new File("$outputDir/05_peakcalling/pureclip/sample_1_R1_pureclip_crosslinks.bed").exists()
-            assert new File("$outputDir/05_peakcalling/pureclip/sample_1_R1_pureclip_peaks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/pureclip/PHO92_A_pureclip_crosslinks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/pureclip/PHO92_A_pureclip_peaks.bed").exists()
         }
     }
 
@@ -66,19 +66,19 @@ nextflow_pipeline {
             assert workflow.success
 
             // clippy
-            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
-            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
-            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
-            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/PHO92_A.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/PHO92_A.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/PHO92_A.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/PHO92_A.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
             // icount
-            assert !(new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.sigxls.bed").exists())
-            assert !(new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.peaks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/icountmini/PHO92_A.sigxls.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/icountmini/PHO92_A.peaks.bed").exists())
             // paraclu
-            assert !(new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.genome.peaks.clustered.simplified.bed").exists())
-            assert !(new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.transcriptome.peaks.clustered.simplified.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/paraclu/PHO92_A.genome.peaks.clustered.simplified.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/paraclu/PHO92_A.transcriptome.peaks.clustered.simplified.bed").exists())
             // pureclip
-            assert !(new File("$outputDir/05_peakcalling/pureclip/sample_1_R1_pureclip_crosslinks.bed").exists())
-            assert !(new File("$outputDir/05_peakcalling/pureclip/sample_1_R1_pureclip_peaks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/pureclip/PHO92_A_pureclip_crosslinks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/pureclip/PHO92_A_pureclip_peaks.bed").exists())
         }
     }
 
@@ -97,19 +97,19 @@ nextflow_pipeline {
             assert workflow.success
 
             // clippy
-            assert !(new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
-            assert !(new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
-            assert !(new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
-            assert !(new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/clippy/PHO92_A.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/clippy/PHO92_A.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/clippy/PHO92_A.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/clippy/PHO92_A.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
             // icount
-            assert new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.sigxls.bed").exists()
-            assert new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.peaks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/icountmini/PHO92_A.sigxls.bed").exists()
+            assert new File("$outputDir/05_peakcalling/icountmini/PHO92_A.peaks.bed").exists()
             // paraclu
-            assert !(new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.genome.peaks.clustered.simplified.bed").exists())
-            assert !(new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.transcriptome.peaks.clustered.simplified.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/paraclu/PHO92_A.genome.peaks.clustered.simplified.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/paraclu/PHO92_A.transcriptome.peaks.clustered.simplified.bed").exists())
             // pureclip
-            assert !(new File("$outputDir/05_peakcalling/pureclip/sample_1_R1_pureclip_crosslinks.bed").exists())
-            assert !(new File("$outputDir/05_peakcalling/pureclip/sample_1_R1_pureclip_peaks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/pureclip/PHO92_A_pureclip_crosslinks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/pureclip/PHO92_A_pureclip_peaks.bed").exists())
         }
     }
 
@@ -128,19 +128,19 @@ nextflow_pipeline {
             assert workflow.success
 
             // clippy
-            assert !(new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
-            assert !(new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
-            assert !(new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
-            assert !(new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/clippy/PHO92_A.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/clippy/PHO92_A.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/clippy/PHO92_A.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/clippy/PHO92_A.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists())
             // icount
-            assert !(new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.sigxls.bed").exists())
-            assert !(new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.peaks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/icountmini/PHO92_A.sigxls.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/icountmini/PHO92_A.peaks.bed").exists())
             // paraclu
-            assert new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.genome.peaks.clustered.simplified.bed").exists()
-            assert new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.transcriptome.peaks.clustered.simplified.bed").exists()
+            assert new File("$outputDir/05_peakcalling/paraclu/PHO92_A.genome.peaks.clustered.simplified.bed").exists()
+            assert new File("$outputDir/05_peakcalling/paraclu/PHO92_A.transcriptome.peaks.clustered.simplified.bed").exists()
             // pureclip
-            assert !(new File("$outputDir/05_peakcalling/pureclip/sample_1_R1_pureclip_crosslinks.bed").exists())
-            assert !(new File("$outputDir/05_peakcalling/pureclip/sample_1_R1_pureclip_peaks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/pureclip/PHO92_A_pureclip_crosslinks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/pureclip/PHO92_A_pureclip_peaks.bed").exists())
         }
     }
 
@@ -159,19 +159,19 @@ nextflow_pipeline {
             assert workflow.success
 
             // clippy
-            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
-            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
-            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
-            assert new File("$outputDir/05_peakcalling/clippy/sample_1_R1.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/PHO92_A.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/PHO92_A.genome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/PHO92_A.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Peaks.bed").exists()
+            assert new File("$outputDir/05_peakcalling/clippy/PHO92_A.transcriptome.peaks_rollmean10_minHeightAdjust1.0_minPromAdjust1.0_minGeneCount5_Summits.bed").exists()
             // icount
-            assert !(new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.sigxls.bed").exists())
-            assert !(new File("$outputDir/05_peakcalling/icountmini/sample_1_R1.peaks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/icountmini/PHO92_A.sigxls.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/icountmini/PHO92_A.peaks.bed").exists())
             // paraclu
-            assert new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.genome.peaks.clustered.simplified.bed").exists()
-            assert new File("$outputDir/05_peakcalling/paraclu/sample_1_R1.transcriptome.peaks.clustered.simplified.bed").exists()
+            assert new File("$outputDir/05_peakcalling/paraclu/PHO92_A.genome.peaks.clustered.simplified.bed").exists()
+            assert new File("$outputDir/05_peakcalling/paraclu/PHO92_A.transcriptome.peaks.clustered.simplified.bed").exists()
             // pureclip
-            assert !(new File("$outputDir/05_peakcalling/pureclip/sample_1_R1_pureclip_crosslinks.bed").exists())
-            assert !(new File("$outputDir/05_peakcalling/pureclip/sample_1_R1_pureclip_peaks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/pureclip/PHO92_A_pureclip_crosslinks.bed").exists())
+            assert !(new File("$outputDir/05_peakcalling/pureclip/PHO92_A_pureclip_peaks.bed").exists())
         }
     }
 }

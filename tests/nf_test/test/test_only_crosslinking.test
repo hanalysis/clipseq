@@ -15,17 +15,17 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert new File("$outputDir/04_crosslinks/sample_1_R1.genome.cmd.bed").exists()
-            assert new File("$outputDir/04_crosslinks/sample_1_R1.genome.cmd.bedgraph").exists()
-            assert new File("$outputDir/04_crosslinks/sample_1_R1.norm.genome.cmd.bedgraph").exists()
+            assert new File("$outputDir/04_crosslinks/PHO92_A.genome.cmd.bed").exists()
+            assert new File("$outputDir/04_crosslinks/PHO92_A.genome.cmd.bedgraph").exists()
+            assert new File("$outputDir/04_crosslinks/PHO92_A.norm.genome.cmd.bedgraph").exists()
 
-            assert new File("$outputDir/04_crosslinks/sample_1_R1.transcript.cmd.bed").exists()
-            assert new File("$outputDir/04_crosslinks/sample_1_R1.transcript.cmd.bedgraph").exists()
-            assert new File("$outputDir/04_crosslinks/sample_1_R1.norm.transcript.cmd.bedgraph").exists()
+            assert new File("$outputDir/04_crosslinks/PHO92_A.transcript.cmd.bed").exists()
+            assert new File("$outputDir/04_crosslinks/PHO92_A.transcript.cmd.bedgraph").exists()
+            assert new File("$outputDir/04_crosslinks/PHO92_A.norm.transcript.cmd.bedgraph").exists()
 
-            assert new File("$outputDir/04_crosslinks/icountmini_summaries/sample_1_R1.summary_gene.tsv").exists()
-            assert new File("$outputDir/04_crosslinks/icountmini_summaries/sample_1_R1.summary_subtype.tsv").exists()
-            assert new File("$outputDir/04_crosslinks/icountmini_summaries/sample_1_R1.summary_type.tsv").exists()
+            assert new File("$outputDir/04_crosslinks/icountmini_summaries/PHO92_A.summary_gene.tsv").exists()
+            assert new File("$outputDir/04_crosslinks/icountmini_summaries/PHO92_A.summary_subtype.tsv").exists()
+            assert new File("$outputDir/04_crosslinks/icountmini_summaries/PHO92_A.summary_type.tsv").exists()
         }
     }
 }

@@ -16,8 +16,8 @@ nextflow_pipeline {
             assert workflow.success
 
             // Transcript
-            assert new File("$outputDir/03_filt_dedup/sample_1_R1.transcript.filt.sorted.bam").exists()
-            assert new File("$outputDir/03_filt_dedup/sample_1_R1.transcript.filt.sorted.bam.bai").exists()
+            assert new File("$outputDir/03_filt_dedup/PHO92_A.transcript.filt.sorted.bam").exists()
+            assert new File("$outputDir/03_filt_dedup/PHO92_A.transcript.filt.sorted.bam.bai").exists()
 
         }
     }
@@ -36,8 +36,8 @@ nextflow_pipeline {
             assert workflow.success
 
             // Transcript
-            assert !(new File("$outputDir/03_filt_dedup/sample_1_R1.transcript.filt.sorted.bam").exists())
-            assert !(new File("$outputDir/03_filt_dedup/sample_1_R1.transcript.filt.sorted.bam.bai").exists())
+            assert !(new File("$outputDir/03_filt_dedup/PHO92_A.transcript.filt.sorted.bam").exists())
+            assert !(new File("$outputDir/03_filt_dedup/PHO92_A.transcript.filt.sorted.bam.bai").exists())
         }
     }
 }
