@@ -1,5 +1,4 @@
 name: nf-core CI
-# This workflow runs the pipeline with the minimal test dataset to check that it completes without any syntax errors
 on:
   push:
     branches:
@@ -10,6 +9,8 @@ on:
 
 env:
   NXF_ANSI_LOG: false
+  NXF_SINGULARITY_CACHEDIR: ${{ github.workspace }}/.singularity
+  NXF_SINGULARITY_LIBRARYDIR: ${{ github.workspace }}/.singularity
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}"
@@ -18,16 +19,19 @@ concurrency:
 jobs:
   test:
     name: Run pipeline with test data
-    # Only run on push if this is the nf-core dev branch (merged PRs)
     if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/clipseq') }}"
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         NXF_VER:
           - "23.04.3"
           - "latest-everything"
         profile: ["docker", "singularity"]
         test: ["test"]
+        exclude:
+          - NXF_VER: "latest-everything"
+            profile: "singularity"
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v3
@@ -37,22 +41,22 @@ jobs:
         with:
           version: "${{ matrix.NXF_VER }}"
 
+      - name: Set up Apptainer
+        if: matrix.profile == 'singularity'
+        uses: eWaterCycle/setup-apptainer@main
+
       - name: Set up Singularity
         if: matrix.profile == 'singularity'
-        uses: eWaterCycle/setup-singularity@v7
-        with:
-          singularity-version: 4.0.1
-
-      - name: Set up Singularity cache
-        if: matrix.profile == 'singularity'
         run: |
-          mkdir -p /tmp/singularity_cache
-          echo "SINGULARITY_CACHEDIR=/tmp/singularity_cache" >> $GITHUB_ENV
+          mkdir -p $NXF_SINGULARITY_CACHEDIR
+          mkdir -p $NXF_SINGULARITY_LIBRARYDIR
 
       - name: Run pipeline with test data
         run: |
-          if [[ ${{ matrix.profile }} == 'singularity' ]]; then
-            nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.profile }},${{ matrix.test }} --outdir ./results -with-singularity --singularity-oci
-          else
-            nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.profile }},${{ matrix.test }} --outdir ./results
-          fi
+          nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.profile }},${{ matrix.test }} --outdir ./results
+
+      - name: Output log on failure
+        if: failure()
+        run: |
+          sudo apt install bat > /dev/null
+          batcat --decorations=always --color=always .nextflow.log
