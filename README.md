@@ -35,13 +35,13 @@ By default, the pipeline currently performs the following:
 7. Crosslink summaries over RNA types (`iCount Summary`)
 8. Crosslink metagene profiles (`iCount Metagene`)
 9. Peak calling (multiple options):
-    - `iCount`
-    - `Paraclu`
-    - `PureCLIP`
-    - `Clippy`
+   - `iCount`
+   - `Paraclu`
+   - `PureCLIP`
+   - `Clippy`
 10. Consensus peak output, ie. grouping all crosslinks, calling peaks and reporting a table with individual sample counts over consensus peaks. Useful as an input for differential binding analyses.
-10. Motif detection (`PEKA`)
-11. Overall pipeline run and QC summaries and peak calling comparisons (`MultiQC`)
+11. Motif detection (`PEKA`)
+12. Overall pipeline run and QC summaries and peak calling comparisons (`MultiQC`)
 
 ## Usage
 
@@ -49,8 +49,6 @@ By default, the pipeline currently performs the following:
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how
 > to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline)
 > with `-profile test` before running the workflow on actual data.
-
-
 
 First, prepare a samplesheet with your input data that looks as follows:
 
@@ -66,9 +64,7 @@ HNRNPC,,,https://github.com/luslab/test-datasets/raw/clipseq/v_2_0/fastq/ERR3988
 
 Each row represents a fastq file (single-end). If multiple rows have the same `sample_name`, `group_name` and `input_name` then their fastqs will be concatenated at the beginning of the pipeline (eg. in the case of a sample that was resequenced and so has multiple fastq files). If multiple rows have different `sample_name`s but the same `group_name` and `input_name`, then the crosslinks for these samples will be merged and peaks and downstream analyses will be run on the grouped crosslinks.
 
-The `input_name` is used for providing input data, currently the only peak caller we support that can use input data is PureCLIP. The `input_name` must match either a `sample_name` or a `group_name`. 
-
-
+The `input_name` is used for providing input data, currently the only peak caller we support that can use input data is PureCLIP. The `input_name` must match either a `sample_name` or a `group_name`.
 
 Now, you can run the pipeline using:
 
@@ -93,7 +89,7 @@ For more details about the output files and reports, please refer to the
 
 ## A note on paired-end reads
 
-The pipeline currently does not support paired-end reads, as in our experience alignment using both reads when available doesn't improve analysis of CLIP data. When recieving CLIP data sequenced paired-end, we recommend running the pipeline with the read containing the crosslink and ensuring the crosslink_position parameter is set appropriately. If you have evidence to the contrary please do get in touch and let us know, or if you are working on a new variant protocol where paired-end alignment is important please do reach out. 
+The pipeline currently does not support paired-end reads, as in our experience alignment using both reads when available doesn't improve analysis of CLIP data. When recieving CLIP data sequenced paired-end, we recommend running the pipeline with the read containing the crosslink and ensuring the crosslink_position parameter is set appropriately. If you have evidence to the contrary please do get in touch and let us know, or if you are working on a new variant protocol where paired-end alignment is important please do reach out.
 
 ## Credits
 
@@ -103,7 +99,6 @@ v2.0 was spearheaded by [Ule lab](https://github.com/ulelab) in collaboration wi
 
 We thank the following people for their extensive assistance in the development of this pipeline:
 Ira Iosub, Marc Jones, Rupert Faraway, Oscar G. Wilkins, Klara Kuret
-
 
 ## Contributions and Support
 
