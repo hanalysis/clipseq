@@ -15,17 +15,17 @@ nextflow_pipeline {
         then {
             assert workflow.success
 
-            assert new File("$outputDir/04_crosslinks/sample_1_R1.genome.cmd.bed").exists()
-            assert new File("$outputDir/04_crosslinks/sample_1_R1.genome.cmd.bedgraph").exists()
-            assert new File("$outputDir/04_crosslinks/sample_1_R1.norm.genome.cmd.bedgraph").exists()
+            assert new File("$outputDir/04_crosslinks/PHO92_A.genome.xl.bed").exists()
+            assert new File("$outputDir/04_crosslinks/PHO92_A.genome.xl.bedgraph").exists()
+            assert new File("$outputDir/04_crosslinks/PHO92_A.genome.xl.CPMnorm.bedgraph").exists()
 
-            assert new File("$outputDir/04_crosslinks/sample_1_R1.transcript.cmd.bed").exists()
-            assert new File("$outputDir/04_crosslinks/sample_1_R1.transcript.cmd.bedgraph").exists()
-            assert new File("$outputDir/04_crosslinks/sample_1_R1.norm.transcript.cmd.bedgraph").exists()
+            assert new File("$outputDir/04_crosslinks/grouped_crosslinks/PHO92_grouped.genome.xl.bed").exists()
+            assert new File("$outputDir/04_crosslinks/grouped_crosslinks/PHO92_grouped.genome.xl.bedgraph").exists()
+            assert new File("$outputDir/04_crosslinks/grouped_crosslinks/PHO92_grouped.genome.xl.CPMnorm.bedgraph").exists()
 
-            assert new File("$outputDir/04_crosslinks/icountmini_summaries/sample_1_R1.summary_gene.tsv").exists()
-            assert new File("$outputDir/04_crosslinks/icountmini_summaries/sample_1_R1.summary_subtype.tsv").exists()
-            assert new File("$outputDir/04_crosslinks/icountmini_summaries/sample_1_R1.summary_type.tsv").exists()
+            assert new File("$outputDir/04_crosslinks/icountmini_summaries/PHO92.summary_gene_premapadjusted.tsv").exists()
+            assert new File("$outputDir/04_crosslinks/icountmini_summaries/PHO92.summary_subtype_premapadjusted.tsv").exists()
+            assert new File("$outputDir/04_crosslinks/icountmini_summaries/PHO92.summary_type_premapadjusted.tsv").exists()
         }
     }
 }
