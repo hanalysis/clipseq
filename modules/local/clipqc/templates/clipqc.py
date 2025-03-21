@@ -51,7 +51,6 @@ def main(process_name):
     ncrna_df = pd.DataFrame(ncrna)
     print(ncrna_df)
 
-
     # Next get STAR logs
     star_logs = sorted(["mapped/" + f for f in os.listdir("mapped") if f.endswith(".Log.final.out")])
 
@@ -182,70 +181,74 @@ def main(process_name):
     # Summary cDNA
     # ==========
     summary_type_files = sorted(["summary_type/" + f for f in os.listdir("summary_type") if f.endswith(".tsv")])
-    #summary_data = dict((key, []) for key in ["exp", "Type", "Length", "Total_number_cDNA", "perc_number_cDNA"])
-    #summary_data = dict((key, []) for key in ["exp", "Type", "perc_number_cDNA"])
+    # summary_data = dict((key, []) for key in ["exp", "Type", "Length", "Total_number_cDNA", "perc_number_cDNA"])
+    # summary_data = dict((key, []) for key in ["exp", "Type", "perc_number_cDNA"])
     summary_data = []
 
     for summary_type_file in summary_type_files:
-           
-            exp = re.sub(".summary_type_premapadjusted.tsv", "", os.path.basename(summary_type_file))
-            df = pd.read_csv(summary_type_file, sep='\t')
-            
 
-            exp_data = {'exp': exp}
-        
-            # Add percentage for each RNA type
-            for _, row in df.iterrows():
-                rna_type = row['Type']
-                exp_data[rna_type] = row['cDNA %']
-        
-            summary_data.append(exp_data)
-    
+        exp = re.sub(".summary_type_premapadjusted.tsv", "", os.path.basename(summary_type_file))
+        df = pd.read_csv(summary_type_file, sep="\t")
 
-    summary_df = pd.DataFrame(summary_data) 
-    desired_columns = ['exp', 'CDS', 'ncRNA', 'intergenic', 'premapped RNA']
+        exp_data = {"exp": exp}
+
+        # Add percentage for each RNA type
+        for _, row in df.iterrows():
+            rna_type = row["Type"]
+            exp_data[rna_type] = row["cDNA %"]
+
+        summary_data.append(exp_data)
+
+    summary_df = pd.DataFrame(summary_data)
+    desired_columns = ["exp", "CDS", "ncRNA", "intergenic", "premapped RNA"]
     existing_cols = [col for col in desired_columns if col in summary_df.columns]
     summary_df = summary_df[existing_cols]
     summary_df.to_csv("summary_type_metrics.tsv", sep="\t", index=False)
 
-   
     # ==========
     # Summary subtype cDNA
     # ==========
 
-    summary_subtype_files = sorted(["summary_subtype/" + f for f in os.listdir("summary_subtype") if f.endswith(".tsv")])
+    summary_subtype_files = sorted(
+        ["summary_subtype/" + f for f in os.listdir("summary_subtype") if f.endswith(".tsv")]
+    )
     summary_subtypedata = []
 
     for summary_subtype_file in summary_subtype_files:
-           
-            exp = re.sub(".summary_subtype_premapadjusted.tsv", "", os.path.basename(summary_subtype_file))
-            df = pd.read_csv(summary_subtype_file, sep='\t')
-            
 
-            exp_data = {'exp': exp}
-        
-            # Add percentage for each RNA type
-            for _, row in df.iterrows():
-                rna_type = row['Subtype']
-                exp_data[rna_type] = row['cDNA %']
-        
-            summary_subtypedata.append(exp_data)
-    
+        exp = re.sub(".summary_subtype_premapadjusted.tsv", "", os.path.basename(summary_subtype_file))
+        df = pd.read_csv(summary_subtype_file, sep="\t")
 
-    summary_subtype_df = pd.DataFrame(summary_subtypedata) 
-    desired_columns = ['exp', 'CDS mRNA','ncRNA rRNA','ncRNA snRNA','ncRNA snoRNA','ncRNA tRNA','ncRNA ncRNA', 'intergenic', 'premapped RNA']
+        exp_data = {"exp": exp}
+
+        # Add percentage for each RNA type
+        for _, row in df.iterrows():
+            rna_type = row["Subtype"]
+            exp_data[rna_type] = row["cDNA %"]
+
+        summary_subtypedata.append(exp_data)
+
+    summary_subtype_df = pd.DataFrame(summary_subtypedata)
+    desired_columns = [
+        "exp",
+        "CDS mRNA",
+        "ncRNA rRNA",
+        "ncRNA snRNA",
+        "ncRNA snoRNA",
+        "ncRNA tRNA",
+        "ncRNA ncRNA",
+        "intergenic",
+        "premapped RNA",
+    ]
     existing_cols = [col for col in desired_columns if col in summary_subtype_df.columns]
     summary_subtype_df = summary_subtype_df[existing_cols]
     summary_subtype_df.to_csv("summary_subtype_metrics.tsv", sep="\t", index=False)
-
-
-
 
     # ==========
     # Peaks
     # ==========
 
-    peakcallers = ["icount", "paraclu", "clippy","pureclip"]
+    peakcallers = ["icount", "paraclu", "clippy", "pureclip"]
 
     def get_peaks_metrics(peakcaller):
         peak_files = sorted([peakcaller + "/" + f for f in os.listdir(peakcaller) if f.endswith(".bed")])
@@ -353,10 +356,6 @@ def main(process_name):
 
     print(peaks_xlinksite_coverage_percent_df)
     print("\n\n")
-
-   
-
-
 
 
 if __name__ == "__main__":
