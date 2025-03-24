@@ -180,6 +180,11 @@
                         "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
                         "installed_by": ["fastq_fastqc_umitools_trimgalore"]
                     },
+                    "ucsc/bedgraphtobigwig": {
+                        "branch": "master",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": ["modules"]
+                    },
                     "umicollapse": {
                         "branch": "master",
                         "git_sha": "b97197968ac12dde2463fa54541f6350c46f2035",
