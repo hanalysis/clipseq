@@ -71,7 +71,10 @@ def Annotate_EnsCan(df_gtf):
         raise ValueError("Some genes do not have one Ensembl canonical transcript.")
 
 
-def main(process_name, gtf, output="."):
+def main(process_name, gtf, output=None):
+
+    if output is None:
+        output = f"filtered.{os.path.basename(gtf)}"
 
     # Export versions
     dump_versions(process_name)
@@ -96,7 +99,7 @@ def main(process_name, gtf, output="."):
         # Save filtered annotation
         print("Saving filtered annotation.")
         # filt_annot[ann_cols].to_csv(f"{output}/filtered.{os.path.basename(gtf)}", header=None, index=None, sep='\t', quoting=csv.QUOTE_NONE)
-        filt_annot[ann_cols].to_csv("filtered.gtf", header=None, index=None, sep='\t', quoting=csv.QUOTE_NONE)
+        filt_annot[ann_cols].to_csv(output, header=None, index=None, sep='\t', quoting=csv.QUOTE_NONE)
         return
 
 if __name__ == "__main__":
