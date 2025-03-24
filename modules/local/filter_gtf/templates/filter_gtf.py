@@ -74,6 +74,7 @@ def Annotate_EnsCan(df_gtf):
 def main(process_name, gtf, output=None):
 
     if output is None:
+        # This output file name is overriden by output specifiec in main.nf
         output = f"filtered.{os.path.basename(gtf)}"
 
     # Export versions
