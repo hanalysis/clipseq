@@ -282,9 +282,7 @@ workflow PREPARE_GENOME {
         RESOLVE_UNANNOTATED_REGIONS (
             ch_regions_gtf.map{ it[1] },
             ch_regions_filt_gtf.map{ it[1] },
-            ch_gtf.map{ it[1] },
-            ch_fasta_fai.map{ it[1] },
-            false
+            ch_fasta_fai.map{ it[1] }
         )
         ch_regions_resolved_gtf = RESOLVE_UNANNOTATED_REGIONS.out.gtf
     }
