@@ -280,9 +280,9 @@ workflow PREPARE_GENOME {
     ch_regions_resolved_gtf = Channel.of( [ [id:regions_resolved_gtf.baseName], regions_resolved_gtf ] )
     if (!regions_resolved_gtf) {
         RESOLVE_UNANNOTATED_REGIONS (
-            ch_regions_gtf.map{ it[1] },
-            ch_regions_filt_gtf.map{ it[1] },
-            ch_fasta_fai.map{ it[1] }
+            ch_regions_gtf,
+            ch_regions_filt_gtf,
+            ch_fasta_fai
         )
         ch_regions_resolved_gtf = RESOLVE_UNANNOTATED_REGIONS.out.gtf
     }

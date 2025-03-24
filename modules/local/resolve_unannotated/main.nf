@@ -6,13 +6,13 @@ process CLIPSEQ_RESOLVE_UNANNOTATED {
     container "quay.io/goodwright/mulled-v2-9617f1b1a927f74fecc0c8b26ec773df8a8593b7:78688d5e3c856e3fbba8a63a7740b414dc4c0c5a-0"
 
     input:
-    path unfilt_regs
-    path filt_regs
-    path fai
+    tuple val(meta), path(unfilt_regs)
+    tuple val(meta), path(filt_regs)
+    tuple val(meta), path(fai)
 
     output:
-    path "*.gtf"         , emit: gtf
-    path  "versions.yml" , emit: versions
+    tuple val(meta), path("*.gtf"), emit: gtf
+    path  "versions.yml"          , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
