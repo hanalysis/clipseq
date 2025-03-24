@@ -3,13 +3,17 @@ include { SAMTOOLS_INDEX as SAMTOOLS_GROUP_INDEX                    } from '../.
 include { GET_CROSSLINKS as CALC_CROSSLINKS_INDIVIDUAL              } from '../../modules/local/get_crosslinks'
 include { GET_CROSSLINKS as CALC_CROSSLINKS_INDIVIDUAL_HASGROUP     } from '../../modules/local/get_crosslinks'
 include { GET_CROSSLINKS as CALC_CROSSLINKS_GROUP_HASGROUP          } from '../../modules/local/get_crosslinks'
+include { UCSC_BEDGRAPHTOBIGWIG as BIGWIGGENOME_INDIVIDUAL          } from "../../modules/nf-core/ucsc/bedgraphtobigwig/main"
+include { UCSC_BEDGRAPHTOBIGWIG as BIGWIGGENOME_INDIVIDUAL_HASGROUP } from "../../modules/nf-core/ucsc/bedgraphtobigwig/main"
+include { UCSC_BEDGRAPHTOBIGWIG as BIGWIGGENOME_GROUP_HASGROUP      } from "../../modules/nf-core/ucsc/bedgraphtobigwig/main"
 
 workflow RESOLVE_GROUPS_AND_CROSSLINKS {
     take:
-    ch_bam        // channel: [ val(meta), [ bam ] ]
-    ch_bai        // channel: [ val(meta), [ bai ] ]
-    ch_fasta      // channel: [ val(meta), fasta ]
-    ch_fasta_fai  // channel: [ val(meta), fasta.fai ]
+    ch_bam         // channel: [ val(meta), [ bam ] ]
+    ch_bai         // channel: [ val(meta), [ bai ] ]
+    ch_fasta       // channel: [ val(meta), fasta ]
+    ch_fasta_fai   // channel: [ val(meta), fasta.fai ]
+    ch_chrom_sizes // channel: [ val(meta), chrom_sizes ]
 
     main:
     ch_versions = Channel.empty()
@@ -74,24 +78,50 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
     //ch_peakcalling_bai.view { item -> "Grouped BAI and non-grouped BAIs: $item" }
 
     //
-    // SUBWORKFLOW: Run crosslink calculation for samples without a group
+    // MODULE: Run crosslink calculation for samples without a group
     //
+
     CALC_CROSSLINKS_INDIVIDUAL (
         ch_bam_branches.noGroup.join(ch_bai_branches.noGroup),
         ch_fasta_fai
     )
     ch_versions                        = ch_versions.mix(CALC_CROSSLINKS_INDIVIDUAL.out.versions)
     ch_crosslink_INDIVIDUAL_bed        = CALC_CROSSLINKS_INDIVIDUAL.out.bed
+    ch_crosslink_INDIVIDUAL_bedgraph   = CALC_CROSSLINKS_INDIVIDUAL.out.bedgraph
+
+    //
+    // MODULE: Convert crosslinks bedgraph to bigwig for samples without a group
+    //
+
+    BIGWIGGENOME_INDIVIDUAL (
+        ch_crosslink_INDIVIDUAL_bedgraph, 
+        ch_chrom_sizes
+    )
+    ch_versions                        = ch_versions.mix(BIGWIGGENOME_INDIVIDUAL.out.versions)
+    ch_crosslink_INDIVIDUAL_bigwig     = BIGWIGGENOME_INDIVIDUAL.out.bigwig
 
     //
     // SUBWORKFLOW: Run crosslink calculation for samples WITH A GROUP indidivually
+    //
 
     CALC_CROSSLINKS_INDIVIDUAL_HASGROUP (
         ch_bam_branches.hasGroup.join(ch_bai_branches.hasGroup),
         ch_fasta_fai
     )
-    ch_versions                          = ch_versions.mix(CALC_CROSSLINKS_INDIVIDUAL_HASGROUP.out.versions)
-    ch_crosslink_INDIVIDUAL_HASGROUP_bed = CALC_CROSSLINKS_INDIVIDUAL_HASGROUP.out.bed
+    ch_versions                                 = ch_versions.mix(CALC_CROSSLINKS_INDIVIDUAL_HASGROUP.out.versions)
+    ch_crosslink_INDIVIDUAL_HASGROUP_bed        = CALC_CROSSLINKS_INDIVIDUAL_HASGROUP.out.bed
+    ch_crosslink_INDIVIDUAL_HASGROUP_bedgraph   = CALC_CROSSLINKS_INDIVIDUAL_HASGROUP.out.bedgraph
+
+    //
+    // MODULE: Convert crosslinks bedgraph to bigwig for samples WITH A GROUP individually
+    //
+
+    BIGWIGGENOME_INDIVIDUAL_HASGROUP (
+        ch_crosslink_INDIVIDUAL_HASGROUP_bedgraph, 
+        ch_chrom_sizes
+    )
+    ch_versions                                 = ch_versions.mix(BIGWIGGENOME_INDIVIDUAL_HASGROUP.out.versions)
+    ch_crosslink_INDIVIDUAL_HASGROUP_bigwig     = BIGWIGGENOME_INDIVIDUAL_HASGROUP.out.bigwig
 
     //
     // SUBWORKFLOW: Run crosslink calculation for samples WITH A GROUP AS A GROUP
@@ -101,20 +131,37 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
         ch_grouped_bam.join(ch_peakcalling_bai),
         ch_fasta_fai
     )
-    ch_versions                     = ch_versions.mix(CALC_CROSSLINKS_GROUP_HASGROUP.out.versions)
-    ch_crosslink_GROUP_HASGROUP_bed = CALC_CROSSLINKS_GROUP_HASGROUP.out.bed
+    ch_versions                            = ch_versions.mix(CALC_CROSSLINKS_GROUP_HASGROUP.out.versions)
+    ch_crosslink_GROUP_HASGROUP_bed        = CALC_CROSSLINKS_GROUP_HASGROUP.out.bed
+    ch_crosslink_GROUP_HASGROUP_bedgraph   = CALC_CROSSLINKS_GROUP_HASGROUP.out.bedgraph
+
+    //
+    // MODULE: Convert crosslinks bedgraph to bigwig for samples WITH A GROUP AS A GROUP
+    //
+
+    BIGWIGGENOME_GROUP_HASGROUP (
+        ch_crosslink_GROUP_HASGROUP_bedgraph, 
+        ch_chrom_sizes
+    )
+    ch_versions                                 = ch_versions.mix(BIGWIGGENOME_GROUP_HASGROUP.out.versions)
+    ch_crosslink_GROUP_HASGROUP_bigwig          = BIGWIGGENOME_GROUP_HASGROUP.out.bigwig
 
     //
     // Combine crosslinking results for moving forwards
     //
+
     ch_crosslink_bed = ch_crosslink_INDIVIDUAL_bed.mix(ch_crosslink_GROUP_HASGROUP_bed)
 
     emit:
-    versions                        = ch_versions
-    crosslink_group_resolved        = ch_crosslink_bed                     // channel: [ val(meta), [ bed ] ] 
-    crosslink_INDIVIDUAL            = ch_crosslink_INDIVIDUAL_bed          // channel: [ val(meta), [ bed ] ] 
-    crosslink_INDIVIDUAL_HASGROUP   = ch_crosslink_INDIVIDUAL_HASGROUP_bed // channel: [ val(meta), [ bed ] ] 
-    crosslink_GROUP_HASGROUP        = ch_crosslink_GROUP_HASGROUP_bed      // channel: [ val(meta), [ bed ] ]
-    genome_peakcalling_bam          = ch_peakcalling_bam            // channel: [ val(meta), [ bam ] ]
-    genome_peakcalling_bai          = ch_peakcalling_bai            // channel: [ val(meta), [ bai ] ]
+    versions                              = ch_versions
+    crosslink_group_resolved              = ch_crosslink_bed                         // channel: [ val(meta), [ bed ] ] 
+    crosslink_INDIVIDUAL                  = ch_crosslink_INDIVIDUAL_bed              // channel: [ val(meta), [ bed ] ] 
+    crosslink_INDIVIDUAL_HASGROUP         = ch_crosslink_INDIVIDUAL_HASGROUP_bed     // channel: [ val(meta), [ bed ] ] 
+    crosslink_GROUP_HASGROUP              = ch_crosslink_GROUP_HASGROUP_bed          // channel: [ val(meta), [ bed ] ]
+    crosslink_INDIVIDUAL_bigwig           = ch_crosslink_INDIVIDUAL_bigwig           // channel: [ val(meta), [ bigwig ] ]
+    crosslink_INDIVIDUAL_HASGROUP_bigwig  = ch_crosslink_INDIVIDUAL_HASGROUP_bigwig  // channel: [ val(meta), [ bigwig ] ]
+    crosslink_GROUP_HASGROUP_bigwig       = ch_crosslink_GROUP_HASGROUP_bigwig       // channel: [ val(meta), [ bigwig ] ]
+    genome_peakcalling_bam                = ch_peakcalling_bam                       // channel: [ val(meta), [ bam ] ]
+    genome_peakcalling_bai                = ch_peakcalling_bai                       // channel: [ val(meta), [ bai ] ]
+
 }
