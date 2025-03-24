@@ -2,30 +2,39 @@
 
 """Filter GTF file for optimal clipseq execution. Filters GENCODE or ENSEMBL genomic annotation in GTF format."""
 
+import platform
 import pandas as pd
 import csv
 import argparse
 import numpy as np
 import os
 
-def cli():
-    parser = argparse.ArgumentParser(description='Filter genomic annotation from GENCODE or ENSEMBL in GTF format by tag \"basic\" and transcript_support_level.'\
-    ' These flags are currently (20250312) annotated for Homo sapiens and Mus musculus organisms.')
-    required = parser.add_argument_group('required arguments')
-    required.add_argument('-a', '--annotation', type=str, required=True,
-                        help='Annotation file from GENCODE or ENSEMBL in GTF format.')
-    required.add_argument('-o', '--outputdir', type=str, required=True,
-                        help='Path to output folder.')
-    args = parser.parse_args()
-    print(args)
-    return(args.annotation, args.outputdir)
+
+def dump_versions(process_name):
+    with open("versions.yml", "w") as out_f:
+        out_f.write(process_name + ":\n")
+        out_f.write("    python: " + platform.python_version() + "\n")
+        out_f.write("    pandas: " + pd.__version__ + "\n")
+
+
+# def cli():
+#     parser = argparse.ArgumentParser(description='Filter genomic annotation from GENCODE or ENSEMBL in GTF format by tag \"basic\" and transcript_support_level.'\
+#     ' These flags are currently (20250312) annotated for Homo sapiens and Mus musculus organisms.')
+#     required = parser.add_argument_group('required arguments')
+#     required.add_argument('-a', '--annotation', type=str, required=True,
+#                         help='Annotation file from GENCODE or ENSEMBL in GTF format.')
+#     required.add_argument('-o', '--outputdir', type=str, required=True,
+#                         help='Path to output folder.')
+#     args = parser.parse_args()
+#     print(args)
+#     return(args.annotation, args.outputdir)
 
 
 def ParseIds(annotation_string):
     # Check for NaN or missing values
     if not isinstance(annotation_string, str):
         raise ValueError("Annotation string is missing or NaN.")
-    
+
     ids = {}
     for id_type in ['gene_id', 'transcript_id']:
         lst = [v for v in annotation_string.split(';') if f'{id_type} ' in v]
@@ -74,23 +83,23 @@ def Annotate_EnsCan(df_gtf):
     else:
         print("Some genes do not have one Ensembl canonical transcript.")
         raise ValueError("Some genes do not have one Ensembl canonical transcript.")
-    
-        
+
+
 
 def filter_gff(gtf_file, outputdir):
 
     # Parse gtf file into pandas dataframe.
     print("Reading annotation file.")
     input_annotation, ann_cols = read_ann(gtf_file)
-    
+
     # Annotate Ensembl canonical transcripts
     print("Annotating Ensembl canonical transcripts.")
     input_annotation = Annotate_EnsCan(input_annotation.copy())
-    
+
 
     # Filter
     filt_annot = input_annotation.loc[(input_annotation['Ensembl_canonical'] == True) | (input_annotation['feature'] == 'gene')].copy()
-    
+
     # Test if all genes have a representative transcript; raise error if not
     minTx = filt_annot.loc[filt_annot.feature.isin(['gene', 'transcript'])].groupby(['gene_id'])['transcript_id'].nunique().min()
     if minTx < 1:
@@ -106,8 +115,16 @@ def main():
     (gtf_file, outputdir) = cli()
     filter_gff(gtf_file, outputdir)
 
-if __name__ == '__main__':
-    main()
+
+if __name__ == "__main__":
+    # Allows switching between nextflow templating and standalone python running using arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--process_name", default="!{process_name}")
+    parser.add_argument("--gtf", default="!{gtf}")
+    parser.add_argument("--output", default="!{output}")
+    args = parser.parse_args()
+
+    main(args.process_name, args.gtf, args.output)
 
 
 # import platform
