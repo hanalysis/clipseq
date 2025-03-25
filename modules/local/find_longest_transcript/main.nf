@@ -8,7 +8,7 @@ process FIND_LONGEST_TRANSCRIPT {
         'quay.io/biocontainers/pyranges:0.1.4--pyhdfd78af_0' }"
 
     input:
-    tuple val(meta), path(gtf)
+    tuple val(meta), path(gtf), path(user_transcripts)
 
     output:
     tuple val(meta), path("*.txt")                 ,emit: longest_transcript
