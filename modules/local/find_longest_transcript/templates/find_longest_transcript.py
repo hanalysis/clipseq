@@ -8,6 +8,7 @@ from sys import exit
 # import re
 import pyranges as pr
 import pandas as pd
+import warnings
 
 t_types = ["transcript_type", "transcript_biotype"]
 g_types = ["gene_type", "gene_biotype"]
@@ -27,6 +28,7 @@ def main(process_name, gtf, output):
     df_gtf = pr.read_gtf(gtf, as_df=True)
     df_gtf['length'] = df_gtf['End'] - df_gtf['Start']
     input_genes = set(df_gtf.gene_id.unique())
+    print("number of total genes in: ", len(input_genes))
 
     # Check if any of g_types in columns
     if not any(g in df_gtf.columns for g in g_types):
@@ -34,20 +36,24 @@ def main(process_name, gtf, output):
     else:
         # Get the gene type column that is in the gtf
         gene_type_col = [v for v in df_gtf.columns if v in g_types][0]
+        print(gene_type_col)
+
         transcript_type_col = [v for v in df_gtf.columns if v in t_types][0]
 
-        # FEATURE include genes encoding the antibody chains as protein coding (ie. IG_C_gene)
+        # FEATURETODO include genes encoding the antibody chains as protein coding (ie. IG_C_gene)
 
-        gtf_prot = df_gtf.loc[:, df_gtf[gene_type_col] == "protein_coding"].copy()
+        gtf_prot = df_gtf.loc[df_gtf[gene_type_col] == "protein_coding"].copy()
         input_prot = set(gtf_prot.gene_id.unique())
-        gtf_noncod = df_gtf.loc[:, df_gtf[gene_type_col] != "protein_coding"].copy()
-        # input_noncod = set(gtf_noncod.gene_id.unique())
-    
+        print("number of protein coding genes in: ", len(input_prot))
+        gtf_noncod = df_gtf.loc[df_gtf[gene_type_col] != "protein_coding"].copy()
+        input_noncod = set(gtf_noncod.gene_id.unique())
+        print("number of protein non-coding genes in: ", len(input_noncod))
+
     # Filtering protein-coding gtf; only keep protein_coding transcript types for protein_coding genes
-    gtf_prot = gtf_prot.loc[gtf_prot['Feature'] == 'gene' | gtf_prot[transcript_type_col] == 'protein_coding']
+    # gtf_prot = gtf_prot.loc[(gtf_prot['Feature'] == 'gene') | (gtf_prot[transcript_type_col] == 'protein_coding')]
     check_genes = set(gtf_prot.gene_id.unique())
     minTx = gtf_prot.loc[gtf_prot['Feature'] == 'transcript'].groupby('gene_id')['transcript_id'].nunique().min()
-    if (check_genes != input_prot) | (minTx < 1):
+    if (check_genes != input_prot) or (minTx < 1):
         raise ValueError(f"Protein coding gene IDs do not match after filtering or some genes do not have a representative transcript.")
 
     # Calculate CDS and exon lengths per transcript ID
@@ -55,15 +61,17 @@ def main(process_name, gtf, output):
     exon_sums_prot = gtf_prot.loc[gtf_prot['Feature'] == 'exon'].groupby(['gene_id', 'transcript_id'])['length'].sum()
     # Join the two dataframes
     df_txlengths_prot = pd.concat([cds_sums_prot, exon_sums_prot], axis=1, keys=['cds_length', 'exon_length']).reset_index()
+
+    # Summing up all exon lengths for non-coding
+    df_txlengths_nc = gtf_noncod.loc[gtf_noncod['Feature'] == 'exon'].groupby(['gene_id', 'transcript_id'], as_index=False)['length'].sum()
+    df_txlengths_nc.rename(columns = {'length':'exon_length'}, inplace = True)
+
     # Check if all transcripts have a CDS length
     if df_txlengths_prot.cds_length.isna().any():
-        raise ValueError("Some protein coding transcripts do not have a CDS length.")
-    
-    df_txlengths_nc = gtf_noncod.loc[gtf_noncod['Feature'] == 'exon'].groupby(['gene_id', 'transcript_id'], as_index=False)['length'].sum()
-
+        warnings.warn("Some protein coding transcripts do not have a CDS length.", RuntimeWarning)
     # Fill in nan with 0
-    df_txlengths_prot[['cds_length', 'exon_length']].fillna(0, inplace=True)
-    df_txlengths_nc[['exon_length']].fillna(0, inplace=True)
+    df_txlengths_prot[['cds_length', 'exon_length']] = df_txlengths_prot[['cds_length', 'exon_length']].fillna(0)
+    df_txlengths_nc[['exon_length']] = df_txlengths_nc[['exon_length']].fillna(0)
 
     # Sort
     df_txlengths_prot = df_txlengths_prot.sort_values(by=['cds_length', 'exon_length', 'transcript_id'], ascending=[False, False, True])
@@ -74,18 +82,24 @@ def main(process_name, gtf, output):
     df_txlengths_nc = df_txlengths_nc.drop_duplicates(subset='gene_id', keep='first')
 
     # Check if all of the initial genes have a transcript assigned
-    if df_txlengths_nc.transcript_id.isna().any() | df_txlengths_prot.transcript_id.isna().any():
+    if df_txlengths_nc.transcript_id.isna().any() or df_txlengths_prot.transcript_id.isna().any():
         raise ValueError("Some genes do not have a representative transcript.")
-    set_filtgenes = set(df_txlengths_prot.gene_id.unique()) + set(df_txlengths_nc.gene_id.unique())
+    # set_filtgenes = set(df_txlengths_prot.gene_id.unique()) + set(df_txlengths_nc.gene_id.unique())
+    set_filtgenes = set(df_txlengths_prot.gene_id.unique()).union(df_txlengths_nc.gene_id.unique())
+    print(len(set_filtgenes))
+    print(len(input_genes))
+
+    print(input_genes - set_filtgenes)
+
     if set_filtgenes != input_genes:
         raise ValueError("Some genes are missing after filtering for cds and exon lengths.")
-    
+
     # Concatenate the two dataframes
     df_txlengths = pd.concat([df_txlengths_prot, df_txlengths_nc], ignore_index=True)
-    
+
     # Filter the initial annotation by transcript ids that we obtain
     transcripts = df_txlengths.transcript_id.tolist()
-    filt_annot = df_gtf.loc[df_gtf['transcript_id'].isin(transcripts) | df_gtf['Feature'] == 'gene'].copy()
+    filt_annot = df_gtf.loc[(df_gtf['transcript_id'].isin(transcripts)) | (df_gtf['Feature'] == 'gene')].copy()
 
     # Convert the filtered annotation to pyranges
     pr_gtf = pr.PyRanges(filt_annot)
@@ -94,7 +108,12 @@ def main(process_name, gtf, output):
 
     # Get a list of transcript ids for saving
     pr_gtf = pr_gtf.as_df()
-    transcript_ids = list(dict.fromkeys(pr_gtf['transcript_ids'].values().tolist()))
+
+    transcript_ids = []
+    for g in pr_gtf.loc[pr_gtf.Feature=='transcript', 'transcript_id'].values.tolist():
+        if g not in transcript_ids:
+            transcript_ids.append(g)
+
     # Save to file
     print("Saving longest transcript per gene...")
     with open(output + ".txt", "w") as f:
@@ -141,7 +160,7 @@ if __name__ == "__main__":
 
 
 
-    
+
 
 #     # # For each transcript, get the transcript ID, gene ID, total CDS length and
 #     # # total exon length, using only protein coding transcripts
