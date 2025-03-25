@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Filter GTF file for optimal clipseq execution. Filters GENCODE or ENSEMBL genomic annotation in GTF format."""
+"""Filter GTF file based on Ensembl_canonical flag for optimal clipseq execution. Filters GENCODE or ENSEMBL genomic annotation in GTF format."""
 
 import platform
 import pandas as pd
@@ -92,16 +92,22 @@ def main(process_name, gtf, output=None):
     filt_annot = input_annotation.loc[(input_annotation['Ensembl_canonical'] == True) | (input_annotation['feature'] == 'gene')].copy()
 
     # Test if all genes have a representative transcript; raise error if not
-    minTx = filt_annot.loc[filt_annot.feature.isin(['gene', 'transcript'])].groupby(['gene_id'])['transcript_id'].nunique().min()
+    # If no transcript IDs are found for a gene, nunique returns 0
+    minTx = filt_annot.loc[filt_annot['feature'].isin(['gene', 'transcript'])].groupby(['gene_id'])['transcript_id'].nunique().min()
+    maxTx = filt_annot.loc[filt_annot['feature'].isin(['gene', 'transcript'])].groupby(['gene_id'])['transcript_id'].nunique().max()
     if minTx < 1:
         raise ValueError("Some genes do not have a representative Ensembl_canonical transcript.")
-    else:
-        print("All genes have a representative Ensembl_canonical transcript")
-        # Save filtered annotation
+    elif maxTx == 1:
+        print("All genes have exactly one representative Ensembl_canonical transcript")
         print("Saving filtered annotation.")
-        # filt_annot[ann_cols].to_csv(f"{output}/filtered.{os.path.basename(gtf)}", header=None, index=None, sep='\t', quoting=csv.QUOTE_NONE)
         filt_annot[ann_cols].to_csv(output, header=None, index=None, sep='\t', quoting=csv.QUOTE_NONE)
+        # Save gene_id and tx_id pairs
+        gene_tx_pairs = filt_annot.loc[filt_annot['feature'] == 'transcript', ['gene_id', 'transcript_id']].drop_duplicates()
+        gene_tx_pairs.to_csv(f"{output.replace('.gtf', '')}.gene2tx.tsv", sep='\t', index=False)
         return
+    else:
+        raise ValueError("Some genes have more than one representative Ensembl_canonical transcript.")
+        
 
 if __name__ == "__main__":
     # Allows switching between nextflow templating and standalone python running using arguments
