@@ -9,6 +9,7 @@ from sys import exit
 import pyranges as pr
 import pandas as pd
 import warnings
+import csv
 
 # t_types = ["transcript_type", "transcript_biotype"]
 g_types = ["gene_type", "gene_biotype"]
@@ -128,7 +129,7 @@ def main(process_name, gtf, output):
     df_txlengths.reset_index(inplace=True)
 
     # Save transcript id and exon length to .fai file, without header
-    df_txlengths[['transcript_id', 'exon_length']].to_csv(f"{output}.fai", header=None, index=None, sep='\t')
+    df_txlengths[['transcript_id', 'exon_length']].to_csv(f"{output}.fai", header=None, index=None, sep='\t', quoting=csv.QUOTE_NONE)
 
     # Make the transcript gtf file
     df_txlengths['src'] = 'src'
@@ -137,9 +138,9 @@ def main(process_name, gtf, output):
     df_txlengths['score'] = '.'
     df_txlengths['strand'] = '+'
     df_txlengths['frame'] = '.'
-    df_txlengths['attributes'] = df_txlengths['transcript_id'].apply(lambda x: f'"id:{x}"')
+    df_txlengths['attributes'] = df_txlengths.apply(lambda row: f'gene_id:{row["gene_id"]}; transcript_id:{row["transcript_id"]}', axis=1)
     # Order into gtf format
-    df_txlengths[['transcript_id', 'src', 'gene', 'start', 'exon_length', 'score', 'strand', 'frame', 'attributes']].to_csv(f"{output}.gtf", header=None, index=None, sep='\t')
+    df_txlengths[['transcript_id', 'src', 'gene', 'start', 'exon_length', 'score', 'strand', 'frame', 'attributes']].to_csv(f"{output}.gtf", header=None, index=None, sep='\t', quoting=csv.QUOTE_NONE)
     return
 
 if __name__ == "__main__":
