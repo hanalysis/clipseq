@@ -10,7 +10,7 @@ import pyranges as pr
 import pandas as pd
 import warnings
 
-t_types = ["transcript_type", "transcript_biotype"]
+# t_types = ["transcript_type", "transcript_biotype"]
 g_types = ["gene_type", "gene_biotype"]
 
 
@@ -38,7 +38,7 @@ def main(process_name, gtf, output):
         gene_type_col = [v for v in df_gtf.columns if v in g_types][0]
         print(gene_type_col)
 
-        transcript_type_col = [v for v in df_gtf.columns if v in t_types][0]
+        # transcript_type_col = [v for v in df_gtf.columns if v in t_types][0]
 
         # FEATURETODO include genes encoding the antibody chains as protein coding (ie. IG_C_gene)
 
@@ -112,7 +112,7 @@ def main(process_name, gtf, output):
     transcript_ids = []
     for g in pr_gtf.loc[pr_gtf.Feature=='transcript', 'transcript_id'].values.tolist():
         if g not in transcript_ids:
-            transcript_ids.append(g)
+            transcript_ids.append(g + '\n')
 
     # Save to file
     print("Saving longest transcript per gene...")
@@ -128,7 +128,7 @@ def main(process_name, gtf, output):
     df_txlengths.reset_index(inplace=True)
 
     # Save transcript id and exon length to .fai file, without header
-    df_txlengths[['exon_length']].to_csv(f"{output}.fai", header=None, sep='\t')
+    df_txlengths[['transcript_id', 'exon_length']].to_csv(f"{output}.fai", header=None, index=None, sep='\t')
 
     # Make the transcript gtf file
     df_txlengths[['src']] = 'src'
@@ -137,7 +137,7 @@ def main(process_name, gtf, output):
     df_txlengths[['score']] = '.'
     df_txlengths[['strand']] = '+'
     df_txlengths[['frame']] = '.'
-    df_txlengths[['attributes']] = [f'id:{df_txlengths.index.tolist()}']
+    df_txlengths[['attributes']] = df_txlengths['transcript_id'].apply(lambda x: f'"id:{x}"')
     # Order into gtf format
     df_txlengths[['transcript_id', 'src', 'gene', 'start', 'exon_length', 'score', 'strand', 'frame', 'attributes']].to_csv(f"{output}.gtf", header=None, index=None, sep='\t')
     return
