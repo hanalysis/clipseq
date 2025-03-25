@@ -15,7 +15,7 @@ include { LINUX_COMMAND as REMOVE_GTF_BRACKETS                                  
 include { CUSTOM_GETCHROMSIZES as GENOME_CHROM_SIZE                              } from '../../modules/nf-core/custom/getchromsizes/main'
 include { CUSTOM_GETCHROMSIZES as NCRNA_CHROM_SIZE                               } from '../../modules/nf-core/custom/getchromsizes/main'
 include { FIND_LONGEST_TRANSCRIPT                                                } from '../../modules/local/find_longest_transcript/main'
-include { CLIPSEQ_FILTER_GTF                                                     } from '../../modules/local/filter_gtf/main'
+// include { CLIPSEQ_FILTER_GTF                                                     } from '../../modules/local/filter_gtf/main'
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_GTF                                   } from '../../modules/nf-core/icountmini/segment/main'
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_FILTGTF                               } from '../../modules/nf-core/icountmini/segment/main'
 // include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED                     } from '../../modules/local/resolve_unannotated/main'
@@ -51,7 +51,6 @@ workflow PREPARE_GENOME {
 
     // Init
     ch_versions = Channel.empty()
-
     //
     // MODULE: Uncompress genome fasta file if required
     //
@@ -190,38 +189,46 @@ workflow PREPARE_GENOME {
     //ch_gtf | view
 
     //
-    // MODULE: Find the longest transcript from the primary genome
+    // MODULE: Filter GTF and generate transcript files (fai, GTF) if needed. Uses provided transcripts or selects longest from primary genome if missing.
     //
-    ch_longest_transcript     = Channel.empty()
-    ch_longest_transcript_fai = Channel.empty()
-    ch_longest_transcript_gtf = Channel.empty()
-    if (longest_transcript && longest_transcript_fai && longest_transcript_gtf){
-        ch_longest_transcript     =  longest_transcript
-        ch_longest_transcript_fai =  longest_transcript_fai
-        ch_longest_transcript_gtf =  longest_transcript_gtf
-    } else {
-        FIND_LONGEST_TRANSCRIPT (
-            ch_gtf
-        )
-        ch_longest_transcript     = FIND_LONGEST_TRANSCRIPT.out.longest_transcript
-        ch_longest_transcript_fai = FIND_LONGEST_TRANSCRIPT.out.longest_transcript_fai
-        ch_longest_transcript_gtf = FIND_LONGEST_TRANSCRIPT.out.longest_transcript_gtf
-        ch_versions               = ch_versions.mix(FIND_LONGEST_TRANSCRIPT.out.versions)
-    }
 
-    //
-    // MODULE: Filter the GTF file
-    //
-    ch_filt_gtf = Channel.of( [ [id:filtered_gtf.baseName], filtered_gtf ] )
-    if (!filtered_gtf){
-        CLIPSEQ_FILTER_GTF (
-            ch_gtf
-        )
-        ch_filt_gtf = CLIPSEQ_FILTER_GTF.out.gtf
-        ch_versions = ch_versions.mix(CLIPSEQ_FILTER_GTF.out.versions)
-    }
-    // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
-    // CLIPSEQ_FILTER_GTF.out.gtf | view
+    // Channel for longest_transcript
+    ch_longest_transcript = longest_transcript ?
+        Channel.of([ [id: longest_transcript.baseName], longest_transcript ]) :
+        Channel.of([[], []])
+
+    // Similarly for fai and gtf, but as empty if not provided
+    ch_longest_transcript_fai = longest_transcript_fai ?
+        Channel.of([ [id: longest_transcript_fai.baseName], longest_transcript_fai ]) :
+        Channel.empty()
+
+    ch_longest_transcript_gtf = longest_transcript_gtf ?
+        Channel.of([ [id: longest_transcript_gtf.baseName], longest_transcript_gtf ]) :
+        Channel.empty()
+
+    // Run FIND_LONGEST_TRANSCRIPT; FILTER_GTF_BY_TRANSCRIPTS could be a better name
+    FIND_LONGEST_TRANSCRIPT(ch_gtf, ch_longest_transcript)
+
+    // Use original channels if provided, otherwise use FIND_LONGEST_TRANSCRIPT output
+    ch_longest_transcript     = ch_longest_transcript.map { it[1] != [] ? it : FIND_LONGEST_TRANSCRIPT.out.longest_transcript.first() }
+    ch_longest_transcript_fai = ch_longest_transcript_fai.ifEmpty(FIND_LONGEST_TRANSCRIPT.out.longest_transcript_fai)
+    ch_longest_transcript_gtf = ch_longest_transcript_gtf.ifEmpty(FIND_LONGEST_TRANSCRIPT.out.longest_transcript_gtf)
+    ch_filt_gtf               = FIND_LONGEST_TRANSCRIPT.out.filtered_gtf
+    ch_versions               = ch_versions.mix(FIND_LONGEST_TRANSCRIPT.out.versions)
+
+    // //
+    // // MODULE: Filter the GTF file
+    // //
+    // ch_filt_gtf = Channel.of( [ [id:filtered_gtf.baseName], filtered_gtf ] )
+    // if (!filtered_gtf){
+    //     CLIPSEQ_FILTER_GTF (
+    //         ch_gtf
+    //     )
+    //     ch_filt_gtf = CLIPSEQ_FILTER_GTF.out.gtf
+    //     ch_versions = ch_versions.mix(CLIPSEQ_FILTER_GTF.out.versions)
+    // }
+    // // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
+    // // CLIPSEQ_FILTER_GTF.out.gtf | view
 
     //
     // MODULE: Segment GTF file using icount

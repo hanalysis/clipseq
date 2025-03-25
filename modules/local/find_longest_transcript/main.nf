@@ -8,14 +8,15 @@ process FIND_LONGEST_TRANSCRIPT {
         'quay.io/biocontainers/pyranges:0.1.4--pyhdfd78af_0' }"
 
     input:
-    tuple val(meta), path(gtf), path(user_transcripts)
+    tuple val(meta), path(gtf)
+    tuple val(meta), path(user_transcripts)
 
     output:
-    tuple val(meta), path("*.txt")                 ,emit: longest_transcript
-    tuple val(meta), path("*.fai")                 ,emit: longest_transcript_fai
-    tuple val(meta), path("*.gtf")                 ,emit: longest_transcript_gtf
-    tuple val(meta), path("*filtered.gtf")         ,emit: filtered_gtf
-    path  "versions.yml"                           ,emit: versions
+    tuple val(meta), path("*longest_transcript.txt")                 ,emit: longest_transcript
+    tuple val(meta), path("*longest_transcript.fai")                 ,emit: longest_transcript_fai
+    tuple val(meta), path("*longest_transcript.gtf")                 ,emit: longest_transcript_gtf
+    tuple val(meta), path("*longest_transcript.filtered.gtf")        ,emit: filtered_gtf
+    path  "versions.yml"                                             ,emit: versions
 
     when:
     task.ext.when == null || task.ext.when
