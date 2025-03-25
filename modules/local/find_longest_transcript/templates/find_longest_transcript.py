@@ -112,12 +112,12 @@ def main(process_name, gtf, output):
     transcript_ids = []
     for g in pr_gtf.loc[pr_gtf.Feature=='transcript', 'transcript_id'].values.tolist():
         if g not in transcript_ids:
-            transcript_ids.append(g + '\n')
+            transcript_ids.append(g)
 
     # Save to file
     print("Saving longest transcript per gene...")
     with open(output + ".txt", "w") as f:
-        f.writelines(transcript_ids)
+        f.write("\n".join(map(str, transcript_ids)) + "\n")
 
     # Make a transcript fai file
     # Set transcript_id as index
@@ -131,13 +131,13 @@ def main(process_name, gtf, output):
     df_txlengths[['transcript_id', 'exon_length']].to_csv(f"{output}.fai", header=None, index=None, sep='\t')
 
     # Make the transcript gtf file
-    df_txlengths[['src']] = 'src'
-    df_txlengths[['gene']] = 'gene'
-    df_txlengths[['start']] = 1
-    df_txlengths[['score']] = '.'
-    df_txlengths[['strand']] = '+'
-    df_txlengths[['frame']] = '.'
-    df_txlengths[['attributes']] = df_txlengths['transcript_id'].apply(lambda x: f'"id:{x}"')
+    df_txlengths['src'] = 'src'
+    df_txlengths['gene'] = 'gene'
+    df_txlengths['start'] = 1
+    df_txlengths['score'] = '.'
+    df_txlengths['strand'] = '+'
+    df_txlengths['frame'] = '.'
+    df_txlengths['attributes'] = df_txlengths['transcript_id'].apply(lambda x: f'"id:{x}"')
     # Order into gtf format
     df_txlengths[['transcript_id', 'src', 'gene', 'start', 'exon_length', 'score', 'strand', 'frame', 'attributes']].to_csv(f"{output}.gtf", header=None, index=None, sep='\t')
     return
