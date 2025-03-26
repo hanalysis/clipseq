@@ -1,5 +1,0 @@
-Sample	Aligned	Not aligned
-HNRNPC_ncrna	1728.0	40817.0
-PHO92_A_ncrna	1728.0	40817.0
-PHO92_B_ncrna	1728.0	40817.0
-PHO92_C_ncrna	1728.0	40817.0
