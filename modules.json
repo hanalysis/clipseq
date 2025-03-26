@@ -62,7 +62,7 @@
                     },
                     "clippy": {
                         "branch": "master",
-                        "git_sha": "25c42a81d5733c982670afe585b067f262b333e2",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
                     "custom/getchromsizes": {
