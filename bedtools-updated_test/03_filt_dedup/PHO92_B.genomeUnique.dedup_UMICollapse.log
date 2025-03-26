@@ -1,0 +1,10 @@
+Arguments	[bam, -i, PHO92_B_uniqueMapped.bam, -o, PHO92_B.genomeUnique.dedup.bam, --umi-sep, rbc:]
+Done reading input file into memory!
+Number of input reads	986
+Number of removed unmapped reads	0
+Number of unremoved reads	986
+Number of unique alignment positions	141
+Average number of UMIs per alignment position	1.6028368794326242
+Max number of UMIs over all alignment positions	10
+Number of reads after deduplicating	219
+UMI collapsing finished in 0.19 seconds!

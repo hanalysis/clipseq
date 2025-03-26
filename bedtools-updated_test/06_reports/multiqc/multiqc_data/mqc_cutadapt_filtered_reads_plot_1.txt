@@ -1,0 +1,5 @@
+Sample	Reads passing filters
+HNRNPC	50000.0
+PHO92_A	50000.0
+PHO92_B	50000.0
+PHO92_C	50000.0

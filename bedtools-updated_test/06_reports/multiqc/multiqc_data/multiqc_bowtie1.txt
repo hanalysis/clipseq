@@ -1,0 +1,5 @@
+Sample	reads_processed	reads_aligned	reads_aligned_percentage	not_aligned	not_aligned_percentage
+HNRNPC_ncrna	42545.0	1728.0	4.06	40817.0	95.94
+PHO92_A_ncrna	42545.0	1728.0	4.06	40817.0	95.94
+PHO92_B_ncrna	42545.0	1728.0	4.06	40817.0	95.94
+PHO92_C_ncrna	42545.0	1728.0	4.06	40817.0	95.94

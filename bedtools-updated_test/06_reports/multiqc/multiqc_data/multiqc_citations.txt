@@ -1,0 +1,5 @@
+10.1093/bioinformatics/btw354                      # MultiQC
+10.14806/ej.17.1.200                               # cutadapt
+10.1186/gb-2009-10-3-r25                           # bowtie1
+10.1093/bioinformatics/bts635                      # star
+

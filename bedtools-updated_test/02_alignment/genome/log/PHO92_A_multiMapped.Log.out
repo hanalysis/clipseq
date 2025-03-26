@@ -1,0 +1,229 @@
+STAR version=2.7.10a
+STAR compilation time,server,dir=2022-01-14T18:50:00-05:00 :/home/dobin/data/STAR/STARcode/STAR.master/source
+STAR git: On branch master ; commit ae26add7ea1724f3281ec8abedb71bcff6a4ae73 ; diff files: CHANGES.md README.md RELEASEnotes.md doc/STARmanual.pdf extras/doc-latex/STARmanual.tex extras/doc-latex/convertParDefToLatexTable.awk extras/doc-latex/parametersDefault.tex extras/docker/Dockerfile source/VERSION 
+##### Command Line:
+STAR --genomeDir star --readFilesIn input1/PHO92_A_ncrna.unmapped.fastq.gz --runThreadN 2 --outFileNamePrefix PHO92_A_multiMapped. --sjdbGTFfile yeast_MitoV_filtered.gtf --outSAMattrRGline ID:PHO92_A_multiMapped SM:PHO92_A_multiMapped --readFilesCommand zcat --outSAMtype BAM SortedByCoordinate --outFilterMultimapNmax 1 --outFilterMultimapScoreRange 1 --outSAMattributes All --alignSJoverhangMin 8 --alignSJDBoverhangMin 1 --outFilterType BySJout --alignIntronMin 20 --alignIntronMax 1000000 --outFilterScoreMin 10 --alignEndsType Extend5pOfRead1 --twopassMode Basic
+##### Initial USER parameters from Command Line:
+outFileNamePrefix                 PHO92_A_multiMapped.
+###### All USER parameters from Command Line:
+genomeDir                     star     ~RE-DEFINED
+readFilesIn                   input1/PHO92_A_ncrna.unmapped.fastq.gz        ~RE-DEFINED
+runThreadN                    2     ~RE-DEFINED
+outFileNamePrefix             PHO92_A_multiMapped.     ~RE-DEFINED
+sjdbGTFfile                   yeast_MitoV_filtered.gtf     ~RE-DEFINED
+outSAMattrRGline              ID:PHO92_A_multiMapped   SM:PHO92_A_multiMapped        ~RE-DEFINED
+readFilesCommand              zcat        ~RE-DEFINED
+outSAMtype                    BAM   SortedByCoordinate        ~RE-DEFINED
+outFilterMultimapNmax         1     ~RE-DEFINED
+outFilterMultimapScoreRange   1     ~RE-DEFINED
+outSAMattributes              All        ~RE-DEFINED
+alignSJoverhangMin            8     ~RE-DEFINED
+alignSJDBoverhangMin          1     ~RE-DEFINED
+outFilterType                 BySJout     ~RE-DEFINED
+alignIntronMin                20     ~RE-DEFINED
+alignIntronMax                1000000     ~RE-DEFINED
+outFilterScoreMin             10     ~RE-DEFINED
+alignEndsType                 Extend5pOfRead1     ~RE-DEFINED
+twopassMode                   Basic     ~RE-DEFINED
+##### Finished reading parameters from all sources
+
+##### Final user re-defined parameters-----------------:
+runThreadN                        2
+genomeDir                         star
+readFilesIn                       input1/PHO92_A_ncrna.unmapped.fastq.gz   
+readFilesCommand                  zcat   
+outFileNamePrefix                 PHO92_A_multiMapped.
+outSAMtype                        BAM   SortedByCoordinate   
+outSAMattributes                  All   
+outSAMattrRGline                  ID:PHO92_A_multiMapped   SM:PHO92_A_multiMapped   
+outFilterType                     BySJout
+outFilterMultimapNmax             1
+outFilterMultimapScoreRange       1
+outFilterScoreMin                 10
+alignIntronMin                    20
+alignIntronMax                    1000000
+alignSJoverhangMin                8
+alignSJDBoverhangMin              1
+alignEndsType                     Extend5pOfRead1
+sjdbGTFfile                       yeast_MitoV_filtered.gtf
+twopassMode                       Basic
+
+-------------------------------
+##### Final effective command line:
+STAR   --runThreadN 2   --genomeDir star   --readFilesIn input1/PHO92_A_ncrna.unmapped.fastq.gz      --readFilesCommand zcat      --outFileNamePrefix PHO92_A_multiMapped.   --outSAMtype BAM   SortedByCoordinate      --outSAMattributes All      --outSAMattrRGline ID:PHO92_A_multiMapped   SM:PHO92_A_multiMapped      --outFilterType BySJout   --outFilterMultimapNmax 1   --outFilterMultimapScoreRange 1   --outFilterScoreMin 10   --alignIntronMin 20   --alignIntronMax 1000000   --alignSJoverhangMin 8   --alignSJDBoverhangMin 1   --alignEndsType Extend5pOfRead1   --sjdbGTFfile yeast_MitoV_filtered.gtf   --twopassMode Basic
+----------------------------------------
+
+Number of fastq files for each mate = 1
+
+   Input read files for mate 1 :
+-rw-r--r--    1 1000     1000       1670985 Mar 25 12:47 input1/PHO92_A_ncrna.unmapped.fastq.gz
+
+   readsCommandsFile:
+exec > "PHO92_A_multiMapped._STARtmp/tmp.fifo.read1"
+echo FILE 0
+zcat      "input1/PHO92_A_ncrna.unmapped.fastq.gz"
+
+WARNING --outSAMattrRG defines a read group, therefore STAR will output RG attribute
+ParametersSolo: --soloCellFilterType CellRanger2.2 filtering parameters:  3000 0.99 10
+WARNING: --limitBAMsortRAM=0, will use genome size as RAM limit for BAM sorting
+Finished loading and checking parameters
+Reading genome generation parameters:
+### STAR   --runMode genomeGenerate      --runThreadN 2   --genomeDir star/   --genomeFastaFiles yeast_MitoV.fa      --genomeSAindexNbases 9   --limitGenomeGenerateRAM 6342450944   --sjdbGTFfile yeast_MitoV.gtf_bracketsremoved.cmd.gtf
+### GstrandBit=32
+versionGenome                 2.7.4a     ~RE-DEFINED
+genomeType                    Full     ~RE-DEFINED
+genomeFastaFiles              yeast_MitoV.fa        ~RE-DEFINED
+genomeSAindexNbases           9     ~RE-DEFINED
+genomeChrBinNbits             18     ~RE-DEFINED
+genomeSAsparseD               1     ~RE-DEFINED
+genomeTransformType           None     ~RE-DEFINED
+genomeTransformVCF            -     ~RE-DEFINED
+sjdbOverhang                  100     ~RE-DEFINED
+sjdbFileChrStartEnd           -        ~RE-DEFINED
+sjdbGTFfile                   yeast_MitoV.gtf_bracketsremoved.cmd.gtf     ~RE-DEFINED
+sjdbGTFchrPrefix              -     ~RE-DEFINED
+sjdbGTFfeatureExon            exon     ~RE-DEFINED
+sjdbGTFtagExonParentTranscripttranscript_id     ~RE-DEFINED
+sjdbGTFtagExonParentGene      gene_id     ~RE-DEFINED
+sjdbInsertSave                Basic     ~RE-DEFINED
+genomeFileSizes               1054807   5518041        ~RE-DEFINED
+Genome version is compatible with current STAR
+Number of real (reference) chromosomes= 2
+1	Mito	85779	0
+2	V	576874	262144
+--sjdbOverhang = 100 taken from the generated genome
+Started loading the genome: Tue Mar 25 12:47:23 2025
+
+Genome: size given as a parameter = 1054807
+SA: size given as a parameter = 5518041
+SAindex: size given as a parameter = 1
+Read from SAindex: pGe.gSAindexNbases=9  nSAi=349524
+nGenome=1054807;  nSAbyte=5518041
+GstrandBit=32   SA number of indices=1337706
+Shared memory is not used for genomes. Allocated a private copy of the genome.
+Genome file size: 1054807 bytes; state: good=1 eof=0 fail=0 bad=0
+Loading Genome ... done! state: good=1 eof=0 fail=0 bad=0; loaded 1054807 bytes
+SA file size: 5518041 bytes; state: good=1 eof=0 fail=0 bad=0
+Loading SA ... done! state: good=1 eof=0 fail=0 bad=0; loaded 5518041 bytes
+Loading SAindex ... done: 1529259 bytes
+Finished loading the genome: Tue Mar 25 12:47:23 2025
+
+Processing splice junctions database sjdbN=31,   pGe.sjdbOverhang=100 
+To accommodate alignIntronMax=1000000 redefined winBinNbits=18
+To accommodate alignIntronMax=1000000 and alignMatesGapMax=0, redefined winFlankNbins=4 and winAnchorDistNbins=8
+Mar 25 12:47:23   Loaded database junctions from the generated genome star//sjdbList.out.tab: 31 total junctions
+
+Mar 25 12:47:23 ..... processing annotations GTF
+Processing pGe.sjdbGTFfile=yeast_MitoV_filtered.gtf, found:
+		411 transcripts
+		458 exons (non-collapsed)
+		31 collapsed junctions
+Total junctions: 62
+Mar 25 12:47:23 ..... finished GTF processing
+
+Mar 25 12:47:23   Finished preparing junctions
+Mar 25 12:47:23 ..... inserting junctions into the genome indices
+Mar 25 12:47:23   Finished SA search: number of new junctions=0, old junctions=31
+Mar 25 12:47:23   Finished sorting SA indicesL nInd=0
+Genome size with junctions=1054807  1048576   6231
+GstrandBit1=32   GstrandBit=32
+Mar 25 12:47:24   Finished inserting junction indices
+Mar 25 12:47:24   Finished SAi
+Mar 25 12:47:24 ..... finished inserting junctions into genome
+Opening the file: PHO92_A_multiMapped._STARtmp//FilterBySJoutFiles.mate1.thread0 ... ok
+Opening the file: PHO92_A_multiMapped._STARtmp//FilterBySJoutFiles.mate1.thread1 ... ok
+Created thread # 1
+Starting to map file # 0
+mate 1:   input1/PHO92_A_ncrna.unmapped.fastq.gz
+Thread #0 end of input stream, nextChar=-1
+Completed: thread #1
+Completed: thread #0
+Joined thread # 1
+Mar 25 12:47:38   Loaded database junctions from the 1st pass file: PHO92_A_multiMapped._STARpass1//SJ.out.tab: 64 total junctions
+
+Mar 25 12:47:38   Finished preparing junctions
+Mar 25 12:47:38 ..... inserting junctions into the genome indices
+Mar 25 12:47:38   Finished SA search: number of new junctions=2, old junctions=31
+Mar 25 12:47:38   Finished sorting SA indicesL nInd=800
+Genome size with junctions=1055209  1048576   6633
+GstrandBit1=32   GstrandBit=32
+Mar 25 12:47:38   Finished inserting junction indices
+Mar 25 12:47:38   Finished SAi
+Mar 25 12:47:38 ..... finished inserting junctions into genome
+
+   Input read files for mate 1 :
+-rw-r--r--    1 1000     1000       1670985 Mar 25 12:47 input1/PHO92_A_ncrna.unmapped.fastq.gz
+
+   readsCommandsFile:
+exec > "PHO92_A_multiMapped._STARtmp/tmp.fifo.read1"
+echo FILE 0
+zcat      "input1/PHO92_A_ncrna.unmapped.fastq.gz"
+
+Opening the file: PHO92_A_multiMapped._STARtmp//FilterBySJoutFiles.mate1.thread0 ... ok
+Opening the file: PHO92_A_multiMapped._STARtmp//FilterBySJoutFiles.mate1.thread1 ... ok
+Created thread # 1
+Starting to map file # 0
+mate 1:   input1/PHO92_A_ncrna.unmapped.fastq.gz
+Thread #0 end of input stream, nextChar=-1
+Completed: thread #1
+Completed: thread #0
+Joined thread # 1
+Completed stage 1 mapping of outFilterBySJout mapping
+Detected 0 novel junctions that passed filtering, will proceed to filter reads that contained unannotated junctions
+Created thread # 1
+Completed: thread #1
+BAM sorting: 986 mapped reads
+BAM sorting bins genomic start loci:
+1	0	9252
+2	0	14097
+3	0	76129
+4	1	20299
+5	1	26275
+6	1	49537
+7	1	61119
+8	1	71130
+9	1	88213
+10	1	88213
+11	1	122848
+12	1	138670
+13	1	138694
+14	1	138695
+15	1	138726
+16	1	138784
+17	1	163777
+18	1	167508
+19	1	167569
+20	1	212414
+21	1	237221
+22	1	244571
+23	1	260922
+24	1	269912
+25	1	282262
+26	1	288662
+27	1	300223
+28	1	326394
+29	1	333713
+30	1	341201
+31	1	342161
+32	1	363061
+33	1	397410
+34	1	402297
+35	1	409420
+36	1	424716
+37	1	427829
+38	1	431129
+39	1	439431
+40	1	439431
+41	1	465534
+42	1	482567
+43	1	513515
+44	1	517895
+45	1	534984
+46	1	534984
+47	1	557828
+48	1	557828
+Completed: thread #0
+Joined thread # 1
+Mar 25 12:47:52 ..... started sorting BAM
+Max memory needed for sorting = 12774
+ALL DONE!

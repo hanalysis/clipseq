@@ -1,0 +1,5 @@
+Sample	Uniquely mapped	Mapped to too many loci	Unmapped: too short	Unmapped: other
+HNRNPC_multiMapped	986.0	2447.0	36911.0	473.0
+PHO92_A_multiMapped	986.0	2447.0	36911.0	473.0
+PHO92_B_multiMapped	986.0	2447.0	36911.0	473.0
+PHO92_C_multiMapped	986.0	2447.0	36911.0	473.0
