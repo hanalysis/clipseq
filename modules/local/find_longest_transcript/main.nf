@@ -15,7 +15,8 @@ process FIND_LONGEST_TRANSCRIPT {
     tuple val(meta), path("*longest_transcript.txt")                 ,emit: longest_transcript
     tuple val(meta), path("*longest_transcript.fai")                 ,emit: longest_transcript_fai
     tuple val(meta), path("*longest_transcript.gtf")                 ,emit: longest_transcript_gtf
-    tuple val(meta), path("*longest_transcript.filtered.gtf")        ,emit: filtered_gtf
+    tuple val(meta), path("*longest_transcript_filtered.gtf")        ,emit: filtered_gtf
+    path  "*.log"                                                    ,emit: log
     path  "versions.yml"                                             ,emit: versions
 
     when:
@@ -23,6 +24,6 @@ process FIND_LONGEST_TRANSCRIPT {
 
     shell:
     process_name = task.process
-    output       = task.ext.output ?: "longest_transcript"
+    output       = task.ext.output ?: "${gtf.simpleName}_longest_transcript"
     template 'find_longest_transcript.py'
 }
