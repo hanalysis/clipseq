@@ -30,9 +30,9 @@ workflow PREPARE_GENOME {
     ncrna_genome_index         // folder: index
     genome_chrom_sizes         // file: .txt
     ncrna_chrom_sizes          // file: .txt
-    longest_transcript         // file: .txt
-    longest_transcript_fai     // file: .fai
-    longest_transcript_gtf     // file: .gtf
+    representative_transcript  // file: .txt
+    representative_transcript_fai  // file: .fai
+    representative_transcript_gtf  // file: .gtf
     filtered_gtf               // file: .gtf
     seg_gtf                    // file: .gtf
     regions_gtf                // file: .gtf
@@ -184,27 +184,27 @@ workflow PREPARE_GENOME {
     // MODULE: Filter GTF and generate transcript files (fai, GTF) if needed. Uses provided transcripts or selects longest from primary genome if missing.
     //
 
-    // Channel for longest_transcript
-    ch_longest_transcript = longest_transcript ?
-        Channel.of([ [id: longest_transcript.baseName], longest_transcript ]) :
+    // Channel for representative_transcript
+    ch_representative_transcript = representative_transcript ?
+        Channel.of([ [id: representative_transcript.baseName], representative_transcript ]) :
         Channel.of([[], []])
 
     // Similarly for fai and gtf, but as empty if not provided
-    ch_longest_transcript_fai = longest_transcript_fai ?
-        Channel.of([ [id: longest_transcript_fai.baseName], longest_transcript_fai ]) :
+    ch_representative_transcript_fai = representative_transcript_fai ?
+        Channel.of([ [id: representative_transcript_fai.baseName], representative_transcript_fai ]) :
         Channel.empty()
 
-    ch_longest_transcript_gtf = longest_transcript_gtf ?
-        Channel.of([ [id: longest_transcript_gtf.baseName], longest_transcript_gtf ]) :
+    ch_representative_transcript_gtf = representative_transcript_gtf ?
+        Channel.of([ [id: representative_transcript_gtf.baseName], representative_transcript_gtf ]) :
         Channel.empty()
 
     // Run FILTER_GTF_BY_TRANSCRIPTS
-    FILTER_GTF_BY_TRANSCRIPTS(ch_gtf, ch_longest_transcript)
+    FILTER_GTF_BY_TRANSCRIPTS(ch_gtf, ch_representative_transcript)
 
     // Use original channels if provided, otherwise use FILTER_BY_TRANSCRIPTS output
-    ch_longest_transcript     = ch_longest_transcript.map { it[1] != [] ? it : FILTER_GTF_BY_TRANSCRIPTS.out.longest_transcript.first() }
-    ch_longest_transcript_fai = ch_longest_transcript_fai.ifEmpty(FILTER_GTF_BY_TRANSCRIPTS.out.longest_transcript_fai)
-    ch_longest_transcript_gtf = ch_longest_transcript_gtf.ifEmpty(FILTER_GTF_BY_TRANSCRIPTS.out.longest_transcript_gtf)
+    ch_representative_transcript     = ch_representative_transcript.map { it[1] != [] ? it : FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript.first() }
+    ch_representative_transcript_fai = ch_representative_transcript_fai.ifEmpty(FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript_fai)
+    ch_representative_transcript_gtf = ch_representative_transcript_gtf.ifEmpty(FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript_gtf)
     ch_filt_gtf               = FILTER_GTF_BY_TRANSCRIPTS.out.filtered_gtf
     ch_versions               = ch_versions.mix(FILTER_GTF_BY_TRANSCRIPTS.out.versions)
 
@@ -269,9 +269,9 @@ workflow PREPARE_GENOME {
     chrom_sizes                = ch_genome_chrom_sizes         // channel: [ val(meta), [ txt ] ]
     ncrna_chrom_sizes          = ch_ncrna_chrom_sizes          // channel: [ val(meta), [ txt ] ]
     gtf                        = ch_gtf                        // channel: [ val(meta), [ gtf ] ]
-    longest_transcript         = ch_longest_transcript         // channel: [ val(meta), [ txt ] ]
-    longest_transcript_fai     = ch_longest_transcript_fai     // channel: [ val(meta), [ fai ] ]
-    longest_transcript_gtf     = ch_longest_transcript_gtf     // channel: [ val(meta), [ fai ] ]
+    representative_transcript         = ch_representative_transcript         // channel: [ val(meta), [ txt ] ]
+    representative_transcript_fai     = ch_representative_transcript_fai     // channel: [ val(meta), [ fai ] ]
+    representative_transcript_gtf     = ch_representative_transcript_gtf     // channel: [ val(meta), [ fai ] ]
     filtered_gtf               = ch_filt_gtf                   // channel: [ val(meta), [ gtf ] ]
     seg_gtf                    = ch_seg_gtf                    // channel: [ val(meta), [ gtf ] ]
     // seg_filt_gtf               = ch_seg_filt_gtf               // channel: [ val(meta), [ gtf ] ]; not used downstream
