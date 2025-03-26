@@ -34,9 +34,9 @@ def checkPathParamList = [
     params.ncrna_genome_index,
     params.genome_chrom_sizes,
     params.ncrna_chrom_sizes,
-    params.longest_transcript,
-    params.longest_transcript_fai,
-    params.longest_transcript_gtf,
+    params.representative_transcript,
+    params.representative_transcript_fai,
+    params.representative_transcript_gtf,
     params.filtered_gtf,
     params.seg_gtf,
     params.regions_gtf,
@@ -183,9 +183,9 @@ workflow CLIPSEQ {
     ch_ncrna_genome_index         = []
     ch_genome_chrom_sizes         = []
     ch_ncrna_chrom_sizes          = []
-    ch_longest_transcript         = []
-    ch_longest_transcript_fai     = []
-    ch_longest_transcript_gtf     = []
+    ch_representative_transcript         = []
+    ch_representative_transcript_fai     = []
+    ch_representative_transcript_gtf     = []
     ch_filtered_gtf               = []
     ch_seg_gtf                    = []
     ch_regions_gtf                = []
@@ -197,9 +197,9 @@ workflow CLIPSEQ {
     if(params.ncrna_genome_index) { ch_ncrna_genome_index = file(params.ncrna_genome_index) }
     if(params.genome_chrom_sizes) { ch_genome_chrom_sizes = file(params.genome_chrom_sizes) }
     if(params.ncrna_chrom_sizes) { ch_ncrna_chrom_sizes = file(params.ncrna_chrom_sizes) }
-    if(params.longest_transcript) { ch_longest_transcript = file(params.longest_transcript) }
-    if(params.longest_transcript_fai) { ch_longest_transcript_fai = file(params.longest_transcript_fai) }
-    if(params.longest_transcript_gtf) { ch_longest_transcript_gtf = file(params.longest_transcript_gtf) }
+    if(params.representative_transcript) { ch_representative_transcript = file(params.representative_transcript) }
+    if(params.representative_transcript_fai) { ch_representative_transcript_fai = file(params.representative_transcript_fai) }
+    if(params.representative_transcript_gtf) { ch_representative_transcript_gtf = file(params.representative_transcript_gtf) }
     if(params.filtered_gtf) { ch_filtered_gtf = file(params.filtered_gtf) }
     if(params.seg_gtf) { ch_seg_gtf = file(params.seg_gtf) }
     if(params.regions_gtf) { ch_regions_gtf = file(params.regions_gtf) }
@@ -220,9 +220,9 @@ workflow CLIPSEQ {
             ch_ncrna_genome_index,
             ch_genome_chrom_sizes,
             ch_ncrna_chrom_sizes,
-            ch_longest_transcript,
-            ch_longest_transcript_fai,
-            ch_longest_transcript_gtf,
+            ch_representative_transcript,
+            ch_representative_transcript_fai,
+            ch_representative_transcript_gtf,
             ch_filtered_gtf,
             ch_seg_gtf,
             ch_regions_gtf,
@@ -238,9 +238,9 @@ workflow CLIPSEQ {
         ch_ncrna_fasta                = PREPARE_GENOME.out.ncrna_fasta
         ch_ncrna_fasta_fai            = PREPARE_GENOME.out.ncrna_fasta_fai
         ch_ncrna_chrom_sizes          = PREPARE_GENOME.out.ncrna_chrom_sizes
-        ch_longest_transcript         = PREPARE_GENOME.out.longest_transcript
-        ch_longest_transcript_fai     = PREPARE_GENOME.out.longest_transcript_fai
-        ch_longest_transcript_gtf     = PREPARE_GENOME.out.longest_transcript_gtf
+        ch_representative_transcript         = PREPARE_GENOME.out.representative_transcript
+        ch_representative_transcript_fai     = PREPARE_GENOME.out.representative_transcript_fai
+        ch_representative_transcript_gtf     = PREPARE_GENOME.out.representative_transcript_gtf
         ch_seg_gtf                    = PREPARE_GENOME.out.seg_gtf
         ch_regions_gtf                = PREPARE_GENOME.out.regions_gtf
         ch_regions_filt_gtf           = PREPARE_GENOME.out.regions_filt_gtf
@@ -316,9 +316,9 @@ workflow CLIPSEQ {
         TRANSCRIPTOME_PROCESSING(
             ch_transcript_unique_bam,
             ch_transcript_unique_bai,
-            ch_longest_transcript,
-            ch_longest_transcript_gtf,
-            ch_longest_transcript_fai,
+            ch_representative_transcript,
+            ch_representative_transcript_gtf,
+            ch_representative_transcript_fai,
             callers,
             ch_paraclu_mincluster
         )
