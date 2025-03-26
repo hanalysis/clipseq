@@ -14,14 +14,10 @@ include { SAMTOOLS_FAIDX as NCRNA_INDEX                                         
 include { LINUX_COMMAND as REMOVE_GTF_BRACKETS                                   } from '../../modules/local/linux_command'
 include { CUSTOM_GETCHROMSIZES as GENOME_CHROM_SIZE                              } from '../../modules/nf-core/custom/getchromsizes/main'
 include { CUSTOM_GETCHROMSIZES as NCRNA_CHROM_SIZE                               } from '../../modules/nf-core/custom/getchromsizes/main'
-include { FIND_LONGEST_TRANSCRIPT                                                } from '../../modules/local/find_longest_transcript/main'
-// include { CLIPSEQ_FILTER_GTF                                                     } from '../../modules/local/filter_gtf/main'
+include { FILTER_GTF_BY_TRANSCRIPTS                                              } from '../../modules/local/find_longest_transcript/main'
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_GTF                                   } from '../../modules/nf-core/icountmini/segment/main'
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_FILTGTF                               } from '../../modules/nf-core/icountmini/segment/main'
-// include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED                     } from '../../modules/local/resolve_unannotated/main'
-// include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_GENIC_OTHER         } from '../../modules/local/resolve_unannotated/main'
 include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_REGIONS             } from '../../modules/local/resolve_unannotated/main'
-// include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_GENIC_OTHER_REGIONS } from '../../modules/local/resolve_unannotated/main'
 
 workflow PREPARE_GENOME {
     take:
@@ -39,13 +35,9 @@ workflow PREPARE_GENOME {
     longest_transcript_gtf     // file: .gtf
     filtered_gtf               // file: .gtf
     seg_gtf                    // file: .gtf
-    // seg_filt_gtf               // file: .gtf
-    // seg_resolved_gtf           // file: .gtf
-    // seg_resolved_gtf_genic     // file: .gtf
     regions_gtf                // file: .gtf
     regions_filt_gtf           // file: .gtf
     regions_resolved_gtf       // file: .gtf
-    // regions_resolved_gtf_genic // file: .gtf
 
     main:
 
@@ -206,29 +198,15 @@ workflow PREPARE_GENOME {
         Channel.of([ [id: longest_transcript_gtf.baseName], longest_transcript_gtf ]) :
         Channel.empty()
 
-    // Run FIND_LONGEST_TRANSCRIPT; FILTER_GTF_BY_TRANSCRIPTS could be a better name
-    FIND_LONGEST_TRANSCRIPT(ch_gtf, ch_longest_transcript)
+    // Run FILTER_GTF_BY_TRANSCRIPTS
+    FILTER_GTF_BY_TRANSCRIPTS(ch_gtf, ch_longest_transcript)
 
-    // Use original channels if provided, otherwise use FIND_LONGEST_TRANSCRIPT output
-    ch_longest_transcript     = ch_longest_transcript.map { it[1] != [] ? it : FIND_LONGEST_TRANSCRIPT.out.longest_transcript.first() }
-    ch_longest_transcript_fai = ch_longest_transcript_fai.ifEmpty(FIND_LONGEST_TRANSCRIPT.out.longest_transcript_fai)
-    ch_longest_transcript_gtf = ch_longest_transcript_gtf.ifEmpty(FIND_LONGEST_TRANSCRIPT.out.longest_transcript_gtf)
-    ch_filt_gtf               = FIND_LONGEST_TRANSCRIPT.out.filtered_gtf
-    ch_versions               = ch_versions.mix(FIND_LONGEST_TRANSCRIPT.out.versions)
-
-    // //
-    // // MODULE: Filter the GTF file
-    // //
-    // ch_filt_gtf = Channel.of( [ [id:filtered_gtf.baseName], filtered_gtf ] )
-    // if (!filtered_gtf){
-    //     CLIPSEQ_FILTER_GTF (
-    //         ch_gtf
-    //     )
-    //     ch_filt_gtf = CLIPSEQ_FILTER_GTF.out.gtf
-    //     ch_versions = ch_versions.mix(CLIPSEQ_FILTER_GTF.out.versions)
-    // }
-    // // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
-    // // CLIPSEQ_FILTER_GTF.out.gtf | view
+    // Use original channels if provided, otherwise use FILTER_BY_TRANSCRIPTS output
+    ch_longest_transcript     = ch_longest_transcript.map { it[1] != [] ? it : FILTER_GTF_BY_TRANSCRIPTS.out.longest_transcript.first() }
+    ch_longest_transcript_fai = ch_longest_transcript_fai.ifEmpty(FILTER_GTF_BY_TRANSCRIPTS.out.longest_transcript_fai)
+    ch_longest_transcript_gtf = ch_longest_transcript_gtf.ifEmpty(FILTER_GTF_BY_TRANSCRIPTS.out.longest_transcript_gtf)
+    ch_filt_gtf               = FILTER_GTF_BY_TRANSCRIPTS.out.filtered_gtf
+    ch_versions               = ch_versions.mix(FILTER_GTF_BY_TRANSCRIPTS.out.versions)
 
     //
     // MODULE: Segment GTF file using icount
@@ -263,23 +241,6 @@ workflow PREPARE_GENOME {
     // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
     //ICOUNT_SEG_FILTGTF.out.gtf | view
 
-    //
-    // MODULE: Resolve the GTF regions that iCount did not annotate
-    //
-    // ch_seg_resolved_gtf = Channel.of( [ [id:seg_resolved_gtf.baseName], seg_resolved_gtf ] )
-    // if (!params.seg_resolved_gtf) {
-    //     RESOLVE_UNANNOTATED (
-    //         ch_seg_gtf.map{ it[1] },
-    //         ch_seg_filt_gtf.map{ it[1] },
-    //         ch_gtf.map{ it[1] },
-    //         ch_fasta_fai.map{ it[1] },
-    //         false
-    //     )
-    //     ch_seg_resolved_gtf = RESOLVE_UNANNOTATED.out.gtf
-    //     ch_versions         = ch_versions.mix(RESOLVE_UNANNOTATED.out.versions)
-    // }
-    // // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
-    // //RESOLVE_UNANNOTATED.out.gtf | view
 
     //
     // MODULE: Resolve the GTF regions that iCount did not annotate REGIONS FILE
@@ -296,39 +257,6 @@ workflow PREPARE_GENOME {
     // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
     //RESOLVE_UNANNOTATED_REGIONS.out.gtf | view
 
-    //
-    // MODULE: Resolve the GTF regions that iCount did not annotate with genic_other flag
-    //
-    // ch_seg_resolved_gtf_genic = Channel.of( [ [id:seg_resolved_gtf_genic.baseName], seg_resolved_gtf_genic ] )
-    // if (!params.seg_resolved_gtf_genic) {
-    //     RESOLVE_UNANNOTATED_GENIC_OTHER (
-    //         ch_seg_gtf.map{ it[1] },
-    //         ch_seg_filt_gtf.map{ it[1] },
-    //         ch_gtf.map{ it[1] },
-    //         ch_fasta_fai.map{ it[1] },
-    //         true
-    //     )
-    //     ch_seg_resolved_gtf_genic = RESOLVE_UNANNOTATED_GENIC_OTHER.out.gtf
-    // }
-    // // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
-    // //RESOLVE_UNANNOTATED_GENIC_OTHER.out.gtf | view
-
-    //
-    // MODULE: Resolve the GTF regions that iCount did not annotate with genic_other flag REGIONS FILE
-    //
-    // ch_regions_resolved_gtf_genic = Channel.of( [ [id:regions_resolved_gtf_genic.baseName], regions_resolved_gtf_genic ] )
-    // if (!params.regions_resolved_gtf_genic) {
-    //     RESOLVE_UNANNOTATED_GENIC_OTHER_REGIONS (
-    //         ch_regions_gtf.map{ it[1] },
-    //         ch_regions_filt_gtf.map{ it[1] },
-    //         ch_gtf.map{ it[1] },
-    //         ch_fasta_fai.map{ it[1] },
-    //         true
-    //     )
-    //     ch_regions_resolved_gtf_genic = RESOLVE_UNANNOTATED_GENIC_OTHER_REGIONS.out.gtf
-    // }
-    // // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
-    // //RESOLVE_UNANNOTATED_GENIC_OTHER_REGIONS.out.gtf | view
 
 
     emit:

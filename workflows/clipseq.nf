@@ -39,13 +39,9 @@ def checkPathParamList = [
     params.longest_transcript_gtf,
     params.filtered_gtf,
     params.seg_gtf,
-    // params.seg_filt_gtf,
-    // params.seg_resolved_gtf,
-    // params.seg_resolved_gtf_genic,
     params.regions_gtf,
     params.regions_filt_gtf,
-    params.regions_resolved_gtf,
-    // params.regions_resolved_gtf_genic
+    params.regions_resolved_gtf
 ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
@@ -192,13 +188,9 @@ workflow CLIPSEQ {
     ch_longest_transcript_gtf     = []
     ch_filtered_gtf               = []
     ch_seg_gtf                    = []
-    // ch_seg_filt_gtf               = []
-    // ch_seg_resolved_gtf           = []
-    // ch_seg_resolved_gtf_genic     = []
     ch_regions_gtf                = []
     ch_regions_filt_gtf           = []
     ch_regions_resolved_gtf       = []
-    // ch_regions_resolved_gtf_genic = []
     if(params.fasta_fai) { ch_fasta_fai = file(params.fasta_fai) }
     if(params.ncrna_fasta_fai) { ch_ncrna_fasta_fai = file(params.ncrna_fasta_fai) }
     if(params.genome_index) { ch_genome_index = file(params.genome_index) }
@@ -210,13 +202,9 @@ workflow CLIPSEQ {
     if(params.longest_transcript_gtf) { ch_longest_transcript_gtf = file(params.longest_transcript_gtf) }
     if(params.filtered_gtf) { ch_filtered_gtf = file(params.filtered_gtf) }
     if(params.seg_gtf) { ch_seg_gtf = file(params.seg_gtf) }
-    // if(params.seg_filt_gtf) { ch_seg_filt_gtf = file(params.seg_filt_gtf) }
-    // if(params.seg_resolved_gtf) { ch_seg_resolved_gtf = file(params.seg_resolved_gtf) }
-    // if(params.seg_resolved_gtf_genic) { ch_seg_resolved_gtf_genic= file(params.seg_resolved_gtf_genic) }
     if(params.regions_gtf) { ch_regions_gtf = file(params.regions_gtf) }
     if(params.regions_filt_gtf) { ch_regions_filt_gtf = file(params.regions_filt_gtf) }
     if(params.regions_resolved_gtf) { ch_regions_resolved_gtf = file(params.regions_resolved_gtf) }
-    // if(params.regions_resolved_gtf_genic) { ch_regions_resolved_gtf_genic = file(params.regions_resolved_gtf_genic) }
 
     //
     // SUBWORKFLOW: Uncompress and prepare reference genome files
@@ -237,13 +225,9 @@ workflow CLIPSEQ {
             ch_longest_transcript_gtf,
             ch_filtered_gtf,
             ch_seg_gtf,
-            // ch_seg_filt_gtf,
-            // ch_seg_resolved_gtf,
-            // ch_seg_resolved_gtf_genic,
             ch_regions_gtf,
             ch_regions_filt_gtf,
-            ch_regions_resolved_gtf,
-            // ch_regions_resolved_gtf_genic
+            ch_regions_resolved_gtf
         )
         ch_versions                   = ch_versions.mix(PREPARE_GENOME.out.versions)
         ch_fasta                      = PREPARE_GENOME.out.fasta
@@ -258,13 +242,9 @@ workflow CLIPSEQ {
         ch_longest_transcript_fai     = PREPARE_GENOME.out.longest_transcript_fai
         ch_longest_transcript_gtf     = PREPARE_GENOME.out.longest_transcript_gtf
         ch_seg_gtf                    = PREPARE_GENOME.out.seg_gtf
-        // ch_seg_filt_gtf               = PREPARE_GENOME.out.seg_filt_gtf
-        // ch_seg_resolved_gtf           = PREPARE_GENOME.out.seg_resolved_gtf
-        // ch_seg_resolved_gtf_genic     = PREPARE_GENOME.out.seg_resolved_gtf_genic
         ch_regions_gtf                = PREPARE_GENOME.out.regions_gtf
         ch_regions_filt_gtf           = PREPARE_GENOME.out.regions_filt_gtf
         ch_regions_resolved_gtf       = PREPARE_GENOME.out.regions_resolved_gtf
-        // ch_regions_resolved_gtf_genic = PREPARE_GENOME.out.regions_resolved_gtf_genic
         ch_genome_index               = PREPARE_GENOME.out.genome_index
         ch_ncrna_genome_index         = PREPARE_GENOME.out.ncrna_index
     }
@@ -436,9 +416,12 @@ workflow CLIPSEQ {
         ch_ncrna_k1_crosslink_INDIVIDUAL_HASGROUP_bed  = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_INDIVIDUAL_HASGROUP
         ch_ncrna_k1_crosslink_GROUP_HASGROUP_bed       = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_GROUP_HASGROUP
 
+
+        ch_regions = params.filter_gtf_by_transcripts ? ch_regions_resolved_gtf : ch_regions_gtf
+
         ICOUNTMINI_SUMMARY (
             ch_genome_crosslink_group_resolved_bed,
-            ch_regions_resolved_gtf.collect{ it[1] }
+            ch_regions.collect{ it[1] }
         )
 
         MERGE_SUMMARY (
@@ -451,7 +434,7 @@ workflow CLIPSEQ {
 
         ICOUNTMINI_METAGENE (
             ch_genome_crosslink_group_resolved_bed,
-            ch_regions_resolved_gtf.collect{ it[1] }
+            ch_regions.collect{ it[1] }
         )
 
         if(params.consensus_peak){
@@ -523,7 +506,7 @@ workflow CLIPSEQ {
                     ch_all_crosslinks,
                     CLIPPY_GENOME_CONSENSUS.out.peaks,
                     ch_fasta_fai,
-                    ch_regions_resolved_gtf,
+                    ch_regions,
                     "Clippy_Consensus_AllCounts.tsv"
                 )
                 ch_versions = ch_versions.mix(CLIPPY_CONSENSUS_PEAK_TABLE.out.versions)
@@ -535,7 +518,7 @@ workflow CLIPSEQ {
                     ch_genome_crosslink_group_resolved_bed,
                     ch_fasta.collect{ it[1] },
                     ch_fasta_fai.collect{ it[1] },
-                    ch_regions_resolved_gtf.collect{ it[1] }
+                    ch_regions.collect{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_CLIPPY.out.versions)
             }
@@ -606,7 +589,7 @@ workflow CLIPSEQ {
                     ch_all_crosslinks,
                     CONSENSUS_GUNZIP_ICOUNTMINI_PEAKS.out.gunzip,
                     ch_fasta_fai,
-                    ch_regions_resolved_gtf,
+                    ch_regions,
                     "iCount-Mini_Consensus_AllCounts.tsv"
                 )
                 ch_versions = ch_versions.mix(ICOUNT_CONSENSUS_PEAK_TABLE.out.versions)
@@ -618,7 +601,7 @@ workflow CLIPSEQ {
                     ch_genome_crosslink_group_resolved_bed,
                     ch_fasta.collect{ it[1] },
                     ch_fasta_fai.collect{ it[1] },
-                    ch_regions_resolved_gtf.collect{ it[1] }
+                    ch_regions.collect{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_ICOUNT.out.versions)
             }
@@ -647,7 +630,7 @@ workflow CLIPSEQ {
                     ch_all_crosslinks,
                     PARACLU_GENOME_CONSENSUS.out.bed,
                     ch_fasta_fai,
-                    ch_regions_resolved_gtf,
+                    ch_regions,
                     "Paraclu_Consensus_AllCounts.tsv"
                 )
                 ch_versions = ch_versions.mix(PARACLU_CONSENSUS_PEAK_TABLE.out.versions)
@@ -659,7 +642,7 @@ workflow CLIPSEQ {
                     ch_genome_crosslink_group_resolved_bed,
                     ch_fasta.collect{ it[1] },
                     ch_fasta_fai.collect{ it[1] },
-                    ch_regions_resolved_gtf.collect{ it[1] }
+                    ch_regions.collect{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_PARACLU.out.versions)
             }
@@ -755,7 +738,7 @@ workflow CLIPSEQ {
                     ch_genome_crosslink_bed_matched,
                     ch_fasta.collect{ it[1] },
                     ch_fasta_fai.collect{ it[1] },
-                    ch_regions_resolved_gtf.collect{ it[1] }
+                    ch_regions.collect{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_PURECLIP.out.versions)
             }

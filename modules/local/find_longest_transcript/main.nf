@@ -1,4 +1,4 @@
-process FIND_LONGEST_TRANSCRIPT {
+process FILTER_GTF_BY_TRANSCRIPTS {
     tag "$gtf"
     label "process_single"
 
@@ -12,18 +12,18 @@ process FIND_LONGEST_TRANSCRIPT {
     tuple val(meta), path(user_transcripts)
 
     output:
-    tuple val(meta), path("*longest_transcript.txt")                 ,emit: longest_transcript
-    tuple val(meta), path("*longest_transcript.fai")                 ,emit: longest_transcript_fai
-    tuple val(meta), path("*longest_transcript.gtf")                 ,emit: longest_transcript_gtf
-    tuple val(meta), path("*longest_transcript_filtered.gtf")        ,emit: filtered_gtf
-    path  "*.log"                                                    ,emit: log
-    path  "versions.yml"                                             ,emit: versions
+    tuple val(meta), path("*representative_transcript.txt")                 ,emit: longest_transcript
+    tuple val(meta), path("*representative_transcript.fai")                 ,emit: longest_transcript_fai
+    tuple val(meta), path("*representative_transcript.gtf")                 ,emit: longest_transcript_gtf
+    tuple val(meta), path("*representative_transcript_filtered.gtf")        ,emit: filtered_gtf
+    path  "*.log"                                                           ,emit: log
+    path  "versions.yml"                                                    ,emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     shell:
     process_name = task.process
-    output       = task.ext.output ?: "${gtf.simpleName}_longest_transcript"
-    template 'find_longest_transcript.py'
+    output       = task.ext.output ?: "${gtf.simpleName}_representative_transcript"
+    template 'filter_gtf_by_transcripts.py'
 }

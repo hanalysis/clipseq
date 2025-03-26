@@ -22,6 +22,7 @@ import pandas as pd
 import warnings
 import csv
 import logging
+import os
 
 
 def dump_versions(process_name):
@@ -61,8 +62,12 @@ def parse_gtf_and_calculate_lengths(gtf_path):
     # Check if all genes are present for filtering
     missing_genes = input_genes - set(df_txlengths.gene_id)
     if len(missing_genes) > 0:
-        logging.error("Some genes don't have transcripts associated with them")
-        raise ValueError("FATAL: Some genes don't have transcripts associated with them. Corruped GTF file.")
+        logging.error("Some genes don't have transcripts associated with them.")
+        raise ValueError(
+            "FATAL: Some genes have no associated transcripts. The GTF may be corrupted.\n"
+            "Please provide a valid GTF with at least one transcript per gene, or run with --filter_gtf_by_transcripts false."
+        )
+
 
     return df_gtf, df_txlengths, input_genes
 
@@ -82,6 +87,7 @@ def main(process_name, gtf, user_transcripts, output):
 
     # Load the genome annotation file and calculate CDS and exon lengths per transcript
     df_gtf, df_txlengths, input_genes = parse_gtf_and_calculate_lengths(gtf)
+    df_txlengths.to_csv(f"{os.path.basename(gtf)}.lengths.tsv", index=None, sep='\t', quoting=csv.QUOTE_NONE)
     logging.info(f"Total genes in genome GTF: {len(input_genes)}")
 
     # If user specified transcripts are provided, use these to filter gtf; else find longest CDS / exon transcript.
@@ -95,9 +101,11 @@ def main(process_name, gtf, user_transcripts, output):
         # Check if all user-provided IDs are in the GTF
         missing_ids = set(transcript_ids) - set(df_txlengths.transcript_id)
         if len(missing_ids) > 0:
-            logging.warning(f"The following transcript IDs are not in the GTF: {sorted(missing_ids)}")
-            raise ValueError("Some user-provided transcript IDs are not in the GTF.")
-
+            logging.error(f"{len(missing_ids)} transcript IDs not found in the GTF: {sorted(missing_ids)[:10]}{' ...' if len(missing_ids) > 10 else ''}")
+            raise ValueError(
+                "Some user-provided transcript IDs are missing from the GTF. "
+                "Please ensure the transcript list matches the GTF, or omit --representative_transcript to let the pipeline automatically select representative transcripts."
+            )
 
         # Filter based on user provided transcript ID
         df_txlengths_filtered = df_txlengths.loc[df_txlengths.transcript_id.isin(transcript_ids)]
@@ -105,7 +113,10 @@ def main(process_name, gtf, user_transcripts, output):
         # Throw an error if none of the user transcripts are in the GTF
         if df_txlengths_filtered.empty:
             logging.error("FATAL: None of the provided transcript IDs are found in the GTF.")
-            raise ValueError("FATAL: None of the provided transcript IDs are found in the GTF.")
+            raise ValueError(
+                "FATAL: None of the provided transcript IDs are found in the GTF."
+                "Please ensure the transcript list matches the GTF, or omit --representative_transcript to let the pipeline automatically select representative transcripts."
+            )
 
     else:
         # Select longest transcript per gene: hierarchy: CDS length > exon length; remaining ties are resolved alphabetically on transcript ID
@@ -123,19 +134,25 @@ def main(process_name, gtf, user_transcripts, output):
     multi_assigned_genes = transcripts_per_gene[transcripts_per_gene > 1].index.tolist()
     if not (transcripts_per_gene == 1).all():
         logging.error("Some genes do not have exactly one representative transcript. Offending genes (more than 1 transcript assigned): ", multi_assigned_genes)
-        raise ValueError("FATAL: Some genes do not have exactly one representative transcript.")
+        raise ValueError(
+            "FATAL: Some genes do not have exactly one representative transcript. "
+            "Please make sure you provide a single transcript ID per gene ID, or omit --representative_transcript to let the pipeline automatically select representative transcripts."
+        )
 
     set_filtgenes = set(df_txlengths_filtered.gene_id)
     logging.info(f"Remaining genes after filtering: {len(set_filtgenes)}")
 
     missing_genes = input_genes - set_filtgenes
-    if len(missing_ids) > 0:
+    if len(missing_genes) > 0:
         missing_genes_list = sorted(missing_genes)
         top = missing_genes_list[:10]
         more = f" and {len(missing_genes_list) - 10} more" if len(missing_genes_list) > 10 else ""
 
-        logging.error(f"Missing genes after filtering: {top}{more}")
-        raise ValueError("FATAL: Some genes are missing after filtering. Ensure each has one representative transcript.")
+        logging.error(f"Ensure each has one representative transcript.Missing genes after filtering: {top}{more}")
+        raise ValueError(
+            "FATAL: Some genes are missing after filtering."
+            "Please make sure you provide a single transcript ID per gene ID, or omit --representative_transcript to let the pipeline automatically select representative transcripts."
+        )
 
     # Filter the genome annotation
     filt_annot = df_gtf.loc[(df_gtf['transcript_id'].isin(transcript_ids)) | (df_gtf['Feature'] == 'gene')].copy()
