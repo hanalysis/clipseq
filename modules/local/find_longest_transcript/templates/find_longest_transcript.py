@@ -45,7 +45,8 @@ def parse_gtf_and_calculate_lengths(gtf_path):
     # Calculate CDS and exon lengths per transcript
     cds_sums = df_gtf[df_gtf['Feature'] == 'CDS'].groupby(['gene_id', 'transcript_id'])['length'].sum()
     exon_sums = df_gtf[df_gtf['Feature'] == 'exon'].groupby(['gene_id', 'transcript_id'])['length'].sum()
-    df_txlengths = pd.concat([cds_sums, exon_sums], axis=1, keys=['cds_length', 'exon_length']).reset_index()
+    tx_sums = df_gtf[df_gtf['Feature'] == 'transcript'].copy().set_index(['gene_id', 'transcript_id'])['length']
+    df_txlengths = pd.concat([cds_sums, exon_sums, tx_sums], axis=1, keys=['cds_length', 'exon_length', 'unspliced_length']).reset_index()
 
     # Warn if any transcript is missing exon length
     missing_exons = df_txlengths[df_txlengths.exon_length.isna()]
@@ -55,7 +56,13 @@ def parse_gtf_and_calculate_lengths(gtf_path):
         print(missing_exons[['gene_id', 'transcript_id']])
 
     # Fill missing values with 0
-    df_txlengths[['cds_length', 'exon_length']] = df_txlengths[['cds_length', 'exon_length']].fillna(0)
+    df_txlengths[['cds_length', 'exon_length', 'unspliced_length']] = df_txlengths[['cds_length', 'exon_length', 'unspliced_length']].fillna(0)
+
+    # Check if all genes are present for filtering
+    missing_genes = input_genes - set(df_txlengths.gene_id)
+    if len(missing_genes) > 0:
+        logging.error("Some genes don't have transcripts associated with them")
+        raise ValueError("FATAL: Some genes don't have transcripts associated with them. Corruped GTF file.")
 
     return df_gtf, df_txlengths, input_genes
 
@@ -103,7 +110,7 @@ def main(process_name, gtf, user_transcripts, output):
     else:
         # Select longest transcript per gene: hierarchy: CDS length > exon length; remaining ties are resolved alphabetically on transcript ID
         # Sort
-        df_txlengths = df_txlengths.sort_values(by=['cds_length', 'exon_length', 'transcript_id'], ascending=[False, False, True])
+        df_txlengths = df_txlengths.sort_values(by=['cds_length', 'exon_length', 'unspliced_length', 'transcript_id'], ascending=[False, False, False, True])
         # Drop duplicates on gene_id, keep first row
         df_txlengths_filtered = df_txlengths.drop_duplicates(subset='gene_id', keep='first')
         transcript_ids = df_txlengths_filtered.transcript_id.unique().tolist()
