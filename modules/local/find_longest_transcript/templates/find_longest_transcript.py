@@ -82,10 +82,12 @@ def main(process_name, gtf, user_transcripts, output):
         logging.info("Using the transcript IDs in: ", user_transcripts)
         with open(user_transcripts, "r") as file:
             transcript_ids = [line.strip() for line in file]
+            # Remove potential empty strings caused by trailing newline
+            transcript_ids = [x for x in transcript_ids if x]
 
         # Check if all user-provided IDs are in the GTF
         missing_ids = set(transcript_ids) - set(df_txlengths.transcript_id)
-        if missing_ids:
+        if len(missing_ids) > 0:
             logging.warning(f"The following transcript IDs are not in the GTF: {sorted(missing_ids)}")
             raise ValueError("Some user-provided transcript IDs are not in the GTF.")
 
@@ -111,21 +113,16 @@ def main(process_name, gtf, user_transcripts, output):
     # Count number of transcripts per gene
     transcripts_per_gene = df_txlengths_filtered.groupby("gene_id").transcript_id.nunique()
     # Raise warning if any gene has not exactly one transcript and print problematic genes
+    multi_assigned_genes = transcripts_per_gene[transcripts_per_gene > 1].index.tolist()
     if not (transcripts_per_gene == 1).all():
-        # warnings.warn("Some genes do not have exactly one representative transcript.", RuntimeWarning)
-        logging.warning("Some genes do not have exactly one representative transcript.")
-
-    # unassigned_genes = transcripts_per_gene[transcripts_per_gene == 0]
-    # print("Offending genes (no transcript assigned): ", unassigned_genes)
-
-    multi_assigned_genes = transcripts_per_gene[transcripts_per_gene > 1]
-    logging.info("Offending genes (more than 1 transcript assigned): ", multi_assigned_genes)
+        logging.error("Some genes do not have exactly one representative transcript. Offending genes (more than 1 transcript assigned): ", multi_assigned_genes)
+        raise ValueError("FATAL: Some genes do not have exactly one representative transcript.")
 
     set_filtgenes = set(df_txlengths_filtered.gene_id)
     logging.info(f"Remaining genes after filtering: {len(set_filtgenes)}")
 
     missing_genes = input_genes - set_filtgenes
-    if missing_genes:
+    if len(missing_ids) > 0:
         missing_genes_list = sorted(missing_genes)
         top = missing_genes_list[:10]
         more = f" and {len(missing_genes_list) - 10} more" if len(missing_genes_list) > 10 else ""
