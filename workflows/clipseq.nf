@@ -416,12 +416,13 @@ workflow CLIPSEQ {
         ch_ncrna_k1_crosslink_INDIVIDUAL_HASGROUP_bed  = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_INDIVIDUAL_HASGROUP
         ch_ncrna_k1_crosslink_GROUP_HASGROUP_bed       = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_GROUP_HASGROUP
 
-        // If filtering of GTF by transcripts is enabled, use the resoleved regions GTF produced from filtered GTF, if not use regions GTF made by icount-mini
-        ch_regions = params.filter_gtf_by_transcripts ? ch_regions_resolved_gtf : ch_regions_gtf
+        // If filtering of GTF by transcripts is enabled, use the filtered GTF and its resolved regions, if not use regions GTF made by icount-mini
+        ch_regions_used = params.filter_gtf_by_transcripts ? ch_regions_resolved_gtf : ch_regions_gtf
+        ch_gtf_used = params.filter_gtf_by_transcripts ? ch_filtered_gtf : ch_gtf
 
         ICOUNTMINI_SUMMARY (
             ch_genome_crosslink_group_resolved_bed,
-            ch_regions.collect{ it[1] }
+            ch_regions_used.collect{ it[1] }
         )
 
         MERGE_SUMMARY (
@@ -434,7 +435,7 @@ workflow CLIPSEQ {
 
         ICOUNTMINI_METAGENE (
             ch_genome_crosslink_group_resolved_bed,
-            ch_regions.collect{ it[1] }
+            ch_regions_used.collect{ it[1] }
         )
 
         if(params.consensus_peak){
@@ -489,7 +490,7 @@ workflow CLIPSEQ {
 
             CLIPPY_GENOME (
                 ch_genome_crosslink_group_resolved_bed,
-                ch_filtered_gtf.collect{ it[1] },
+                ch_gtf_used.collect{ it[1] },
                 ch_fasta_fai.collect{ it[1] }
             )
             ch_versions             = ch_versions.mix(CLIPPY_GENOME.out.versions)
@@ -498,7 +499,7 @@ workflow CLIPSEQ {
             if(params.consensus_peak){
                 CLIPPY_GENOME_CONSENSUS (
                     ch_consensus_crosslinks_final_bed,
-                    ch_filtered_gtf.collect{ it[1] },
+                    ch_gtf_used.collect{ it[1] },
                     ch_fasta_fai.collect{ it[1] }
                 )
 
@@ -506,7 +507,7 @@ workflow CLIPSEQ {
                     ch_all_crosslinks,
                     CLIPPY_GENOME_CONSENSUS.out.peaks,
                     ch_fasta_fai,
-                    ch_regions,
+                    ch_regions_used,
                     "Clippy_Consensus_AllCounts.tsv"
                 )
                 ch_versions = ch_versions.mix(CLIPPY_CONSENSUS_PEAK_TABLE.out.versions)
@@ -518,7 +519,7 @@ workflow CLIPSEQ {
                     ch_genome_crosslink_group_resolved_bed,
                     ch_fasta.collect{ it[1] },
                     ch_fasta_fai.collect{ it[1] },
-                    ch_regions.collect{ it[1] }
+                    ch_regions_used.collect{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_CLIPPY.out.versions)
             }
@@ -589,7 +590,7 @@ workflow CLIPSEQ {
                     ch_all_crosslinks,
                     CONSENSUS_GUNZIP_ICOUNTMINI_PEAKS.out.gunzip,
                     ch_fasta_fai,
-                    ch_regions,
+                    ch_regions_used,
                     "iCount-Mini_Consensus_AllCounts.tsv"
                 )
                 ch_versions = ch_versions.mix(ICOUNT_CONSENSUS_PEAK_TABLE.out.versions)
@@ -601,7 +602,7 @@ workflow CLIPSEQ {
                     ch_genome_crosslink_group_resolved_bed,
                     ch_fasta.collect{ it[1] },
                     ch_fasta_fai.collect{ it[1] },
-                    ch_regions.collect{ it[1] }
+                    ch_regions_used.collect{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_ICOUNT.out.versions)
             }
@@ -630,7 +631,7 @@ workflow CLIPSEQ {
                     ch_all_crosslinks,
                     PARACLU_GENOME_CONSENSUS.out.bed,
                     ch_fasta_fai,
-                    ch_regions,
+                    ch_regions_used,
                     "Paraclu_Consensus_AllCounts.tsv"
                 )
                 ch_versions = ch_versions.mix(PARACLU_CONSENSUS_PEAK_TABLE.out.versions)
@@ -642,7 +643,7 @@ workflow CLIPSEQ {
                     ch_genome_crosslink_group_resolved_bed,
                     ch_fasta.collect{ it[1] },
                     ch_fasta_fai.collect{ it[1] },
-                    ch_regions.collect{ it[1] }
+                    ch_regions_used.collect{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_PARACLU.out.versions)
             }
@@ -738,7 +739,7 @@ workflow CLIPSEQ {
                     ch_genome_crosslink_bed_matched,
                     ch_fasta.collect{ it[1] },
                     ch_fasta_fai.collect{ it[1] },
-                    ch_regions.collect{ it[1] }
+                    ch_regions_used.collect{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_PURECLIP.out.versions)
             }
