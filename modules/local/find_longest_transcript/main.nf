@@ -12,9 +12,9 @@ process FILTER_GTF_BY_TRANSCRIPTS {
     tuple val(meta), path(user_transcripts)
 
     output:
-    tuple val(meta), path("*representative_transcript.txt")                 ,emit: longest_transcript
-    tuple val(meta), path("*representative_transcript.fai")                 ,emit: longest_transcript_fai
-    tuple val(meta), path("*representative_transcript.gtf")                 ,emit: longest_transcript_gtf
+    tuple val(meta), path("*representative_transcript.txt")                 ,emit: representative_transcript
+    tuple val(meta), path("*representative_transcript.fai")                 ,emit: representative_transcript_fai
+    tuple val(meta), path("*representative_transcript.gtf")                 ,emit: representative_transcript_gtf
     tuple val(meta), path("*representative_transcript_filtered.gtf")        ,emit: filtered_gtf
     path  "*.log"                                                           ,emit: log
     path  "versions.yml"                                                    ,emit: versions
