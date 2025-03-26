@@ -82,27 +82,27 @@
                     },
                     "icountmini/metagene": {
                         "branch": "master",
-                        "git_sha": "ae5b64c9ad1464c12976357a1d47d28386b56cdd",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
                     "icountmini/peaks": {
                         "branch": "master",
-                        "git_sha": "0342d858b8cc2147846ba45220d288516c43a12d",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
                     "icountmini/segment": {
                         "branch": "master",
-                        "git_sha": "7bf8bf88ab96273c0ce93db57353d87f48cd2dd4",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
                     "icountmini/sigxls": {
                         "branch": "master",
-                        "git_sha": "24978a4232c602135097c619f3a15014932bb784",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
                     "icountmini/summary": {
                         "branch": "master",
-                        "git_sha": "e9f9aa72492e3234f405d7dccf59924ad7e8268d",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
                     "multiqc": {
@@ -122,7 +122,7 @@
                     },
                     "pureclip": {
                         "branch": "master",
-                        "git_sha": "3f25680841cc9aea58eba851956da8176cf52e21",
+                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
                     "samtools/faidx": {
