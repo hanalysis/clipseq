@@ -198,15 +198,21 @@ workflow PREPARE_GENOME {
         Channel.of([ [id: representative_transcript_gtf.baseName], representative_transcript_gtf ]) :
         Channel.empty()
 
-    // Run FILTER_GTF_BY_TRANSCRIPTS
-    FILTER_GTF_BY_TRANSCRIPTS(ch_gtf, ch_representative_transcript)
+    ch_filt_gtf = filtered_gtf ?
+        Channel.of([ [id: filtered_gtf.baseName], filtered_gtf ]) :
+        Channel.empty()
 
-    // Use original channels if provided, otherwise use FILTER_BY_TRANSCRIPTS output
-    ch_representative_transcript     = ch_representative_transcript.map { it[1] != [] ? it : FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript.first() }
-    ch_representative_transcript_fai = ch_representative_transcript_fai.ifEmpty(FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript_fai)
-    ch_representative_transcript_gtf = ch_representative_transcript_gtf.ifEmpty(FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript_gtf)
-    ch_filt_gtf               = FILTER_GTF_BY_TRANSCRIPTS.out.filtered_gtf
-    ch_versions               = ch_versions.mix(FILTER_GTF_BY_TRANSCRIPTS.out.versions)
+   // Run FILTER_GTF_BY_TRANSCRIPTS if any required file is missing
+    if (!representative_transcript || !representative_transcript_fai || !representative_transcript_gtf || !filtered_gtf) {
+        FILTER_GTF_BY_TRANSCRIPTS(ch_gtf, ch_representative_transcript)
+
+        // For each channel, use the provided file if it exists, otherwise use the output from FILTER_GTF_BY_TRANSCRIPTS
+        ch_representative_transcript     = ch_representative_transcript.map { it[1] != [] ? it : FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript.first() }
+        ch_representative_transcript_fai = ch_representative_transcript_fai.ifEmpty(FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript_fai)
+        ch_representative_transcript_gtf = ch_representative_transcript_gtf.ifEmpty(FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript_gtf)
+        ch_filt_gtf                      = ch_filt_gtf.ifEmpty(FILTER_GTF_BY_TRANSCRIPTS.out.filtered_gtf)
+        ch_versions                      = ch_versions.mix(FILTER_GTF_BY_TRANSCRIPTS.out.versions)
+    }
 
     //
     // MODULE: Segment GTF file using icount
