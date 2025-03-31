@@ -184,12 +184,11 @@ workflow PREPARE_GENOME {
     // MODULE: Filter GTF and generate transcript files (fai, GTF) if needed. Uses provided transcripts or selects longest from primary genome if missing.
     //
 
-    // Channel for representative_transcript
+    // Channels for representative_transcript
     ch_representative_transcript = representative_transcript ?
         Channel.of([ [id: representative_transcript.baseName], representative_transcript ]) :
         Channel.of([[], []])
 
-    // Similarly for fai and gtf, but as empty if not provided
     ch_representative_transcript_fai = representative_transcript_fai ?
         Channel.of([ [id: representative_transcript_fai.baseName], representative_transcript_fai ]) :
         Channel.empty()
@@ -202,15 +201,14 @@ workflow PREPARE_GENOME {
         Channel.of([ [id: filtered_gtf.baseName], filtered_gtf ]) :
         Channel.empty()
 
-   // Run FILTER_GTF_BY_TRANSCRIPTS if any required file is missing
+    // Run FILTER_GTF_BY_TRANSCRIPTS if any required file is missing
     if (!representative_transcript || !representative_transcript_fai || !representative_transcript_gtf || !filtered_gtf) {
         FILTER_GTF_BY_TRANSCRIPTS(ch_gtf, ch_representative_transcript)
 
-        // For each channel, use the provided file if it exists, otherwise use the output from FILTER_GTF_BY_TRANSCRIPTS
-        ch_representative_transcript     = ch_representative_transcript.map { it[1] != [] ? it : FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript.first() }
-        ch_representative_transcript_fai = ch_representative_transcript_fai.ifEmpty(FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript_fai)
-        ch_representative_transcript_gtf = ch_representative_transcript_gtf.ifEmpty(FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript_gtf)
-        ch_filt_gtf                      = ch_filt_gtf.ifEmpty(FILTER_GTF_BY_TRANSCRIPTS.out.filtered_gtf)
+        ch_representative_transcript     = FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript
+        ch_representative_transcript_fai = FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript_fai
+        ch_representative_transcript_gtf = FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript_gtf
+        ch_filt_gtf                      = FILTER_GTF_BY_TRANSCRIPTS.out.filtered_gtf
         ch_versions                      = ch_versions.mix(FILTER_GTF_BY_TRANSCRIPTS.out.versions)
     }
 
