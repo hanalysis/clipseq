@@ -21,23 +21,23 @@ include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_REGIONS            
 
 workflow PREPARE_GENOME {
     take:
-    fasta                      // file: .fasta
-    fasta_fai                  // file: .fai
-    ncrna_fasta                // file: .fasta
-    ncrna_fasta_fai            // file: .fai
-    gtf                        // file: .gtf
-    genome_index               // folder: index
-    ncrna_genome_index         // folder: index
-    genome_chrom_sizes         // file: .txt
-    ncrna_chrom_sizes          // file: .txt
-    representative_transcript  // file: .txt
+    fasta                          // file: .fasta
+    fasta_fai                      // file: .fai
+    ncrna_fasta                    // file: .fasta
+    ncrna_fasta_fai                // file: .fai
+    gtf                            // file: .gtf
+    genome_index                   // folder: index
+    ncrna_genome_index             // folder: index
+    genome_chrom_sizes             // file: .txt
+    ncrna_chrom_sizes              // file: .txt
+    representative_transcript      // file: .txt
     representative_transcript_fai  // file: .fai
     representative_transcript_gtf  // file: .gtf
-    filtered_gtf               // file: .gtf
-    seg_gtf                    // file: .gtf
-    regions_gtf                // file: .gtf
-    regions_filt_gtf           // file: .gtf
-    regions_resolved_gtf       // file: .gtf
+    filtered_gtf                   // file: .gtf
+    seg_gtf                        // file: .gtf
+    regions_gtf                    // file: .gtf
+    regions_filt_gtf               // file: .gtf
+    regions_resolved_gtf           // file: .gtf
 
     main:
 
@@ -264,26 +264,23 @@ workflow PREPARE_GENOME {
 
 
     emit:
-    fasta                      = ch_fasta                      // channel: [ val(meta), [ fasta ] ]
-    fasta_fai                  = ch_fasta_fai                  // channel: [ val(meta), [ fai ] ]
-    ncrna_fasta                = ch_ncrna_fasta                // channel: [ val(meta), [ fasta ] ]
-    ncrna_fasta_fai            = ch_ncrna_fasta_fai            // channel: [ val(meta), [ fai ] ]
-    genome_index               = ch_star_index                 // channel: [ val(meta), [ star_index ] ]
-    ncrna_index                = ch_bt_index                   // channel: [ val(meta), [ bt2_index ] ]
-    chrom_sizes                = ch_genome_chrom_sizes         // channel: [ val(meta), [ txt ] ]
-    ncrna_chrom_sizes          = ch_ncrna_chrom_sizes          // channel: [ val(meta), [ txt ] ]
-    gtf                        = ch_gtf                        // channel: [ val(meta), [ gtf ] ]
+    fasta                             = ch_fasta                             // channel: [ val(meta), [ fasta ] ]
+    fasta_fai                         = ch_fasta_fai                         // channel: [ val(meta), [ fai ] ]
+    ncrna_fasta                       = ch_ncrna_fasta                       // channel: [ val(meta), [ fasta ] ]
+    ncrna_fasta_fai                   = ch_ncrna_fasta_fai                   // channel: [ val(meta), [ fai ] ]
+    genome_index                      = ch_star_index                        // channel: [ val(meta), [ star_index ] ]
+    ncrna_index                       = ch_bt_index                          // channel: [ val(meta), [ bt2_index ] ]
+    chrom_sizes                       = ch_genome_chrom_sizes                // channel: [ val(meta), [ txt ] ]
+    ncrna_chrom_sizes                 = ch_ncrna_chrom_sizes                 // channel: [ val(meta), [ txt ] ]
+    gtf                               = ch_gtf                               // channel: [ val(meta), [ gtf ] ]
     representative_transcript         = ch_representative_transcript         // channel: [ val(meta), [ txt ] ]
     representative_transcript_fai     = ch_representative_transcript_fai     // channel: [ val(meta), [ fai ] ]
     representative_transcript_gtf     = ch_representative_transcript_gtf     // channel: [ val(meta), [ fai ] ]
-    filtered_gtf               = ch_filt_gtf                   // channel: [ val(meta), [ gtf ] ]
-    seg_gtf                    = ch_seg_gtf                    // channel: [ val(meta), [ gtf ] ]
-    // seg_filt_gtf               = ch_seg_filt_gtf               // channel: [ val(meta), [ gtf ] ]; not used downstream
-    // seg_resolved_gtf           = ch_seg_resolved_gtf           // channel: [ val(meta), [ gtf ] ]
-    // seg_resolved_gtf_genic     = ch_seg_resolved_gtf_genic     // channel: [ val(meta), [ gtf ] ]
-    regions_gtf                = ch_regions_gtf                // channel: [ val(meta), [ gtf ] ]
-    regions_filt_gtf           = ch_regions_filt_gtf           // channel: [ val(meta), [ gtf ] ]
-    regions_resolved_gtf       = ch_regions_resolved_gtf       // channel: [ val(meta), [ gtf ] ]
-    // regions_resolved_gtf_genic = ch_regions_resolved_gtf_genic // channel: [ val(meta), [ gtf ] ]
-    versions                   = ch_versions                   // channel: [ versions.yml ]
+    filtered_gtf                      = ch_filt_gtf                          // channel: [ val(meta), [ gtf ] ]
+    seg_gtf                           = ch_seg_gtf                           // channel: [ val(meta), [ gtf ] ]
+    // seg_filt_gtf                   = ch_seg_filt_gtf                      // channel: [ val(meta), [ gtf ] ]; not used downstream
+    regions_gtf                       = ch_regions_gtf                       // channel: [ val(meta), [ gtf ] ]
+    regions_filt_gtf                  = ch_regions_filt_gtf                  // channel: [ val(meta), [ gtf ] ]
+    regions_resolved_gtf              = ch_regions_resolved_gtf              // channel: [ val(meta), [ gtf ] ]
+    versions                          = ch_versions                          // channel: [ versions.yml ]
 }
