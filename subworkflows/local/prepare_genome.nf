@@ -185,7 +185,7 @@ workflow PREPARE_GENOME {
     //ch_gtf | view
 
     //
-    // MODULE: Filter GTF by transcripts, validate GTF and transcripts (if provided), and generate auxiliary files (FAI, GTF) using provided or auto-selected transcripts
+    // MODULE: Filter GTF by transcripts, validate GTF and transcripts (if provided), and generate auxiliary files (FAI, GTF) for provided or auto-selected transcripts
     //
 
     // Channels for representative_transcript
@@ -219,10 +219,8 @@ workflow PREPARE_GENOME {
         ch_representative_transcript     = FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript
         ch_representative_transcript_fai = FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript_fai
         ch_representative_transcript_gtf = FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript_gtf
-
         if (!skip_filter_gtf && !filtered_gtf) {
             ch_filt_gtf                  = FILTER_GTF_BY_TRANSCRIPTS.out.gtf
-
         }
         ch_versions                      = ch_versions.mix(FILTER_GTF_BY_TRANSCRIPTS.out.versions)
     }
@@ -249,7 +247,7 @@ workflow PREPARE_GENOME {
     //
     // ch_seg_filt_gtf     = Channel.of( [ [id:seg_filt_gtf.baseName], seg_filt_gtf ] )
     ch_regions_filt_gtf = Channel.of( [ [id:regions_filt_gtf.baseName], regions_filt_gtf ] )
-    if (!regions_filt_gtf) {
+    if (!skip_filter_gtf && !regions_filt_gtf) {
         ICOUNT_SEG_FILTGTF (
             ch_filt_gtf,
             ch_fasta_fai.map{ it[1] }
@@ -265,7 +263,7 @@ workflow PREPARE_GENOME {
     // MODULE: Resolve the GTF regions that iCount did not annotate REGIONS FILE
     //
     ch_regions_resolved_gtf = Channel.of( [ [id:regions_resolved_gtf.baseName], regions_resolved_gtf ] )
-    if (!regions_resolved_gtf) {
+    if (!skip_filter_gtf && !regions_resolved_gtf) {
         RESOLVE_UNANNOTATED_REGIONS (
             ch_regions_gtf,
             ch_regions_filt_gtf,

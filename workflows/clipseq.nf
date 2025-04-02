@@ -177,20 +177,20 @@ workflow CLIPSEQ {
     ch_gtf         = file(params.gtf)
 
     // Prepare non-mandatory params
-    ch_fasta_fai                  = []
-    ch_ncrna_fasta_fai            = []
-    ch_genome_index               = []
-    ch_ncrna_genome_index         = []
-    ch_genome_chrom_sizes         = []
-    ch_ncrna_chrom_sizes          = []
+    ch_fasta_fai                         = []
+    ch_ncrna_fasta_fai                   = []
+    ch_genome_index                      = []
+    ch_ncrna_genome_index                = []
+    ch_genome_chrom_sizes                = []
+    ch_ncrna_chrom_sizes                 = []
     ch_representative_transcript         = []
     ch_representative_transcript_fai     = []
     ch_representative_transcript_gtf     = []
-    ch_filtered_gtf               = []
-    ch_seg_gtf                    = []
-    ch_regions_gtf                = []
-    ch_regions_filt_gtf           = []
-    ch_regions_resolved_gtf       = []
+    ch_filtered_gtf                      = []
+    ch_seg_gtf                           = []
+    ch_regions_gtf                       = []
+    ch_regions_filt_gtf                  = []
+    ch_regions_resolved_gtf              = []
     if(params.fasta_fai) { ch_fasta_fai = file(params.fasta_fai) }
     if(params.ncrna_fasta_fai) { ch_ncrna_fasta_fai = file(params.ncrna_fasta_fai) }
     if(params.genome_index) { ch_genome_index = file(params.genome_index) }
@@ -326,7 +326,7 @@ workflow CLIPSEQ {
         ch_versions                      = ch_versions.mix(TRANSCRIPTOME_PROCESSING.out.versions)
         ch_transcript_bam                = TRANSCRIPTOME_PROCESSING.out.transcript_dedupe_bam
         ch_transcript_bai                = TRANSCRIPTOME_PROCESSING.out.transcript_dedupe_bai
-        ch_trans_crosslink_bed           = TRANSCRIPTOME_PROCESSING.out.crosslink_bed 
+        ch_trans_crosslink_bed           = TRANSCRIPTOME_PROCESSING.out.crosslink_bed
         ch_clippy_transcriptome_peaks    = TRANSCRIPTOME_PROCESSING.out.clippy_peaks
         ch_paraclu_transcriptome_peaks   = TRANSCRIPTOME_PROCESSING.out.paraclu_peaks
     }
