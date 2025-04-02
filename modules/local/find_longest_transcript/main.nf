@@ -9,7 +9,7 @@ process FILTER_GTF_BY_TRANSCRIPTS {
 
     input:
     tuple val(meta), path(gtf)
-    tuple val(meta), path(user_transcripts)
+    tuple val(meta), path(transcript)
 
     output:
     tuple val(meta), path("*representative_transcript.txt")                 ,emit: representative_transcript
