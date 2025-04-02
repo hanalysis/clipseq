@@ -25,7 +25,7 @@ for (param in check_param_list) {
     }
 }
 
-// Check non-manditory input parameters to see if the files exist if they have been specified
+// Check non-mandatory input parameters to see if the files exist if they have been specified
 def checkPathParamList = [
     params.multiqc_config,
     params.fasta_fai,
@@ -170,7 +170,7 @@ workflow CLIPSEQ {
     // Init
     ch_versions = Channel.empty()
 
-    // Prepare manditory params
+    // Prepare mandatory params
     ch_input       = file(params.input)
     ch_fasta       = file(params.fasta)
     ch_ncrna_fasta = file(params.ncrna_fasta)
@@ -227,26 +227,27 @@ workflow CLIPSEQ {
             ch_seg_gtf,
             ch_regions_gtf,
             ch_regions_filt_gtf,
-            ch_regions_resolved_gtf
+            ch_regions_resolved_gtf,
+            params.skip_filter_gtf
         )
-        ch_versions                   = ch_versions.mix(PREPARE_GENOME.out.versions)
-        ch_fasta                      = PREPARE_GENOME.out.fasta
-        ch_fasta_fai                  = PREPARE_GENOME.out.fasta_fai
-        ch_gtf                        = PREPARE_GENOME.out.gtf
-        ch_filtered_gtf               = PREPARE_GENOME.out.filtered_gtf
-        ch_genome_chrom_sizes         = PREPARE_GENOME.out.chrom_sizes
-        ch_ncrna_fasta                = PREPARE_GENOME.out.ncrna_fasta
-        ch_ncrna_fasta_fai            = PREPARE_GENOME.out.ncrna_fasta_fai
-        ch_ncrna_chrom_sizes          = PREPARE_GENOME.out.ncrna_chrom_sizes
+        ch_versions                          = ch_versions.mix(PREPARE_GENOME.out.versions)
+        ch_fasta                             = PREPARE_GENOME.out.fasta
+        ch_fasta_fai                         = PREPARE_GENOME.out.fasta_fai
+        ch_gtf                               = PREPARE_GENOME.out.gtf
+        ch_filtered_gtf                      = PREPARE_GENOME.out.filtered_gtf
+        ch_genome_chrom_sizes                = PREPARE_GENOME.out.chrom_sizes
+        ch_ncrna_fasta                       = PREPARE_GENOME.out.ncrna_fasta
+        ch_ncrna_fasta_fai                   = PREPARE_GENOME.out.ncrna_fasta_fai
+        ch_ncrna_chrom_sizes                 = PREPARE_GENOME.out.ncrna_chrom_sizes
         ch_representative_transcript         = PREPARE_GENOME.out.representative_transcript
         ch_representative_transcript_fai     = PREPARE_GENOME.out.representative_transcript_fai
         ch_representative_transcript_gtf     = PREPARE_GENOME.out.representative_transcript_gtf
-        ch_seg_gtf                    = PREPARE_GENOME.out.seg_gtf
-        ch_regions_gtf                = PREPARE_GENOME.out.regions_gtf
-        ch_regions_filt_gtf           = PREPARE_GENOME.out.regions_filt_gtf
-        ch_regions_resolved_gtf       = PREPARE_GENOME.out.regions_resolved_gtf
-        ch_genome_index               = PREPARE_GENOME.out.genome_index
-        ch_ncrna_genome_index         = PREPARE_GENOME.out.ncrna_index
+        ch_seg_gtf                           = PREPARE_GENOME.out.seg_gtf
+        ch_regions_gtf                       = PREPARE_GENOME.out.regions_gtf
+        ch_regions_filt_gtf                  = PREPARE_GENOME.out.regions_filt_gtf
+        ch_regions_resolved_gtf              = PREPARE_GENOME.out.regions_resolved_gtf
+        ch_genome_index                      = PREPARE_GENOME.out.genome_index
+        ch_ncrna_genome_index                = PREPARE_GENOME.out.ncrna_index
     }
 
     //
@@ -416,9 +417,9 @@ workflow CLIPSEQ {
         ch_ncrna_k1_crosslink_INDIVIDUAL_HASGROUP_bed  = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_INDIVIDUAL_HASGROUP
         ch_ncrna_k1_crosslink_GROUP_HASGROUP_bed       = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_GROUP_HASGROUP
 
-        // If filtering of GTF by transcripts is enabled, use the filtered GTF and its resolved regions, if not use regions GTF made by icount-mini
-        ch_regions_used = params.use_filtered_gtf ? ch_regions_resolved_gtf : ch_regions_gtf
-        ch_gtf_used = params.use_filtered_gtf ? ch_filtered_gtf : ch_gtf
+        // If filtering of GTF by transcripts is enabled, use the filtered GTF and its resolved regions, if not use those made by icount-mini
+        ch_regions_used = params.skip_filter_gtf ? ch_regions_gtf : ch_regions_resolved_gtf
+        ch_gtf_used = params.skip_filter_gtf ? ch_gtf : ch_filtered_gtf
 
         ICOUNTMINI_SUMMARY (
             ch_genome_crosslink_group_resolved_bed,

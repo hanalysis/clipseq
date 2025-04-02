@@ -1,3 +1,6 @@
+// Import the log object at the top of your workflow file
+import nextflow.util.LoggerHelper
+
 //
 // Uncompress and prepare reference genome files
 //
@@ -38,6 +41,7 @@ workflow PREPARE_GENOME {
     regions_gtf                    // file: .gtf
     regions_filt_gtf               // file: .gtf
     regions_resolved_gtf           // file: .gtf
+    skip_filter_gtf                // value: boolean
 
     main:
 
@@ -181,7 +185,7 @@ workflow PREPARE_GENOME {
     //ch_gtf | view
 
     //
-    // MODULE: Filter GTF and generate transcript files (fai, GTF) if needed. Uses provided transcripts or selects longest from primary genome if missing.
+    // MODULE: Filter GTF by transcripts, validate GTF and transcripts (if provided), and generate auxiliary files (FAI, GTF) using provided or auto-selected transcripts
     //
 
     // Channels for representative_transcript
@@ -201,14 +205,25 @@ workflow PREPARE_GENOME {
         Channel.of([ [id: filtered_gtf.baseName], filtered_gtf ]) :
         Channel.empty()
 
-    // Run FILTER_GTF_BY_TRANSCRIPTS if any required file is missing
-    if (!representative_transcript || !representative_transcript_fai || !representative_transcript_gtf || !filtered_gtf) {
-        FILTER_GTF_BY_TRANSCRIPTS(ch_gtf, ch_representative_transcript)
+    // Run FILTER_GTF_BY_TRANSCRIPTS if skip_filter_gtf disabled and filtered GTF missing, OR any required transcript file (.txt, .fai, .gtf) is missing OR to validate the GTF and transcripts provided when representative_transcript provided.
+    if (
+        (!skip_filter_gtf && !filtered_gtf) ||
+        (!representative_transcript || !representative_transcript_fai || !representative_transcript_gtf) ||
+        (representative_transcript && skip_filter_gtf)
+    ) {
+        if (representative_transcript && skip_filter_gtf) {
+            log.warn "WARNING: You provided a representative_transcript file but set skip_filter_gtf=true. The FILTER_GTF_BY_TRANSCRIPTS process will still run to validate your GTF and transcripts."
+        }
+        FILTER_GTF_BY_TRANSCRIPTS(ch_gtf, ch_representative_transcript, skip_filter_gtf)
 
         ch_representative_transcript     = FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript
         ch_representative_transcript_fai = FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript_fai
         ch_representative_transcript_gtf = FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript_gtf
-        ch_filt_gtf                      = FILTER_GTF_BY_TRANSCRIPTS.out.filtered_gtf
+
+        if (!skip_filter_gtf && !filtered_gtf) {
+            ch_filt_gtf                  = FILTER_GTF_BY_TRANSCRIPTS.out.gtf
+
+        }
         ch_versions                      = ch_versions.mix(FILTER_GTF_BY_TRANSCRIPTS.out.versions)
     }
 
@@ -217,7 +232,7 @@ workflow PREPARE_GENOME {
     //
     ch_seg_gtf     = Channel.of( [ [id:seg_gtf.baseName], seg_gtf ] )
     ch_regions_gtf = Channel.of( [ [id:regions_gtf.baseName], regions_gtf ] )
-   if (!seg_gtf || !regions_gtf){
+    if (!seg_gtf || !regions_gtf) {
         ICOUNT_SEG_GTF (
             ch_gtf,
             ch_fasta_fai.map{ it[1] }

@@ -4,7 +4,7 @@
 Validates user-provided transcripts or automatically selects the longest
 transcript per gene based on CDS and exon length.
 
-Filters genome annotation (GTF) by the list of selected transcript IDs.
+Filters genome annotation (GTF) by the list of selected transcript IDs (.txt).
 
 Outputs:
 - A list of selected transcript IDs (.txt)
@@ -53,7 +53,8 @@ def parse_gtf(gtf_path):
         logging.error(f"Some genes have no transcript entries in the GTF: {top}{more}")
         raise ValueError(
             "ERROR: Some genes in the GTF have no associated transcript entries. "
-            "Please ensure the GTF includes transcript-level features for each gene."
+            "Please ensure the GTF includes transcript-level features for each gene. "
+            "You can run the pipeline with --skip_filter_gtf enabled, but expect many processes will FAIL."
         )
     else:
         logging.info("GTF passed validation: All genes have associated transcript entries.")
@@ -73,21 +74,22 @@ def compute_gtf_feature_lengths(gtf_path):
     df_gtf['length'] = df_gtf['End'] - df_gtf['Start']
     input_genes = set(df_gtf.gene_id)
 
-    # Calculate CDS and exon lengths per transcript
+    # Calculate CDS, exon and unspliced total lengths per transcript
     cds_sums = df_gtf[df_gtf['Feature'] == 'CDS'].groupby(['gene_id', 'transcript_id'])['length'].sum()
     exon_sums = df_gtf[df_gtf['Feature'] == 'exon'].groupby(['gene_id', 'transcript_id'])['length'].sum()
-    tx_sums = df_gtf[df_gtf['Feature'] == 'transcript'].copy().set_index(['gene_id', 'transcript_id'])['length']
-    df_txlengths = pd.concat([cds_sums, exon_sums, tx_sums], axis=1, keys=['cds_length', 'exon_length', 'unspliced_length']).reset_index()
+    tx_len = df_gtf[df_gtf['Feature'] == 'transcript'].copy().set_index(['gene_id', 'transcript_id'])['length']
+
+    df_txlengths = pd.concat([cds_sums, exon_sums, tx_len], axis=1, keys=['cds_length', 'exon_length', 'unspliced_length']).reset_index()
     # Fill missing values with 0
     df_txlengths[['cds_length', 'exon_length', 'unspliced_length']] = df_txlengths[['cds_length', 'exon_length', 'unspliced_length']].fillna(0)
 
-    # Warn if any gene has only transcripts with exon length 0
+    # Error if ANY gene has only transcripts with exon length 0
     zero_exon_genes = df_txlengths.groupby('gene_id')['exon_length'].apply(lambda x: (x == 0).all())
     if zero_exon_genes.any():
-        logging.warning("Some genes have only transcripts with exon length 0. Genes with zero exon length transcripts: %s", zero_exon_genes[zero_exon_genes].index)
-        warnings.warn("Some genes have only transcripts with exon length 0.", RuntimeWarning)
+        logging.error("Some genes have only transcripts with exon length 0. Genes with zero exon length transcripts: %s", zero_exon_genes[zero_exon_genes].index)
+        raise ValueError("Some genes have only transcripts with exon length 0.") # Placing responsibility on the user to provide a GTF compatible with the pipeline.
     else:
-        logging.info("All genes have non-zero exon lengths.")
+        logging.info("All genes have non-zero total exon lengths.")
 
     return df_gtf, df_txlengths, input_genes
 
@@ -106,6 +108,7 @@ def load_and_validate_transcripts(df_txlengths, transcript):
     Raises:
     - ValueError: If the transcript list is empty or any IDs are missing from the GTF
     """
+    logging.info(f"Command-line arguments: {vars(args)}")
     # Log the transcript file being used
     logging.info(f"Using the transcript IDs in: {transcript}")
 
@@ -126,7 +129,7 @@ def load_and_validate_transcripts(df_txlengths, transcript):
     # Transcript list validation: check if all user-provided IDs are in the GTF
     gtf_tx_set = set(df_txlengths.transcript_id)
     tx_set = set(transcript_ids)
-    logging.info(f"Number of transcript IDs in {transcript} : {tx_set}")
+    logging.info(f"Number of transcript IDs in {transcript} : {len(tx_set)}")
 
     # Find matching and missing IDs
     matching_ids = tx_set & gtf_tx_set
@@ -137,13 +140,15 @@ def load_and_validate_transcripts(df_txlengths, transcript):
         logging.error("None of the provided transcript IDs are found in the GTF.")
         raise ValueError(
             "ERROR: None of the provided transcript IDs are found in the GTF. "
-            "Please ensure the transcript list matches the GTF, or omit --representative_transcript to let the pipeline automatically select representative transcripts."
+            "Please ensure the transcript list matches the GTF, "
+            "or omit --representative_transcript to let the pipeline automatically select representative transcripts."
         )
     elif len(missing_ids) > 0:
         logging.error(f"{len(missing_ids)} transcript IDs not found in the GTF: {sorted(missing_ids)[:10]}{' ...' if len(missing_ids) > 10 else ''}")
         raise ValueError(
             "Some user-provided transcript IDs are missing from the GTF. "
-            "Please ensure the transcript list matches the GTF, or omit --representative_transcript to let the pipeline automatically select representative transcripts."
+            "Please ensure the transcript list matches the GTF, "
+            "or omit --representative_transcript to let the pipeline automatically select representative transcripts."
         )
     else:
         logging.info("All provided transcript IDs are found in the GTF.")
@@ -189,7 +194,7 @@ def select_longest_transcript(df_txlengths, df_gtf):
     return df_txlengths_filtered, transcript_ids_sorted
 
 
-def main(process_name, gtf, transcript, output):
+def main(process_name, gtf, transcript, output, skip_filter_gtf):
     # Dump version file
     dump_versions(process_name)
 
@@ -224,7 +229,8 @@ def main(process_name, gtf, transcript, output):
         logging.error("Some genes do not have exactly one representative transcript. Offending genes (more than 1 transcript assigned): ", multi_assigned_genes)
         raise ValueError(
             "ERROR: Some genes do not have exactly one representative transcript. "
-            "Please make sure you provide a single transcript ID per gene ID, or omit --representative_transcript to let the pipeline automatically select representative transcripts."
+            "Please make sure you provide a single transcript ID per gene ID, "
+            "or omit --representative_transcript to let the pipeline automatically select representative transcripts."
         )
 
     set_filtgenes = set(df_txlengths_filtered.gene_id)
@@ -274,25 +280,31 @@ def main(process_name, gtf, transcript, output):
     # Order into gtf format
     df_txlengths_filtered[['transcript_id', 'src', 'gene', 'start', 'exon_length', 'score', 'strand', 'frame', 'attributes']].to_csv(f"{output}.gtf", header=None, index=None, sep='\t', quoting=csv.QUOTE_NONE)
 
-    # Filter the genome annotation
-    filt_annot = df_gtf.loc[(df_gtf['transcript_id'].isin(transcript_ids_sorted)) | (df_gtf['Feature'] == 'gene')].copy()
-    # Convert the filtered annotation to pyranges
-    pr_gtf = pr.PyRanges(filt_annot[[c for c in filt_annot.columns if c!='length']])
-    # Save the filtered annotation
-    logging.info(f"Saving genome GTF filtered by representative transcripts to {output}_filtered.gtf")
-    pr_gtf.to_gtf(f"{output}_filtered.gtf")
+    logging.info(f"skip_filter_gtf: {skip_filter_gtf}")
+    # Filter the genome annotation if genome GTF filtering enabled
+    if skip_filter_gtf:
+        logging.info("Skipping GTF filtering as requested with --skip_filter_gtf.")
+    else:
+        filt_annot = df_gtf.loc[(df_gtf['transcript_id'].isin(transcript_ids_sorted)) | (df_gtf['Feature'] == 'gene')].copy()
+        # Convert the filtered annotation to pyranges
+        pr_gtf = pr.PyRanges(filt_annot[[c for c in filt_annot.columns if c!='length']])
+        # Save the filtered annotation
+        logging.info(f"Saving genome GTF filtered by representative transcripts to {output}_filtered.gtf")
+        pr_gtf.to_gtf(f"{output}_filtered.gtf")
+
     logging.info("Completed.")
 
     return
 
 
 if __name__ == "__main__":
-    # Allows switching between nextflow templating and standalone python running using arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--process_name", default="!{process_name}")
     parser.add_argument("--gtf", default="!{gtf}")
     parser.add_argument("--transcript", default="!{transcript}")
     parser.add_argument("--output", default="!{output}")
+    parser.add_argument("--skip_filter_gtf", default="!{skip_filter_gtf}", help="Skip GTF filtering.")
     args = parser.parse_args()
 
-    main(args.process_name, args.gtf, args.transcript, args.output)
+    main(args.process_name, args.gtf, args.transcript, args.output, args.skip_filter_gtf)
+
