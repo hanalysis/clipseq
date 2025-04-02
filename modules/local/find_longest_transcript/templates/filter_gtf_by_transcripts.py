@@ -149,7 +149,7 @@ def load_and_validate_transcripts(df_txlengths, transcript):
         logging.info("All provided transcript IDs are found in the GTF.")
 
     # Filter features dataframe based on provided transcript IDs
-    df_txlengths_filtered = df_txlengths.loc[df_txlengths.transcript_id.isin(transcript_ids_sorted)]
+    df_txlengths_filtered = df_txlengths.loc[df_txlengths.transcript_id.isin(transcript_ids)]
 
     return df_txlengths_filtered, transcript_ids
 
@@ -228,7 +228,7 @@ def main(process_name, gtf, transcript, output):
         )
 
     set_filtgenes = set(df_txlengths_filtered.gene_id)
-    logging.info(f"Remaining genes after filtering: {len(set_filtgenes)}")
+    logging.info(f"Remaining genes after filtering by transcript IDs: {len(set_filtgenes)}")
 
     # Check that all genes from GTF have been assigned at least 1 transcript
     missing_genes = input_genes - set_filtgenes
@@ -237,7 +237,7 @@ def main(process_name, gtf, transcript, output):
         top = missing_genes_list[:10]
         more = f" and {len(missing_genes_list) - 10} more" if len(missing_genes_list) > 10 else ""
 
-        logging.error(f"Not all genes in the GTF have a representative transcript. Genes without trancripts, after filtering: {top}{more}")
+        logging.error(f"Not all genes in the GTF have been assigned a representative transcript. Genes without trancripts, after filtering: {top}{more}")
         raise ValueError(
             "ERROR: Not all genes in the GTF have a representative transcript after filtering. "
             "Please make sure you provide a single transcript ID for every gene ID in the GTF, "
