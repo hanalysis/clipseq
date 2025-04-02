@@ -4,13 +4,14 @@
 Validates user-provided transcripts or automatically selects the longest
 transcript per gene based on CDS and exon length.
 
-Filters genome annotation (GTF) by the list of selected transcript IDs (.txt).
+Validates and filters genome annotation (GTF) by the list of selected transcript IDs (.txt).
 
 Outputs:
 - A list of selected transcript IDs (.txt)
 - A transcript length index file (.fai) with transcript ID and exon length
 - A transcript GTF
 - A filtered genome annotation GTF containing only entries corresponding to representative transcripts
+- A log file documenting all settings, validation and filtering steps
 """
 
 import platform
@@ -54,7 +55,8 @@ def parse_gtf(gtf_path):
         raise ValueError(
             "ERROR: Some genes in the GTF have no associated transcript entries. "
             "Please ensure the GTF includes transcript-level features for each gene. "
-            "You can run the pipeline with --skip_filter_gtf enabled, but expect many processes will FAIL."
+            "Or try to run the pipeline with --skip_filter_gtf enabled, but expect many "
+            "processes will FAIL because the GTF format is not compatible."
         )
     else:
         logging.info("GTF passed validation: All genes have associated transcript entries.")
@@ -87,9 +89,12 @@ def compute_gtf_feature_lengths(gtf_path):
     zero_exon_genes = df_txlengths.groupby('gene_id')['exon_length'].apply(lambda x: (x == 0).all())
     if zero_exon_genes.any():
         logging.error("Some genes have only transcripts with exon length 0. Genes with zero exon length transcripts: %s", zero_exon_genes[zero_exon_genes].index)
-        raise ValueError("Some genes have only transcripts with exon length 0.") # Placing responsibility on the user to provide a GTF compatible with the pipeline.
+        raise ValueError("Some genes have only transcripts withou exons (exon length 0). "
+                         "Please ensure the GTF includes at least one exon feature for each gene. "
+                         "Or try to run the pipeline with --skip_filter_gtf enabled, but expect many "
+                         "processes will FAIL because the GTF format is not compatible.") # Placing responsibility on the user to provide a GTF compatible with the pipeline.
     else:
-        logging.info("All genes have non-zero total exon lengths.")
+        logging.info("All genes have a valid exon feature.") # All genes have non-zero total exon lengths.
 
     return df_gtf, df_txlengths, input_genes
 
@@ -99,7 +104,7 @@ def load_and_validate_transcripts(df_txlengths, transcript):
     Loads the transcript IDs from the provided file and validates them against the GTF.
 
     Args:
-    - df_txlengths: DataFrame containing the GTF transcript data
+    - df_txlengths: DataFrame containing the GTF transcript data, incl. a transcript_id column
     - transcript: Path to the file containing the user-provided transcript IDs
 
     Returns:
@@ -255,7 +260,7 @@ def main(process_name, gtf, transcript, output, skip_filter_gtf):
     with open(output + ".txt", "w") as f:
         f.write("\n".join(map(str, transcript_ids_sorted)) + "\n")
 
-    # Make a transcript fai file
+    # Create a transcript fai file
     # Set transcript_id as index
     df_txlengths_filtered.set_index('transcript_id', inplace=True)
     # Sort in order of transcript_ids
@@ -280,8 +285,8 @@ def main(process_name, gtf, transcript, output, skip_filter_gtf):
     # Order into gtf format
     df_txlengths_filtered[['transcript_id', 'src', 'gene', 'start', 'exon_length', 'score', 'strand', 'frame', 'attributes']].to_csv(f"{output}.gtf", header=None, index=None, sep='\t', quoting=csv.QUOTE_NONE)
 
-    logging.info(f"skip_filter_gtf: {skip_filter_gtf}")
     # Filter the genome annotation if genome GTF filtering enabled
+    logging.info(f"skip_filter_gtf: {skip_filter_gtf}")
     if skip_filter_gtf:
         logging.info("Skipping GTF filtering as requested with --skip_filter_gtf.")
     else:
