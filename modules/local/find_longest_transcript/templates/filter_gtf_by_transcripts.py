@@ -92,6 +92,103 @@ def compute_gtf_feature_lengths(gtf_path):
     return df_gtf, df_txlengths, input_genes
 
 
+def load_and_validate_transcripts(df_txlengths, transcript):
+    """
+    Loads the transcript IDs from the provided file and validates them against the GTF.
+
+    Args:
+    - df_txlengths: DataFrame containing the GTF transcript data
+    - transcript: Path to the file containing the user-provided transcript IDs
+
+    Returns:
+    - df_txlengths_filtered (pandas.DataFrame): A filtered DataFrame containing the representative transcript per gene.
+    - transcript_ids_sorted: Sorted list of valid transcript IDs
+    Raises:
+    - ValueError: If the transcript list is empty or any IDs are missing from the GTF
+    """
+    # Log the transcript file being used
+    logging.info(f"Using the transcript IDs in: {transcript}")
+
+    # Load the transcript IDs from the file
+    with open(transcript, "r") as file:
+        transcript_ids = [line.strip() for line in file]
+        # Remove potential empty strings caused by trailing newline
+        transcript_ids = [x for x in transcript_ids if x]
+
+    # Check if the transcript file was empty or only contained blank lines
+    if len(transcript_ids) == 0:
+        logging.error("Transcript list file is empty.")
+        raise ValueError(
+            "ERROR: The transcript list provided is empty. "
+            "Please provide a non-empty file with transcript IDs."
+        )
+
+    # Transcript list validation: check if all user-provided IDs are in the GTF
+    gtf_tx_set = set(df_txlengths.transcript_id)
+    tx_set = set(transcript_ids)
+    logging.info(f"Number of transcript IDs in {transcript} : {tx_set}")
+
+    # Find matching and missing IDs
+    matching_ids = tx_set & gtf_tx_set
+    missing_ids = tx_set - gtf_tx_set
+
+    # Check if none or some of the transcript IDs match
+    if len(matching_ids) == 0:
+        logging.error("None of the provided transcript IDs are found in the GTF.")
+        raise ValueError(
+            "ERROR: None of the provided transcript IDs are found in the GTF. "
+            "Please ensure the transcript list matches the GTF, or omit --representative_transcript to let the pipeline automatically select representative transcripts."
+        )
+    elif len(missing_ids) > 0:
+        logging.error(f"{len(missing_ids)} transcript IDs not found in the GTF: {sorted(missing_ids)[:10]}{' ...' if len(missing_ids) > 10 else ''}")
+        raise ValueError(
+            "Some user-provided transcript IDs are missing from the GTF. "
+            "Please ensure the transcript list matches the GTF, or omit --representative_transcript to let the pipeline automatically select representative transcripts."
+        )
+    else:
+        logging.info("All provided transcript IDs are found in the GTF.")
+
+    # Filter features dataframe based on provided transcript IDs
+    df_txlengths_filtered = df_txlengths.loc[df_txlengths.transcript_id.isin(transcript_ids_sorted)]
+
+    return df_txlengths_filtered, transcript_ids
+
+
+def select_longest_transcript(df_txlengths, df_gtf):
+    """
+    Selects the longest transcript per gene based on the sorting hierarchy:
+    CDS length > exon length > unspliced length. Ties are broken alphabetically by transcript ID.
+
+    Args:
+    - df_txlengths: DataFrame containing transcript lengths (cds_length, exon_length, unspliced_length)
+    - df_gtf: Full parsed GTF DataFrame, used to ensure the order of transcript IDs matches the original GTF
+
+    Returns:
+    - df_txlengths_filtered (pandas.DataFrame): A filtered DataFrame containing the longest transcript per gene.
+    - transcript_ids_sorted (list): A list of transcript IDs sorted in the same order as in the original GTF.
+    """
+    # Sort by the lengths of CDS, exon, and unspliced regions in descending order,
+    # and alphabetically by transcript ID in ascending order
+    df_txlengths_sorted = df_txlengths.sort_values(
+        by=['cds_length', 'exon_length', 'unspliced_length', 'transcript_id'],
+        ascending=[False, False, False, True]
+    )
+
+    # For each gene, keep the longest (first) transcript after sorting
+    df_txlengths_filtered = df_txlengths_sorted.drop_duplicates(subset='gene_id', keep='first')
+
+    # Extract the unique transcript IDs from the filtered DataFrame
+    transcript_ids = df_txlengths_filtered.transcript_id.unique().tolist()
+
+    # Ensure the order of the transcript IDs matches the original GTF order
+    transcript_ids_sorted = df_gtf.loc[df_gtf['Feature'] == 'transcript', 'transcript_id'] \
+        .drop_duplicates() \
+        .loc[lambda x: x.isin(df_txlengths_filtered.transcript_id)] \
+        .tolist()
+
+    return df_txlengths_filtered, transcript_ids_sorted
+
+
 def main(process_name, gtf, transcript, output):
     # Dump version file
     dump_versions(process_name)
@@ -112,61 +209,15 @@ def main(process_name, gtf, transcript, output):
 
     # If user specified transcripts are provided, use these to filter gtf; else find longest CDS / exon transcript.
     if transcript != "":
-        logging.info(f"Using the transcript IDs in: {transcript}")
-        with open(transcript, "r") as file:
-            transcript_ids = [line.strip() for line in file]
-            # Remove potential empty strings caused by trailing newline
-            transcript_ids = [x for x in transcript_ids if x]
-            transcript_ids_sorted = transcript_ids
-
-        # Check if the transcript file was empty or only contained blank lines
-        if len(transcript_ids) == 0:
-            logging.error("Transcript list file is empty.")
-            raise ValueError(
-                "ERROR: The transcript list provided is empty. "
-                "Please provide a non-empty file with transcript IDs."
-            )
-
-        # Transcript list validation: check if all user-provided IDs are in the GTF
-        gtf_tx_set = set(df_txlengths.transcript_id)
-        tx_set = set(transcript_ids)
-
-        # Find matching and missing IDs
-        matching_ids = tx_set & gtf_tx_set
-        missing_ids = tx_set - gtf_tx_set
-
-        # Check if none or some of the transcript IDs match
-        if len(matching_ids) == 0:
-            logging.error("None of the provided transcript IDs are found in the GTF.")
-            raise ValueError(
-                "ERROR: None of the provided transcript IDs are found in the GTF. "
-                "Please ensure the transcript list matches the GTF, or omit --representative_transcript to let the pipeline automatically select representative transcripts."
-            )
-        elif len(missing_ids) > 0:
-            logging.error(f"{len(missing_ids)} transcript IDs not found in the GTF: {sorted(missing_ids)[:10]}{' ...' if len(missing_ids) > 10 else ''}")
-            raise ValueError(
-                "Some user-provided transcript IDs are missing from the GTF. "
-                "Please ensure the transcript list matches the GTF, or omit --representative_transcript to let the pipeline automatically select representative transcripts."
-            )
-        else:
-            logging.info("All provided transcript IDs are found in the GTF.")
-
-        # Filter based on user provided transcript ID
-        df_txlengths_filtered = df_txlengths.loc[df_txlengths.transcript_id.isin(transcript_ids_sorted)]
+        df_txlengths_filtered, transcript_ids_sorted = load_and_validate_transcripts(df_txlengths, transcript)
 
     else:
-        # Select longest transcript per gene: hierarchy: CDS length > exon length; remaining ties are resolved alphabetically on transcript ID
-        # Sort
-        df_txlengths = df_txlengths.sort_values(by=['cds_length', 'exon_length', 'unspliced_length', 'transcript_id'], ascending=[False, False, False, True])
-        # Drop duplicates on gene_id, keep first row
-        df_txlengths_filtered = df_txlengths.drop_duplicates(subset='gene_id', keep='first')
-        transcript_ids = df_txlengths_filtered.transcript_id.unique().tolist()
-        # Ensure same order as in original GTF
-        transcript_ids_sorted = df_gtf.loc[df_gtf['Feature'] == 'transcript', 'transcript_id'].drop_duplicates().loc[lambda x: x.isin(df_txlengths_filtered.transcript_id)].tolist()
+        df_txlengths_filtered, transcript_ids_sorted = select_longest_transcript(df_txlengths, df_gtf)
 
     # Check if all filtered genes have exactly one matching transcript ID
     # Count number of transcripts per gene
     transcripts_per_gene = df_txlengths_filtered.groupby("gene_id").transcript_id.nunique()
+
     # Raise error if any gene has not exactly one transcript and print problematic genes
     multi_assigned_genes = transcripts_per_gene[transcripts_per_gene > 1].index.tolist()
     if not (transcripts_per_gene == 1).all():
