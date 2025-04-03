@@ -1,4 +1,4 @@
-// Import the log object at the top of your workflow file
+// Import the log object
 import nextflow.util.LoggerHelper
 
 //
@@ -194,17 +194,9 @@ workflow PREPARE_GENOME {
         Channel.of([ [id: representative_transcript.baseName], representative_transcript ]) :
         Channel.of([[], []])
 
-    ch_representative_transcript_fai = representative_transcript_fai ?
-        Channel.of([ [id: representative_transcript_fai.baseName], representative_transcript_fai ]) :
-        Channel.empty()
-
-    ch_representative_transcript_gtf = representative_transcript_gtf ?
-        Channel.of([ [id: representative_transcript_gtf.baseName], representative_transcript_gtf ]) :
-        Channel.empty()
-
-    ch_filt_gtf = filtered_gtf ?
-        Channel.of([ [id: filtered_gtf.baseName], filtered_gtf ]) :
-        Channel.empty()
+    ch_representative_transcript_fai = Channel.of([ [id: representative_transcript_fai.baseName], representative_transcript_fai ])
+    ch_representative_transcript_gtf = Channel.of([ [id: representative_transcript_gtf.baseName], representative_transcript_gtf ])
+    ch_filt_gtf = Channel.of([ [id: filtered_gtf.baseName], filtered_gtf ])
 
     // Run FILTER_GTF_BY_TRANSCRIPT if skip_filter_gtf disabled and filtered GTF missing,
     // OR any required transcript file (.txt, .fai, .gtf) is missing and skip_transcriptome false,
@@ -215,7 +207,7 @@ workflow PREPARE_GENOME {
         ((representative_transcript && !skip_transcriptome && skip_filter_gtf))
     ) {
         if (representative_transcript && !skip_transcriptome && skip_filter_gtf) {
-            log.warn "WARNING: You provided a representative_transcript file and enabled transcriptome analysis but set skip_filter_gtf=true. The FILTER_GTF_BY_TRANSCRIPT process will still run to validate your transcripts against the GTF."
+            log.warn "WARNING: You provided a representative_transcript file and enabled transcriptome analysis but set skip_filter_gtf=true. The FILTER_GTF_BY_TRANSCRIPT process will still run, only to validate your transcripts against the GTF."
         }
         FILTER_GTF_BY_TRANSCRIPT(ch_gtf, ch_representative_transcript, skip_filter_gtf)
 
