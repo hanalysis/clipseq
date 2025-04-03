@@ -17,7 +17,7 @@ include { SAMTOOLS_FAIDX as NCRNA_INDEX                                         
 include { LINUX_COMMAND as REMOVE_GTF_BRACKETS                                   } from '../../modules/local/linux_command'
 include { CUSTOM_GETCHROMSIZES as GENOME_CHROM_SIZE                              } from '../../modules/nf-core/custom/getchromsizes/main'
 include { CUSTOM_GETCHROMSIZES as NCRNA_CHROM_SIZE                               } from '../../modules/nf-core/custom/getchromsizes/main'
-include { FILTER_GTF_BY_TRANSCRIPTS                                              } from '../../modules/local/find_longest_transcript/main'
+include { FILTER_GTF_BY_TRANSCRIPT                                               } from '../../modules/local/find_longest_transcript/main'
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_GTF                                   } from '../../modules/nf-core/icountmini/segment/main'
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_FILTGTF                               } from '../../modules/nf-core/icountmini/segment/main'
 include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_REGIONS             } from '../../modules/local/resolve_unannotated/main'
@@ -206,24 +206,24 @@ workflow PREPARE_GENOME {
         Channel.of([ [id: filtered_gtf.baseName], filtered_gtf ]) :
         Channel.empty()
 
-    // Run FILTER_GTF_BY_TRANSCRIPTS if skip_filter_gtf disabled and filtered GTF missing, OR any required transcript file (.txt, .fai, .gtf) is missing OR to validate the GTF and transcripts provided when representative_transcript provided.
+    // Run FILTER_GTF_BY_TRANSCRIPT if skip_filter_gtf disabled and filtered GTF missing, OR any required transcript file (.txt, .fai, .gtf) is missing OR to validate the GTF and transcripts provided when representative_transcript provided.
     if (
         (!skip_filter_gtf && !filtered_gtf) ||
         ((!representative_transcript || !representative_transcript_fai || !representative_transcript_gtf) && !skip_transcriptome) ||
         ((representative_transcript && !skip_transcriptome && skip_filter_gtf))
     ) {
         if (representative_transcript && !skip_transcriptome && skip_filter_gtf) {
-            log.warn "WARNING: You provided a representative_transcript file and enabled transcriptome analysis but set skip_filter_gtf=true. The FILTER_GTF_BY_TRANSCRIPTS process will still run to validate your transcripts against the GTF."
+            log.warn "WARNING: You provided a representative_transcript file and enabled transcriptome analysis but set skip_filter_gtf=true. The FILTER_GTF_BY_TRANSCRIPT process will still run to validate your transcripts against the GTF."
         }
-        FILTER_GTF_BY_TRANSCRIPTS(ch_gtf, ch_representative_transcript, skip_filter_gtf, skip_transcriptome)
+        FILTER_GTF_BY_TRANSCRIPT(ch_gtf, ch_representative_transcript, skip_filter_gtf, skip_transcriptome)
 
-        ch_representative_transcript     = FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript
-        ch_representative_transcript_fai = FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript_fai
-        ch_representative_transcript_gtf = FILTER_GTF_BY_TRANSCRIPTS.out.representative_transcript_gtf
+        ch_representative_transcript     = FILTER_GTF_BY_TRANSCRIPT.out.representative_transcript
+        ch_representative_transcript_fai = FILTER_GTF_BY_TRANSCRIPT.out.representative_transcript_fai
+        ch_representative_transcript_gtf = FILTER_GTF_BY_TRANSCRIPT.out.representative_transcript_gtf
         if (!skip_filter_gtf && !filtered_gtf) {
-            ch_filt_gtf                  = FILTER_GTF_BY_TRANSCRIPTS.out.gtf
+            ch_filt_gtf                  = FILTER_GTF_BY_TRANSCRIPT.out.gtf
         }
-        ch_versions                      = ch_versions.mix(FILTER_GTF_BY_TRANSCRIPTS.out.versions)
+        ch_versions                      = ch_versions.mix(FILTER_GTF_BY_TRANSCRIPT.out.versions)
     }
 
     //

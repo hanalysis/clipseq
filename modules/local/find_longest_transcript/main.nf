@@ -1,4 +1,4 @@
-process FILTER_GTF_BY_TRANSCRIPTS {
+process FILTER_GTF_BY_TRANSCRIPT {
     tag "$gtf"
     label "process_single"
 
