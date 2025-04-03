@@ -17,7 +17,7 @@ include { SAMTOOLS_FAIDX as NCRNA_INDEX                                         
 include { LINUX_COMMAND as REMOVE_GTF_BRACKETS                                   } from '../../modules/local/linux_command'
 include { CUSTOM_GETCHROMSIZES as GENOME_CHROM_SIZE                              } from '../../modules/nf-core/custom/getchromsizes/main'
 include { CUSTOM_GETCHROMSIZES as NCRNA_CHROM_SIZE                               } from '../../modules/nf-core/custom/getchromsizes/main'
-include { FILTER_GTF_BY_TRANSCRIPT                                               } from '../../modules/local/find_longest_transcript/main'
+include { FILTER_GTF_BY_TRANSCRIPT                                               } from '../../modules/local/filter_gtf_by_transcript/main'
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_GTF                                   } from '../../modules/nf-core/icountmini/segment/main'
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_FILTGTF                               } from '../../modules/nf-core/icountmini/segment/main'
 include { CLIPSEQ_RESOLVE_UNANNOTATED as RESOLVE_UNANNOTATED_REGIONS             } from '../../modules/local/resolve_unannotated/main'
