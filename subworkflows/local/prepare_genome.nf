@@ -206,7 +206,7 @@ workflow PREPARE_GENOME {
         Channel.of([ [id: filtered_gtf.baseName], filtered_gtf ]) :
         Channel.empty()
 
-    // Run FILTER_GTF_BY_TRANSCRIPT if skip_filter_gtf disabled and filtered GTF missing, OR any required transcript file (.txt, .fai, .gtf) is missing OR to validate the GTF and transcripts provided when representative_transcript provided.
+    // Run FILTER_GTF_BY_TRANSCRIPT if skip_filter_gtf disabled and filtered GTF missing, OR any required transcript file (.txt, .fai, .gtf) is missing and skip_transcriptome false,  OR to validate the GTF and transcripts provided when representative_transcript provided and skip_transcriptome false.
     if (
         (!skip_filter_gtf && !filtered_gtf) ||
         ((!representative_transcript || !representative_transcript_fai || !representative_transcript_gtf) && !skip_transcriptome) ||
@@ -215,7 +215,7 @@ workflow PREPARE_GENOME {
         if (representative_transcript && !skip_transcriptome && skip_filter_gtf) {
             log.warn "WARNING: You provided a representative_transcript file and enabled transcriptome analysis but set skip_filter_gtf=true. The FILTER_GTF_BY_TRANSCRIPT process will still run to validate your transcripts against the GTF."
         }
-        FILTER_GTF_BY_TRANSCRIPT(ch_gtf, ch_representative_transcript, skip_filter_gtf, skip_transcriptome)
+        FILTER_GTF_BY_TRANSCRIPT(ch_gtf, ch_representative_transcript, skip_filter_gtf)
 
         ch_representative_transcript     = FILTER_GTF_BY_TRANSCRIPT.out.representative_transcript
         ch_representative_transcript_fai = FILTER_GTF_BY_TRANSCRIPT.out.representative_transcript_fai
