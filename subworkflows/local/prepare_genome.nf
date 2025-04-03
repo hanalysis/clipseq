@@ -206,7 +206,9 @@ workflow PREPARE_GENOME {
         Channel.of([ [id: filtered_gtf.baseName], filtered_gtf ]) :
         Channel.empty()
 
-    // Run FILTER_GTF_BY_TRANSCRIPT if skip_filter_gtf disabled and filtered GTF missing, OR any required transcript file (.txt, .fai, .gtf) is missing and skip_transcriptome false,  OR to validate the GTF and transcripts provided when representative_transcript provided and skip_transcriptome false.
+    // Run FILTER_GTF_BY_TRANSCRIPT if skip_filter_gtf disabled and filtered GTF missing,
+    // OR any required transcript file (.txt, .fai, .gtf) is missing and skip_transcriptome false,
+    // OR to validate the GTF and transcripts provided when representative_transcript provided and skip_transcriptome false, even when skip_filter_gtf is true.
     if (
         (!skip_filter_gtf && !filtered_gtf) ||
         ((!representative_transcript || !representative_transcript_fai || !representative_transcript_gtf) && !skip_transcriptome) ||
