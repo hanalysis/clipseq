@@ -12,6 +12,7 @@ process CLIPSEQ_RESOLVE_UNANNOTATED {
 
     output:
     tuple val(meta), path("*.gtf"), emit: gtf
+    path  "*.log"                 , emit: log
     path  "versions.yml"          , emit: versions
 
     when:

@@ -113,7 +113,6 @@ def load_and_validate_transcripts(df_txlengths, transcript):
     Raises:
     - ValueError: If the transcript list is empty or any IDs are missing from the GTF
     """
-    logging.info(f"Command-line arguments: {vars(args)}")
     # Log the transcript file being used
     logging.info(f"Using the transcript IDs in: {transcript}")
 
@@ -211,7 +210,7 @@ def main(process_name, gtf, transcript, output, skip_filter_gtf):
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
-
+    logging.info(f"Command-line arguments: {vars(args)}")
     # Load the genome annotation file and calculate CDS and exon lengths per transcript
     df_gtf, df_txlengths, input_genes = compute_gtf_feature_lengths(gtf)
     df_txlengths.to_csv(f"{os.path.basename(gtf)}.lengths.tsv", index=None, sep='\t', quoting=csv.QUOTE_NONE)

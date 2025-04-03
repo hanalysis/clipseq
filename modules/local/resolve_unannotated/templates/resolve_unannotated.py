@@ -11,6 +11,7 @@ import csv
 import pandas as pd
 import pybedtools as pbt
 import plumbum as pb
+import logging
 
 
 def dump_versions(process_name):
@@ -64,14 +65,27 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
     # Dump version file
     dump_versions(process_name)
 
+    # Logging
+    log_file = f"{output}.log"
+    logging.basicConfig(
+        filename=log_file,
+        filemode='w',
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s'
+    )
+    logging.info(f"Command-line arguments: {vars(args)}")
+
     # Read filtered iCount genomic segment and convert it from GTF to BED format.
-    print("Reading genomic segmentation.")
+    logging.info(f"Reading iCount genomic segmentation (regions) for filtered GTF in {filt_regs}")
     df_regions = read_gtf(filt_regs)
     bed_regions = df_regions.assign(start=df_regions["start"] - 1, score=0)[
         ["chrom", "start", "end", "feature", "score", "strand"]
     ]
     bed_regions = pbt.BedTool.from_dataframe(bed_regions).sort()
     # Read unfiltered iCount genomic segment and convert it from GTF to BED format.
+    logging.info(f"Reading iCount genomic segmentation (regions) for unfiltered GTF in {unfilt_regs}")
+
+
     df_unfiltered = read_gtf(unfilt_regs)
     bed_unfiltered = df_unfiltered.assign(start=df_unfiltered["start"] - 1, score=0)[
         ["chrom", "start", "end", "feature", "score", "strand", "annotations"]
@@ -91,16 +105,16 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
     # bed_annotation = pbt.BedTool.from_dataframe(bed_annotation).sort()
 
     # Find regions that are unannotated in the iCount genome segmentation.
-    print("Getting unannotated regions...")
+    logging.info("Getting unannotated regions...")
     bed_missing = bed_fai.subtract(bed_regions, s=True, nonamecheck=True).sort()
-    print(f"Found {len(bed_missing)} unannotated genomic regions.")
+    logging.info(f"Found {len(bed_missing)} unannotated genomic regions.")
     # Use intersect to split unnanotated regions
     intersect = bed_missing.intersect(bed_unfiltered, s=True, nonamecheck=True).sort()
 
-    print("Annotating regions with gene information...")
+    logging.info("Annotating regions with gene information...")
     # if genic_other == "false":
     # Intersect missing regions with unfiltered segment to get transcript region
-    print("Annotating missing regions in iCount segment with transcript regions...")
+    logging.info("Annotating missing regions in iCount segment with transcript regions...")
     # Annotate with annotations (column 7) and feature (column 4)
     missingAnnotated = intersect.map(bed_unfiltered, s=True, c=[7, 4], o="collapse", nonamecheck=True).sort()
     df_unnanotated = pd.read_csv(
@@ -150,9 +164,9 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
         ["chrom", "source", "feature", "start", "end", "name", "strand", "name2", "annotations"]
     ]
     # Add missing regions to original iCount segment.
-    print("Adding annotated missisng regions to iCount segment...")
+    logging.info("Adding annotated missing regions to iCount segment...")
     df_regions = pd.concat([df_regions, df_unnanotated], ignore_index=True)
-    print("N segment entries:", len(df_regions))
+    logging.info("N segment entries:", len(df_regions))
     # Sort GTF segment and write it to file
     # if genic_other == "true":
     #     identifier = "genic_other"
@@ -162,7 +176,7 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
         df_regions.to_csv(tmpfile.name, index=False, header=False, sep="\t", quoting=csv.QUOTE_NONE)
         cmd = (pb.cmd.sort["-t\t", "-k1,1", "-k4,4n", tmpfile.name]) > output
         print(cmd())
-    print(f"Saved the segment as {output}")
+    logging.info(f"Saved the segment as {output}")
     return 0
 
 
