@@ -287,7 +287,7 @@ def main(process_name, gtf, transcript, output, skip_filter_gtf):
 
     # Filter the genome annotation if genome GTF filtering enabled
     logging.info(f"skip_filter_gtf: {skip_filter_gtf}")
-    if skip_filter_gtf:
+    if skip_filter_gtf == "true":
         logging.info("Skipping GTF filtering as requested with --skip_filter_gtf.")
     else:
         filt_annot = df_gtf.loc[(df_gtf['transcript_id'].isin(transcript_ids_sorted)) | (df_gtf['Feature'] == 'gene')].copy()
