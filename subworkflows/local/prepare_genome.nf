@@ -207,7 +207,7 @@ workflow PREPARE_GENOME {
         ((representative_transcript && !skip_transcriptome && skip_filter_gtf))
     ) {
         if (representative_transcript && !skip_transcriptome && skip_filter_gtf) {
-            log.warn "WARNING: You provided a representative_transcript file and enabled transcriptome analysis but set skip_filter_gtf=true. The FILTER_GTF_BY_TRANSCRIPT process will still run, only to validate your transcripts against the GTF."
+            log.info "INFO: You provided a representative_transcript file and enabled transcriptome analysis but set skip_filter_gtf=true. The FILTER_GTF_BY_TRANSCRIPT process will still run, only to validate your transcripts against the GTF."
         }
         FILTER_GTF_BY_TRANSCRIPT(ch_gtf, ch_representative_transcript, skip_filter_gtf)
 
