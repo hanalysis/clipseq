@@ -19,17 +19,18 @@ import argparse
 from sys import exit
 import pyranges as pr
 import pandas as pd
-import warnings
 import csv
 import logging
 import os
 
 
 def dump_versions(process_name):
-    """Write the Python version and process name to a file"""
+    """Write the software version and process name to a file."""
     with open("versions.yml", "w") as out_f:
         out_f.write(process_name + ":\n")
         out_f.write("    python: " + platform.python_version() + "\n")
+        out_f.write("    pandas: " + pd.__version__ + "\n")
+        out_f.write("    pybedtools: " + pr.__version__ + "\n")
 
 
 def parse_gtf(gtf_path):
