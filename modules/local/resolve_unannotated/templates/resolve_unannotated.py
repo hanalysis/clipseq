@@ -17,6 +17,7 @@ import logging
 
 
 def dump_versions(process_name):
+    """Write the software version and process name to a file."""
     with open("versions.yml", "w") as out_f:
         out_f.write(process_name + ":\n")
         out_f.write("    python: " + platform.python_version() + "\n")
@@ -180,11 +181,7 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
     logging.info("Getting unannotated regions...")
     bed_missing = bed_fai.subtract(bed_regions, s=True, nonamecheck=True).sort()
     logging.info(f"Found {len(bed_missing)} unannotated genomic regions.")
-    # Use intersect to split unnanotated regions
-    intersect = bed_missing.intersect(bed_unfiltered, s=True, nonamecheck=True).sort()
 
-    logging.info("Annotating regions with gene information...")
-    # if genic_other == "false":
     # Intersect missing regions with unfiltered segment to get transcript region
     logging.info("Annotating missing regions in iCount regions file using the unfiltered regions file...")
     # Use intersect to split unannotated regions into chunks matching the unfiltered segment.
