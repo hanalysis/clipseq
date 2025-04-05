@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
-"""Annotates genome segments that are not annotated by iCount segmentation."""
+"""
+Annotates genome segments that are not annotated by iCount segmentation,
+when performing segmentation based on a filtered GTF file.
+"""
 
 
 import platform
@@ -23,6 +26,7 @@ def dump_versions(process_name):
 
 
 def read_gtf(segmentation):
+    """Read GTF file and return a pandas DataFrame."""
     df_regions = pd.read_csv(
         segmentation,
         sep="\t",
@@ -41,21 +45,37 @@ def read_gtf(segmentation):
             "annotations": str,
         },
     )
-    return df_regions
+    # Get a set of chromosomes
+    chromosomes = set(df_regions.chrom)
+    return chromosomes, df_regions
 
 
 def fai2bed(fai):
     """Convert fasta index to BED6 format and return as pybedtools object."""
-    df_chromosomes = pd.read_csv(fai, sep="\t", header=None, names=["chr", "end", "offset", "linebases", "linewidth"])
-    df_chromosomes = df_chromosomes[["chr", "end"]].assign(start=0, name=".", score=0)
+    df_chromosomes = pd.read_csv(
+        fai,
+        sep="\t",
+        header=None,
+        names=["chrom", "end", "offset", "linebases", "linewidth"],
+        dtype={
+            "chrom": str,
+            "end": int,
+            "offset": int,
+            "linebases": int,
+            "linewidth": int
+        },
+        )
+    df_chromosomes = df_chromosomes[["chrom", "end"]].assign(start=0, name=".", score=0)
+    # Get a set of chromosomes
+    chromosomes = set(df_chromosomes.chrom)
     # Assign positive strand
     df_chromosomes_p = df_chromosomes.copy()
     df_chromosomes_p["strand"] = "+"
-    df_chromosomes_p = df_chromosomes_p[["chr", "start", "end", "name", "score", "strand"]]
+    df_chromosomes_p = df_chromosomes_p[["chrom", "start", "end", "name", "score", "strand"]]
     # Assign negative strand
     df_chromosomes_m = df_chromosomes.copy()
     df_chromosomes_m["strand"] = "-"
-    df_chromosomes_m = df_chromosomes_m[["chr", "start", "end", "name", "score", "strand"]]
+    df_chromosomes_m = df_chromosomes_m[["chrom", "start", "end", "name", "score", "strand"]]
     # Combine both strands, convert to pyranges and sort.
     df_chromosomes = pd.concat([df_chromosomes_p, df_chromosomes_m], ignore_index=True)
     bed_chr = pbt.BedTool.from_dataframe(df_chromosomes).sort()
