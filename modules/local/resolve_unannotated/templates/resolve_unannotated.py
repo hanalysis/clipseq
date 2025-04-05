@@ -5,7 +5,6 @@
 
 import platform
 import argparse
-# from sys import exit
 import tempfile
 import csv
 import pandas as pd
@@ -46,16 +45,18 @@ def read_gtf(segmentation):
 
 
 def fai2bed(fai):
+    """Convert fasta index to BED6 format and return as pybedtools object."""
     df_chromosomes = pd.read_csv(fai, sep="\t", header=None, names=["chr", "end", "offset", "linebases", "linewidth"])
     df_chromosomes = df_chromosomes[["chr", "end"]].assign(start=0, name=".", score=0)
+    # Assign positive strand
     df_chromosomes_p = df_chromosomes.copy()
     df_chromosomes_p["strand"] = "+"
     df_chromosomes_p = df_chromosomes_p[["chr", "start", "end", "name", "score", "strand"]]
-
+    # Assign negative strand
     df_chromosomes_m = df_chromosomes.copy()
     df_chromosomes_m["strand"] = "-"
     df_chromosomes_m = df_chromosomes_m[["chr", "start", "end", "name", "score", "strand"]]
-
+    # Combine both strands, convert to pyranges and sort.
     df_chromosomes = pd.concat([df_chromosomes_p, df_chromosomes_m], ignore_index=True)
     bed_chr = pbt.BedTool.from_dataframe(df_chromosomes).sort()
     return bed_chr
