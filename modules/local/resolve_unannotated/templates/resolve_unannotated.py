@@ -186,58 +186,24 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
     logging.info("Annotating regions with gene information...")
     # if genic_other == "false":
     # Intersect missing regions with unfiltered segment to get transcript region
-    logging.info("Annotating missing regions in iCount segment with transcript regions...")
+    logging.info("Annotating missing regions in iCount regions file using the unfiltered regions file...")
+    # Use intersect to split unannotated regions into chunks matching the unfiltered segment.
+    intersect = bed_missing.intersect(bed_unfiltered, s=True, nonamecheck=True).sort()
     # Annotate with annotations (column 7) and feature (column 4)
     missingAnnotated = intersect.map(bed_unfiltered, s=True, c=[7, 4], o="collapse", nonamecheck=True).sort()
-    df_unnanotated = pd.read_csv(
+    df_unannotated = pd.read_csv(
         missingAnnotated.fn,
         sep="\t",
         header=None,
         names=["chrom", "start", "end", "name", "score", "strand", "annotations", "feature"],
     )
-    df_unnanotated = df_unnanotated.assign(start=df_unnanotated["start"] + 1, source=".", name2=".")
-    # else:
-    #     print('Annotationg missing regions in iCount segment as "genic_other".')
-    #     # Annotate with annotations (column 7), feature is genic_other
-    #     missingAnnotated = intersect.map(bed_unfiltered, s=True, c=7, o="collapse", nonamecheck=True).sort()
-    #     df_unnanotated = pd.read_csv(
-    #         missingAnnotated.fn,
-    #         sep="\t",
-    #         header=None,
-    #         names=["chrom", "start", "end", "name", "score", "strand", "annotations"],
-    #     )
-    #     # Feature is genic_other.
-    #     df_unnanotated = df_unnanotated.assign(
-    #         feature="genic_other", start=df_unnanotated["start"] + 1, source=".", name2="."
-    #     )
-    #     # Find regions that are missing from main annotation and annotate them with gene entries from annotations gtf file
-    #     # Get complement of raw segment to find missing regions
-    #     regsMissingFromMain = bed_fai.subtract(bed_unfiltered, s=True, nonamecheck=True).sort()
-    #     # Annotate them from annotation gtf (gene level annotation) and format entries to replace "gene_type" with "biotype"
-    #     regsMissingFromMain = regsMissingFromMain.map(bed_annotation, s=True, c=4, o="collapse", nonamecheck=True)
-    #     dfMissingFromMain = pd.read_csv(
-    #         regsMissingFromMain.fn,
-    #         sep="\t",
-    #         header=None,
-    #         names=["chrom", "start", "end", "name", "score", "strand", "annotations"],
-    #     )
-    #     dfMissingFromMain["annotations"] = dfMissingFromMain["annotations"].apply(
-    #         lambda x: str(x).replace("gene_type", "biotype")
-    #     )
-    #     dfMissingFromMain = dfMissingFromMain.assign(
-    #         feature="genic_other", start=dfMissingFromMain["start"] + 1, source=".", name2="."
-    #     )
-    #     dfMissingFromMain = dfMissingFromMain[
-    #         ["chrom", "source", "feature", "start", "end", "name", "strand", "name2", "annotations"]
-    #     ]
-    #     # Combine all missing regions
-    #     df_unnanotated = pd.concat([df_unnanotated, dfMissingFromMain])
-    df_unnanotated = df_unnanotated[
+    df_unannotated = df_unannotated.assign(start=df_unannotated["start"] + 1, source=".", name2=".")
+    df_unannotated = df_unannotated[
         ["chrom", "source", "feature", "start", "end", "name", "strand", "name2", "annotations"]
     ]
     # Add missing regions to original iCount segment.
     logging.info("Adding annotated missing regions to iCount segment...")
-    df_regions = pd.concat([df_regions, df_unnanotated], ignore_index=True)
+    df_regions = pd.concat([df_regions, df_unannotated], ignore_index=True)
     logging.info("N segment entries:", len(df_regions))
 
     logging.info("Validating that no regions remain unannotated after resolving...")
