@@ -30,7 +30,7 @@ def dump_versions(process_name):
         out_f.write(process_name + ":\n")
         out_f.write("    python: " + platform.python_version() + "\n")
         out_f.write("    pandas: " + pd.__version__ + "\n")
-        out_f.write("    pybedtools: " + pr.__version__ + "\n")
+        out_f.write("    pyranges: " + pr.__version__ + "\n")
 
 
 def parse_gtf(gtf_path):
