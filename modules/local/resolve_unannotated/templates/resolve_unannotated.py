@@ -142,7 +142,7 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
     dump_versions(process_name)
 
     # Logging
-    log_file = f"{output}.log"
+    log_file = f"{output.replace('resolved.gtf', 'resolved.log')}"
     logging.basicConfig(
         filename=log_file,
         filemode='w',
