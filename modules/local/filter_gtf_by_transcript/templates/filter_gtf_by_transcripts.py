@@ -188,12 +188,9 @@ def select_longest_transcript(df_txlengths, df_gtf):
     df_txlengths_filtered = df_txlengths_sorted.drop_duplicates(subset='gene_id', keep='first')
 
     # Extract the unique transcript IDs from the filtered DataFrame
-    transcript_ids = df_txlengths_filtered.transcript_id.unique().tolist()
-
     # Ensure the order of the transcript IDs matches the original GTF order
-    transcript_ids_sorted = df_gtf.loc[df_gtf['Feature'] == 'transcript', 'transcript_id'] \
-        .drop_duplicates() \
-        .loc[lambda x: x.isin(df_txlengths_filtered.transcript_id)] \
+    transcript_ids_sorted = df_gtf.loc[(df_gtf['Feature'] == 'transcript') & (df_gtf['transcript_id'].isin(df_txlengths_filtered.transcript_id.tolist())), 'transcript_id'] \
+        .unique() \
         .tolist()
 
     return df_txlengths_filtered, transcript_ids_sorted
