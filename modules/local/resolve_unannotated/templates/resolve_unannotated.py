@@ -123,7 +123,6 @@ def validate_unfiltered(bed_fai, bed_unfiltered):
 def validate_resolved(bed_fai, bed_complete):
     """
     Validate that no regions remain unannotated after the resolve process.
-    Inputs: GTF dataframe, fai bed
     """
     bed_missing_c = bed_fai.subtract(bed_complete, s=True, nonamecheck=True).sort()
     if len(bed_missing_c) > 0:
@@ -168,6 +167,11 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
     ]
     bed_unfiltered = pbt.BedTool.from_dataframe(bed_unfiltered).sort()
 
+    ### JUST TESTING
+    # Save bed filtered and unfiltered
+    bed_regions.saveas("filtered_regions.bed")
+    bed_unfiltered.saveas("unfiltered_regions.bed")
+
     # Convert fasta index to BED format - one entry spans one chromosome.
     index_chromosomes, bed_fai = fai2bed(fai)
 
@@ -180,6 +184,11 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
     # Find regions that are unannotated in the iCount genome segmentation.
     logging.info("Getting unannotated regions...")
     bed_missing = bed_fai.subtract(bed_regions, s=True, nonamecheck=True).sort()
+
+    ### JUST TESTING
+    # Save bed
+    bed_missing.saveas("unannotated_in_filtered_regions.bed")
+
     logging.info(f"Found {len(bed_missing)} unannotated genomic regions.")
 
     # Intersect missing regions with unfiltered segment to get transcript region
@@ -188,6 +197,11 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
     intersect = bed_missing.intersect(bed_unfiltered, s=True, nonamecheck=True).sort()
     # Annotate with annotations (column 7) and feature (column 4)
     missingAnnotated = intersect.map(bed_unfiltered, s=True, c=[7, 4], o="collapse", nonamecheck=True).sort()
+
+    ### JUST TESTING
+    # Save bed
+    missingAnnotated.saveas("unannotated_in_filtered_regions_IMPUTED.bed")
+
     df_unannotated = pd.read_csv(
         missingAnnotated.fn,
         sep="\t",
