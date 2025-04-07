@@ -189,16 +189,13 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
     # If missing regions are found proceed with annotating them, otherwise return input as output
     if len(bed_missing) > 0:
 
-        # Save bed for diagnostics
-        bed_missing.saveas("unannotated_in_filtered_regions.bed")
-
         # Intersect missing regions with unfiltered segment to get transcript region
         logging.info("Annotating missing regions in iCount regions file using the unfiltered regions file...")
         # Use intersect to split unannotated regions into chunks matching the unfiltered segment.
         intersect = bed_missing.intersect(bed_unfiltered, s=True, nonamecheck=True).sort()
         # Annotate with annotations (column 7) and feature (column 4), this places the feature annotation in the 8-th column
         missingAnnotated = intersect.map(bed_unfiltered, s=True, c=[7, 4], o="collapse", nonamecheck=True).sort()
-
+        # Convert to dataframe
         df_unannotated = pd.read_csv(
             missingAnnotated.fn,
             sep="\t",
@@ -210,6 +207,7 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
         df_unannotated[["chrom", "start", "end", "feature", "score", "strand"]] \
             .to_csv("unannotated_in_filtered_regions_IMPUTED.bed", index=False, header=False, sep="\t", quoting=csv.QUOTE_NONE)
 
+        # Convert to GTF format
         df_unannotated = df_unannotated.assign(start=df_unannotated["start"] + 1, source=".", name2=".")
         df_unannotated = df_unannotated[
             ["chrom", "source", "feature", "start", "end", "name", "strand", "name2", "annotations"]
