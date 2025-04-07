@@ -156,7 +156,7 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
     filt_chromosomes, df_regions = read_gtf(filt_regs)
     bed_regions = df_regions.assign(start=df_regions["start"] - 1, score=0)[
         ["chrom", "start", "end", "feature", "score", "strand"]
-    ]
+    ].copy()
     bed_regions = pbt.BedTool.from_dataframe(bed_regions).sort()
 
     # Read unfiltered iCount genomic segment and convert it from GTF to BED format.
@@ -164,11 +164,10 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
     unfilt_chromosomes, df_unfiltered = read_gtf(unfilt_regs)
     bed_unfiltered = df_unfiltered.assign(start=df_unfiltered["start"] - 1, score=0)[
         ["chrom", "start", "end", "feature", "score", "strand", "annotations"]
-    ]
+    ].copy()
     bed_unfiltered = pbt.BedTool.from_dataframe(bed_unfiltered).sort()
 
-    ### JUST TESTING
-    # Save bed filtered and unfiltered
+    # Save bed filtered and unfiltered for diagnostics
     bed_regions.saveas("filtered_regions.bed")
     bed_unfiltered.saveas("unfiltered_regions.bed")
 
@@ -185,51 +184,58 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
     logging.info("Getting unannotated regions...")
     bed_missing = bed_fai.subtract(bed_regions, s=True, nonamecheck=True).sort()
 
-    ### JUST TESTING
-    # Save bed
-    bed_missing.saveas("unannotated_in_filtered_regions.bed")
-
     logging.info(f"Found {len(bed_missing)} unannotated genomic regions.")
+    
+    # If missing regions are found proceed with annotating them, otherwise return input as output
+    if len(bed_missing) > 0:
 
-    # Intersect missing regions with unfiltered segment to get transcript region
-    logging.info("Annotating missing regions in iCount regions file using the unfiltered regions file...")
-    # Use intersect to split unannotated regions into chunks matching the unfiltered segment.
-    intersect = bed_missing.intersect(bed_unfiltered, s=True, nonamecheck=True).sort()
-    # Annotate with annotations (column 7) and feature (column 4)
-    missingAnnotated = intersect.map(bed_unfiltered, s=True, c=[7, 4], o="collapse", nonamecheck=True).sort()
+        # Save bed for diagnostics
+        bed_missing.saveas("unannotated_in_filtered_regions.bed")
 
-    ### JUST TESTING
-    # Save bed
-    missingAnnotated.saveas("unannotated_in_filtered_regions_IMPUTED.bed")
+        # Intersect missing regions with unfiltered segment to get transcript region
+        logging.info("Annotating missing regions in iCount regions file using the unfiltered regions file...")
+        # Use intersect to split unannotated regions into chunks matching the unfiltered segment.
+        intersect = bed_missing.intersect(bed_unfiltered, s=True, nonamecheck=True).sort()
+        # Annotate with annotations (column 7) and feature (column 4), this places the feature annotation in the 8-th column
+        missingAnnotated = intersect.map(bed_unfiltered, s=True, c=[7, 4], o="collapse", nonamecheck=True).sort()
 
-    df_unannotated = pd.read_csv(
-        missingAnnotated.fn,
-        sep="\t",
-        header=None,
-        names=["chrom", "start", "end", "name", "score", "strand", "annotations", "feature"],
-    )
-    df_unannotated = df_unannotated.assign(start=df_unannotated["start"] + 1, source=".", name2=".")
-    df_unannotated = df_unannotated[
-        ["chrom", "source", "feature", "start", "end", "name", "strand", "name2", "annotations"]
-    ]
-    # Add missing regions to original iCount segment.
-    logging.info("Adding annotated missing regions to iCount segment...")
-    df_regions = pd.concat([df_regions, df_unannotated], ignore_index=True)
-    logging.info("N segment entries:", len(df_regions))
+        df_unannotated = pd.read_csv(
+            missingAnnotated.fn,
+            sep="\t",
+            header=None,
+            names=["chrom", "start", "end", "name", "score", "strand", "annotations", "feature"],
+        )
 
-    logging.info("Validating that no regions remain unannotated after resolving...")
-    bed_complete = df_regions.assign(start=df_regions["start"] - 1, score=0)[
-        ["chrom", "start", "end", "feature", "score", "strand", "annotations"]
-    ]
-    bed_complete = pbt.BedTool.from_dataframe(bed_complete).sort()
-    validate_resolved(bed_fai, bed_complete)
+        # Save bed for diagnostics
+        df_unannotated[["chrom", "start", "end", "feature", "score", "strand"]] \
+            .to_csv("unannotated_in_filtered_regions_IMPUTED.bed", index=False, header=False, sep="\t", quoting=csv.QUOTE_NONE)
 
+        df_unannotated = df_unannotated.assign(start=df_unannotated["start"] + 1, source=".", name2=".")
+        df_unannotated = df_unannotated[
+            ["chrom", "source", "feature", "start", "end", "name", "strand", "name2", "annotations"]
+        ]
+        # Add missing regions to original iCount segment.
+        logging.info("Adding annotated missing regions to iCount segment...")
+        df_regions = pd.concat([df_regions, df_unannotated], ignore_index=True)
+        logging.info("N segment entries:", len(df_regions))
 
-    with tempfile.NamedTemporaryFile(mode="w") as tmpfile:
+        # Validate that no unannotated regions are left on the genome.
+        logging.info("Validating that no regions remain unannotated after resolving...")
+        bed_complete = df_regions.assign(start=df_regions["start"] - 1, score=0)[
+            ["chrom", "start", "end", "feature", "score", "strand", "annotations"]
+        ].copy()
+        validate_resolved(bed_fai, pbt.BedTool.from_dataframe(bed_complete).sort())
+
+        # Save the resolved GTF file and sort it.
+        with tempfile.NamedTemporaryFile(mode="w") as tmpfile:
+            df_regions.to_csv(tmpfile.name, index=False, header=False, sep="\t", quoting=csv.QUOTE_NONE)
+            cmd = (pb.cmd.sort["-t\t", "-k1,1", "-k4,4n", tmpfile.name]) > output
+            print(cmd())
+        logging.info(f"Saved the resolved segment as {output}")
+    else:
+        # If no missing regions are found in the filtered segment, return input as output.
+        logging.info(f"No missing regions found. Saving inputs segment as {output}.")
         df_regions.to_csv(tmpfile.name, index=False, header=False, sep="\t", quoting=csv.QUOTE_NONE)
-        cmd = (pb.cmd.sort["-t\t", "-k1,1", "-k4,4n", tmpfile.name]) > output
-        print(cmd())
-    logging.info(f"Saved the segment as {output}")
     return 0
 
 
