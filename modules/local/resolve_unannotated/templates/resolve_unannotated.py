@@ -243,8 +243,8 @@ if __name__ == "__main__":
     # Allows switching between nextflow templating and standalone python running using arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--process_name", default="!{process_name}")
-    parser.add_argument("--unfilt_regs", default="!{unfilt_regs}")#update flags
-    parser.add_argument("--filt_regs", default="!{filt_regs}")#update flags
+    parser.add_argument("--unfilt_regs", default="!{unfilt_regs}")
+    parser.add_argument("--filt_regs", default="!{filt_regs}")
     parser.add_argument("--fai", default="!{fai}")
     parser.add_argument("--output", default="!{output}")
     args = parser.parse_args()
