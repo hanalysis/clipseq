@@ -233,7 +233,7 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
     else:
         # If no missing regions are found in the filtered segment, return input as output.
         logging.info(f"No missing regions found. Saving inputs segment as {output}.")
-        df_regions.to_csv(tmpfile.name, index=False, header=False, sep="\t", quoting=csv.QUOTE_NONE)
+        df_regions.to_csv(output, index=False, header=False, sep="\t", quoting=csv.QUOTE_NONE)
     return 0
 
 
