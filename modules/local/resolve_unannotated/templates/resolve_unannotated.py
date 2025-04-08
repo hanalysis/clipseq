@@ -185,7 +185,7 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
     bed_missing = bed_fai.subtract(bed_regions, s=True, nonamecheck=True).sort()
 
     logging.info(f"Found {len(bed_missing)} unannotated genomic regions.")
-    
+
     # If missing regions are found proceed with annotating them, otherwise return input as output
     if len(bed_missing) > 0:
 
