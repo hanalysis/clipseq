@@ -226,14 +226,14 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
 
         # Validate that resolved regions have the same feature types as the unfiltered regions.
         reg_types_out = set(df_regions.feature)
-        logging.info("Types of regions in the resolved output:", reg_types_out)
+        logging.info(f"Types of regions in the resolved output: {reg_types_out}")
         if reg_types_out.issubset(set(df_unfiltered.feature)):
-            logging.info("Types of regions in the resolved output to correspond region types in the unfiltered regions file")
+            logging.info("Types of regions in the resolved output correspond to region types in the unfiltered regions file.")
         else:
             logging.error("ERROR: Types of regions in the resolved output do not correspond to region types in the unfiltered regions file.")
             raise ValueError(
-                "ERROR: An unexpected error occurred. Types of regions in the resolved output do not correspond to region types in the unfiltered regions file."
-                "Region types in the resolved output: {reg_types_out}"
+                f"An unexpected error occurred. Types of regions in the resolved output do not correspond to region types in the unfiltered regions file.\n"
+                f"Region types in the resolved output: {reg_types_out}\n"
                 f"Region types in the unfiltered regions file: {set(df_unfiltered.feature)}"
             )
 
