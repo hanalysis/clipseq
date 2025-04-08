@@ -215,7 +215,7 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
         # Add missing regions to original iCount segment.
         logging.info("Adding annotated missing regions to iCount segment...")
         df_regions = pd.concat([df_regions, df_unannotated], ignore_index=True)
-        logging.info("N segment entries:", len(df_regions))
+        logging.info(f"N segment entries: {len(df_regions)}")
 
         # Validate that no unannotated regions are left on the genome.
         logging.info("Validating that no regions remain unannotated after resolving...")
