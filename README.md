@@ -116,9 +116,9 @@ You can find more technical details in the [iCount segment documentation](https:
 
 Pre-filtering the genomic annotation can improve iCount genome-level segmentation:
 - Ensures segmentation prioritizes a representative transcript per gene
-- Resolves conflicting annotations from overlapping isoforms
+- Uses the representative transcripts to resolve conflicting annotations from overlapping isoforms
 
-This can improve the biological interpretability of region assignments, especially at the genome level, where annotation can otherwise include overlapping or conflicting transcript features.
+This can improve the biological interpretability of region assignments, especially at the genome level.
 
 GTF filtering is enabled by default. To enable, omit the parameter or set `--skip_gtf_filter false`. To disable, set `--skip_gtf_filter true`.
 
@@ -127,7 +127,7 @@ GTF filtering is enabled by default. To enable, omit the parameter or set `--ski
 > If your annotation does not meet these standards you may want to consider disabling filtering with `--skip_gtf_filter true`.
 
 When enabled, the GTF is filtered prior to segmentation to include **one transcript per gene**.
-These represetnative transcripts can be either a user-defined set of transcripts (`--representative_transcript`) or automatically selected as the longest transcript per gene.
+These representative transcripts can be either a user-defined set of transcripts (`--representative_transcript`) or automatically selected as the longest transcript per gene.
 
 #### Transcript selection:
 - If `--representative_transcript` is provided:
