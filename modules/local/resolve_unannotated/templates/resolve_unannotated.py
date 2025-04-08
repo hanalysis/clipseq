@@ -224,6 +224,19 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
         ].copy()
         validate_resolved(bed_fai, pbt.BedTool.from_dataframe(bed_complete).sort())
 
+        # Validate that resolved regions have the same feature types as the unfiltered regions.
+        reg_types_out = set(df_regions.feature)
+        logging.info("Types of regions in the resolved output:", reg_types_out)
+        if reg_types_out.issubset(set(df_unfiltered.feature)):
+            logging.info("Types of regions in the resolved output to correspond region types in the unfiltered regions file")
+        else:
+            logging.error("ERROR: Types of regions in the resolved output do not correspond to region types in the unfiltered regions file.")
+            raise ValueError(
+                "ERROR: An unexpected error occurred. Types of regions in the resolved output do not correspond to region types in the unfiltered regions file."
+                "Region types in the resolved output: {reg_types_out}"
+                f"Region types in the unfiltered regions file: {set(df_unfiltered.feature)}"
+            )
+
         # Save the resolved GTF file and sort it.
         with tempfile.NamedTemporaryFile(mode="w") as tmpfile:
             df_regions.to_csv(tmpfile.name, index=False, header=False, sep="\t", quoting=csv.QUOTE_NONE)
