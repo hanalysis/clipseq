@@ -92,14 +92,14 @@ def validate_chromosomes(filt_chromosomes, unfilt_chromosomes, index_chromosomes
     # Check that all sets filt_chromosomes, unfilt_chromosomes, index_chromosomes are the same.
     if not (filt_chromosomes == unfilt_chromosomes == index_chromosomes):
         logging.error(
-            "Mismatch in chromosomes between filtered GTF regions, unfiltered GTF regions, and fasta index."
+            "ERROR: Mismatch in chromosomes between filtered GTF regions, unfiltered GTF regions, and fasta index."
             "Check that the sets of chromosomes are the same across both regions file and the fasta index."
             f"Filtered GTF chromosomes: {filt_chromosomes}"
             f"Unfiltered GTF chromosomes: {unfilt_chromosomes}"
             f"Fasta index chromosomes: {index_chromosomes}"
         )
         raise ValueError(
-            "Filtered and unfiltered GTF do not contain the same chromosome sets."
+            "ERROR: Filtered and unfiltered GTF do not contain the same chromosome sets."
             "Check that the sets of chromosomes are the same across both regions file and the fasta index."
         )
 
@@ -115,7 +115,7 @@ def validate_unfiltered(bed_fai, bed_unfiltered):
     else:
         logging.error(f"ERROR: Found {len(unfilt_missing)} unannotated regions in the unfiltered GTF.")
         raise ValueError(
-            "Unannotated regions found in the unfiltered GTF."
+            "ERROR: Unannotated regions found in the unfiltered GTF."
             "Either something went wrong with the ICOUNT_SEGMENT process,"
             "or the fasta index provided here did not match the index provided to the ICOUNT_SEGMENT process."
         )
@@ -132,7 +132,7 @@ def validate_resolved(bed_fai, bed_complete):
             )
         bed_missing_c.saveas(f"missing_in_resolved_regions.bed")
         raise ValueError(
-            "Unannotated regions were found in the resolved iCount segment."
+            "ERROR: Unannotated regions were found in the resolved iCount segment."
             "Something went wrong with the RESOLVE_UNANNOTATED process."
         )
 
