@@ -19,17 +19,18 @@ import argparse
 from sys import exit
 import pyranges as pr
 import pandas as pd
-import warnings
 import csv
 import logging
 import os
 
 
 def dump_versions(process_name):
-    """Write the Python version and process name to a file"""
+    """Write the software version and process name to a file."""
     with open("versions.yml", "w") as out_f:
         out_f.write(process_name + ":\n")
         out_f.write("    python: " + platform.python_version() + "\n")
+        out_f.write("    pandas: " + pd.__version__ + "\n")
+        out_f.write("    pyranges: " + pr.__version__ + "\n")
 
 
 def parse_gtf(gtf_path):
@@ -187,12 +188,9 @@ def select_longest_transcript(df_txlengths, df_gtf):
     df_txlengths_filtered = df_txlengths_sorted.drop_duplicates(subset='gene_id', keep='first')
 
     # Extract the unique transcript IDs from the filtered DataFrame
-    transcript_ids = df_txlengths_filtered.transcript_id.unique().tolist()
-
     # Ensure the order of the transcript IDs matches the original GTF order
-    transcript_ids_sorted = df_gtf.loc[df_gtf['Feature'] == 'transcript', 'transcript_id'] \
-        .drop_duplicates() \
-        .loc[lambda x: x.isin(df_txlengths_filtered.transcript_id)] \
+    transcript_ids_sorted = df_gtf.loc[(df_gtf['Feature'] == 'transcript') & (df_gtf['transcript_id'].isin(df_txlengths_filtered.transcript_id.tolist())), 'transcript_id'] \
+        .unique() \
         .tolist()
 
     return df_txlengths_filtered, transcript_ids_sorted
