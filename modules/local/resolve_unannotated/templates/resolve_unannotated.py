@@ -92,15 +92,15 @@ def validate_chromosomes(filt_chromosomes, unfilt_chromosomes, index_chromosomes
     # Check that all sets filt_chromosomes, unfilt_chromosomes, index_chromosomes are the same.
     if not (filt_chromosomes == unfilt_chromosomes == index_chromosomes):
         logging.error(
-            "ERROR: Mismatch in chromosomes between filtered GTF regions, unfiltered GTF regions, and fasta index. "
-            "Check that the sets of chromosomes are the same across both regions file and the fasta index. "
+            "Mismatch in chromosomes between filtered GTF regions, unfiltered GTF regions, and fasta index. "
+            "Check that the sets of chromosomes are the same across both regions files and the fasta index. "
             f"Filtered GTF chromosomes: {filt_chromosomes} "
             f"Unfiltered GTF chromosomes: {unfilt_chromosomes} "
             f"Fasta index chromosomes: {index_chromosomes} "
         )
         raise ValueError(
-            "ERROR: Filtered and unfiltered GTF do not contain the same chromosome sets."
-            "Check that the sets of chromosomes are the same across both regions file and the fasta index."
+            "ERROR: Mismatch in chromosomes between filtered GTF regions, unfiltered GTF regions, and fasta index. "
+            "Check that the sets of chromosomes are the same across both regions files and the fasta index."
         )
 
 
@@ -113,11 +113,11 @@ def validate_unfiltered(bed_fai, bed_unfiltered):
     if len(unfilt_missing) == 0:
         logging.info("No unannotated regions found in the unfiltered GTF.")
     else:
-        logging.error(f"ERROR: Found {len(unfilt_missing)} unannotated regions in the unfiltered GTF.")
+        logging.error(f"Found {len(unfilt_missing)} unannotated regions in the unfiltered GTF.")
         raise ValueError(
-            "ERROR: Unannotated regions found in the unfiltered GTF. "
-            "Either something went wrong with the ICOUNT_SEGMENT process, "
-            "or the fasta index provided here did not match the index provided to the ICOUNT_SEGMENT process."
+            "ERROR: Unannotated regions found for the unfiltered GTF. "
+            "Something went wrong with the ICOUNTMINI_SEGMENT (ICOUNT_SEG_GTF) process, "
+            "or the fasta index provided here did not match the index provided to the ICOUNTMINI_SEGMENT (ICOUNT_SEG_GTF) process."
         )
 
 def validate_resolved(bed_fai, bed_complete):
@@ -127,7 +127,7 @@ def validate_resolved(bed_fai, bed_complete):
     bed_missing_c = bed_fai.subtract(bed_complete, s=True, nonamecheck=True).sort()
     if len(bed_missing_c) > 0:
         logging.error(
-            f"ERROR: Found {len(bed_missing_c)} unannotated regions in the RESOLVED iCount segment. "
+            f"Found {len(bed_missing_c)} unannotated regions in the RESOLVED iCount segment. "
             "Writing missing segments to a BED file..."
             )
         bed_missing_c.saveas(f"missing_in_resolved_regions.bed")
@@ -230,7 +230,7 @@ def main(process_name, unfilt_regs, filt_regs, fai, output):
         if reg_types_out.issubset(set(df_unfiltered.feature)):
             logging.info("Types of regions in the resolved output correspond to region types in the unfiltered regions file.")
         else:
-            logging.error("ERROR: Types of regions in the resolved output do not correspond to region types in the unfiltered regions file.")
+            logging.error("Types of regions in the resolved output do not correspond to region types in the unfiltered regions file.")
             raise ValueError(
                 f"An unexpected error occurred. Types of regions in the resolved output do not correspond to region types in the unfiltered regions file.\n"
                 f"Region types in the resolved output: {reg_types_out}\n"

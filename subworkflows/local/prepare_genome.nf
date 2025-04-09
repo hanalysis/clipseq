@@ -286,7 +286,6 @@ workflow PREPARE_GENOME {
     representative_transcript_gtf     = ch_representative_transcript_gtf     // channel: [ val(meta), [ fai ] ]
     filtered_gtf                      = ch_filt_gtf                          // channel: [ val(meta), [ gtf ] ]
     seg_gtf                           = ch_seg_gtf                           // channel: [ val(meta), [ gtf ] ]
-    // seg_filt_gtf                   = ch_seg_filt_gtf                      // channel: [ val(meta), [ gtf ] ]; not used downstream
     regions_gtf                       = ch_regions_gtf                       // channel: [ val(meta), [ gtf ] ]
     regions_filt_gtf                  = ch_regions_filt_gtf                  // channel: [ val(meta), [ gtf ] ]
     regions_resolved_gtf              = ch_regions_resolved_gtf              // channel: [ val(meta), [ gtf ] ]
