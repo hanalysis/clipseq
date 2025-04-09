@@ -127,12 +127,12 @@ GTF filtering is enabled by default. To enable, omit the parameter or set `--ski
 > If your annotation does not meet these standards you may want to consider disabling filtering with `--skip_gtf_filter true`.
 
 When enabled, the GTF is filtered prior to segmentation to include **one transcript per gene**.
-These representative transcripts can be either a user-defined set of transcripts (`--representative_transcript`) or automatically selected as the longest transcript per gene.
+These representative transcripts can be either a user-defined set of transcripts (`--representative_transcript`) or automatically selected by the pipeline as the longest transcript per gene.
 
 #### Transcript selection:
 - If `--representative_transcript` is provided:
   - Must be a `.txt` file with **one transcript ID per line**
-  - Must include **exactly one transcript per gene** in the input GTF (`--gtf`)
+  - Must include **exactly one transcript for each gene** in the input GTF (`--gtf`)
   - Only these transcripts and their associated features will be retained
 - If not provided, the pipeline auto-selects one representative transcript per gene using the hierarchy:
     1. **CDS length**
@@ -163,9 +163,9 @@ If `--skip_gtf_filter true` is set:
 - All transcripts per gene are included
 - Regions (e.g., UTRs, CDS, introns) are assigned by collapsing annotations across all transcripts
 - iCount’s internal rules resolve overlapping features
-- This may result in more complex annotations for genes with many transcripts
+- This may result in more complex region annotations for genes with many transcripts
 
-Key Outputs (with filtering enabled):
+Key outputs (filtering disabled):
  - `*_seg.gtf`: Transcript-wise segmentation (segments) using the unfiltered GTF.
  - `*_regions.gtf`: Genome-wise segmentation (regions) from all transcripts in the unfiltered GTF
 
