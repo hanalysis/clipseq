@@ -116,7 +116,7 @@ See the [iCount segment documentation](https://icount.readthedocs.io/en/latest/_
 
 Pre-filtering the annotation can improve iCount genome-level segmentation by:
 - Prioritizing one representative transcript per gene
-- Reducing conflicts genomic region assignments caused by overlapping isoforms
+- Reducing conflicts in genomic region assignments caused by overlapping isoforms
 
 This can improve the biological interpretability of region assignments, especially at the genome level.
 

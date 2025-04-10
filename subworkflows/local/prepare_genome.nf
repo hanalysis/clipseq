@@ -194,9 +194,17 @@ workflow PREPARE_GENOME {
         Channel.of([ [id: representative_transcript.baseName], representative_transcript ]) :
         Channel.of([[], []])
 
-    ch_representative_transcript_fai = Channel.of([ [id: representative_transcript_fai.baseName], representative_transcript_fai ])
-    ch_representative_transcript_gtf = Channel.of([ [id: representative_transcript_gtf.baseName], representative_transcript_gtf ])
-    ch_filt_gtf = Channel.of([ [id: filtered_gtf.baseName], filtered_gtf ])
+    ch_representative_transcript_fai = representative_transcript_fai ?
+        Channel.of([[id: representative_transcript_fai.baseName], representative_transcript_fai]) :
+        Channel.empty()
+
+    ch_representative_transcript_gtf = representative_transcript_gtf ?
+        Channel.of([[id: representative_transcript_gtf.baseName], representative_transcript_gtf]) :
+        Channel.empty()
+
+    ch_filt_gtf = filtered_gtf ?
+        Channel.of([[id: filtered_gtf.baseName], filtered_gtf]) :
+        Channel.empty()
 
     // Run FILTER_GTF_BY_TRANSCRIPT if skip_filter_gtf disabled and filtered GTF missing,
     // OR any required transcript file (.txt, .fai, .gtf) is missing and skip_transcriptome false,
@@ -223,8 +231,14 @@ workflow PREPARE_GENOME {
     //
     // MODULE: Segment GTF file using icount
     //
-    ch_seg_gtf     = Channel.of( [ [id:seg_gtf.baseName], seg_gtf ] )
-    ch_regions_gtf = Channel.of( [ [id:regions_gtf.baseName], regions_gtf ] )
+    ch_seg_gtf = seg_gtf ?
+        Channel.of([[id: seg_gtf.baseName], seg_gtf]) :
+        Channel.empty()
+
+    ch_regions_gtf = regions_gtf ?
+        Channel.of([[id: regions_gtf.baseName], regions_gtf]) :
+        Channel.empty()
+
     if (!seg_gtf || !regions_gtf) {
         ICOUNT_SEG_GTF (
             ch_gtf,
@@ -240,14 +254,16 @@ workflow PREPARE_GENOME {
     //
     // MODULE: Segment the filtered GTF file using icount
     //
-    // ch_seg_filt_gtf     = Channel.of( [ [id:seg_filt_gtf.baseName], seg_filt_gtf ] )
-    ch_regions_filt_gtf = Channel.of( [ [id:regions_filt_gtf.baseName], regions_filt_gtf ] )
+    ch_regions_filt_gtf = regions_filt_gtf ?
+        Channel.of([[id: regions_filt_gtf.baseName], regions_filt_gtf]) :
+        Channel.empty()
+
     if (!skip_filter_gtf && !regions_filt_gtf) {
         ICOUNT_SEG_FILTGTF (
             ch_filt_gtf,
             ch_fasta_fai.map{ it[1] }
         )
-        // ch_seg_filt_gtf     = ICOUNT_SEG_FILTGTF.out.gtf
+
         ch_regions_filt_gtf = ICOUNT_SEG_FILTGTF.out.regions
     }
     // EXAMPLE CHANNEL STRUCT: [[meta], gtf]
@@ -257,7 +273,10 @@ workflow PREPARE_GENOME {
     //
     // MODULE: Resolve the GTF regions that iCount did not annotate REGIONS FILE
     //
-    ch_regions_resolved_gtf = Channel.of( [ [id:regions_resolved_gtf.baseName], regions_resolved_gtf ] )
+    ch_regions_resolved_gtf = regions_resolved_gtf ?
+        Channel.of([[id: regions_resolved_gtf.baseName], regions_resolved_gtf]) :
+        Channel.empty()
+
     if (!skip_filter_gtf && !regions_resolved_gtf) {
         RESOLVE_UNANNOTATED_REGIONS (
             ch_regions_gtf,
@@ -281,13 +300,13 @@ workflow PREPARE_GENOME {
     chrom_sizes                       = ch_genome_chrom_sizes                // channel: [ val(meta), [ txt ] ]
     ncrna_chrom_sizes                 = ch_ncrna_chrom_sizes                 // channel: [ val(meta), [ txt ] ]
     gtf                               = ch_gtf                               // channel: [ val(meta), [ gtf ] ]
-    representative_transcript         = ch_representative_transcript         // channel: [ val(meta), [ txt ] ]
-    representative_transcript_fai     = ch_representative_transcript_fai     // channel: [ val(meta), [ fai ] ]
-    representative_transcript_gtf     = ch_representative_transcript_gtf     // channel: [ val(meta), [ fai ] ]
-    filtered_gtf                      = ch_filt_gtf                          // channel: [ val(meta), [ gtf ] ]
+    representative_transcript         = ch_representative_transcript         // channel: [ val(meta), [ txt ] ] or Channel.empty()
+    representative_transcript_fai     = ch_representative_transcript_fai     // channel: [ val(meta), [ fai ] ] or Channel.empty()
+    representative_transcript_gtf     = ch_representative_transcript_gtf     // channel: [ val(meta), [ fai ] ] or Channel.empty()
+    filtered_gtf                      = ch_filt_gtf                          // channel: [ val(meta), [ gtf ] ] or Channel.empty()
     seg_gtf                           = ch_seg_gtf                           // channel: [ val(meta), [ gtf ] ]
     regions_gtf                       = ch_regions_gtf                       // channel: [ val(meta), [ gtf ] ]
-    regions_filt_gtf                  = ch_regions_filt_gtf                  // channel: [ val(meta), [ gtf ] ]
-    regions_resolved_gtf              = ch_regions_resolved_gtf              // channel: [ val(meta), [ gtf ] ]
+    regions_filt_gtf                  = ch_regions_filt_gtf                  // channel: [ val(meta), [ gtf ] ] or Channel.empty()
+    regions_resolved_gtf              = ch_regions_resolved_gtf              // channel: [ val(meta), [ gtf ] ] or Channel.empty()
     versions                          = ch_versions                          // channel: [ versions.yml ]
 }
