@@ -9,6 +9,7 @@ import shutil
 
 print("Starting Python script")
 
+
 def make_dir(path):
     if len(path) > 0:
         try:
@@ -49,16 +50,14 @@ def check_samplesheet(process_name, file_in, file_out):
 
     with open(file_in, "r") as fin:
         ## Check header
-        HEADER = ["sample_name","group_name", "input_name", "fastq"]
+        HEADER = ["sample_name", "group_name", "input_name", "fastq"]
         HEADER_LEN = len(HEADER)
         header = [x.strip('"') for x in fin.readline().strip().split(",")]
         ACTUAL_HEADER_LEN = len(header)
 
         # simply check if number of cols in header is correct
         if ACTUAL_HEADER_LEN != HEADER_LEN:
-            print_error(
-                f"Header formatting is incorrect, ensure you have four columns: {HEADER}"
-            )
+            print_error(f"Header formatting is incorrect, ensure you have four columns: {HEADER}")
 
         # check that columns names are correct and in correct order
         for i in range(HEADER_LEN):
@@ -77,13 +76,13 @@ def check_samplesheet(process_name, file_in, file_out):
                 continue
 
             ## Check that sample_name and fastq are populated, this is the minimum required
-            if not lspl[0]: #sample_name
+            if not lspl[0]:  # sample_name
                 print_error(
                     f"Sample name not provided - line no. {line_no}",
                     "Line",
                     line,
                 )
-            if not lspl[3]: #fastq
+            if not lspl[3]:  # fastq
                 print_error(
                     f"FastQ not provided - line no. {line_no}",
                     "Line",
@@ -93,7 +92,7 @@ def check_samplesheet(process_name, file_in, file_out):
             ## Check sample name and group name entries for common weird characters
             ## We don't need to check input_name because later on we will check that it matches a sample name
             sample_name, group_name, input_name, fastq = lspl[: len(HEADER)]
-            weird_chars = [" ",".",":",";","/","\\"]
+            weird_chars = [" ", ".", ":", ";", "/", "\\"]
             for weirdo in weird_chars:
                 if sample_name.find(weirdo) != -1:
                     print_error(
@@ -114,51 +113,51 @@ def check_samplesheet(process_name, file_in, file_out):
                         "FastQ file does not have extension '.fastq.gz' or '.fq.gz'!",
                         "Line",
                         line,
-                        )
-            
+                    )
+
     #  Do the remaining checks with a pandas dataframe
     df = pd.read_csv(file_in)
 
     # 1. Check for duplicated rows
-    duplicated_rows = df[df.duplicated(subset=['sample_name', 'group_name', 'input_name'])]
+    duplicated_rows = df[df.duplicated(subset=["sample_name", "group_name", "input_name"])]
     if not duplicated_rows.empty:
         for index, row in duplicated_rows.iterrows():
             print(
                 f"Friendly FYI - Row {index + 2}: Sample '{row['sample_name']}' with group '{row['group_name']}' and input '{row['input_name']}' is duplicated. These specific samples will be merged before mapping."
-                )
+            )
 
     # 2. Check for rows where sample_name is duplicated but group_name and/or input_name are different
-    duplicate_sample_names = df[df.duplicated(subset='sample_name', keep=False)].groupby('sample_name').apply(lambda x: x.nunique())
+    duplicate_sample_names = (
+        df[df.duplicated(subset="sample_name", keep=False)].groupby("sample_name").apply(lambda x: x.nunique())
+    )
     for sample, unique_counts in duplicate_sample_names.iterrows():
-        if unique_counts['group_name'] > 1 or unique_counts['input_name'] > 1:
+        if unique_counts["group_name"] > 1 or unique_counts["input_name"] > 1:
             print_error(
                 f"You have duplicate sample names '{sample}' where the group and/or input are different. If you want the fastqs to be merged before mapping the group/input columns must also match. If you do not want the samples to be merged they must have different names."
-                )
+            )
             return
 
     # 3. Check if samples in the same group have different inputs
-    group_inputs = df.groupby('group_name')['input_name'].nunique()
+    group_inputs = df.groupby("group_name")["input_name"].nunique()
     for group, unique_inputs in group_inputs.items():
         if unique_inputs > 1:
-            print_error(
-                f"Samples in the same group '{group}', should have the same input."
-                )
+            print_error(f"Samples in the same group '{group}', should have the same input.")
             return
 
     # 4. Check if input_name is in set of all sample_names or group_names
-    unique_samples = set(df['sample_name'].unique())
-    unique_groups = set(df['group_name'].unique())
+    unique_samples = set(df["sample_name"].unique())
+    unique_groups = set(df["group_name"].unique())
     for index, row in df.iterrows():
-        if row['input_name'] is not None and row['input_name'] != "" and not pd.isna(row['input_name']): 
-            if row['input_name'] not in unique_samples and row['input_name'] not in unique_groups:
+        if row["input_name"] is not None and row["input_name"] != "" and not pd.isna(row["input_name"]):
+            if row["input_name"] not in unique_samples and row["input_name"] not in unique_groups:
                 print_error(
                     f"Row {index + 2}: input_name '{row['input_name']}' must refer to either another sample_name or group_name in the samplesheet."
-                    )
+                )
                 return
-
 
     ## Write validated samplesheet
     shutil.copy(file_in, file_out)
+
 
 if __name__ == "__main__":
     # Allows switching between nextflow templating and standalone python running using arguments

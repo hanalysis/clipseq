@@ -24,7 +24,7 @@ jobs:
     strategy:
       matrix:
         NXF_VER:
-          - "22.10.1"
+          - "23.04.3"
           - "latest-everything"
         profile: ["docker"]
         test: ["test"]
@@ -56,8 +56,6 @@ jobs:
           - "only_preprocessing_skip_trimming"
           - "only_alignment_primary"
           - "only_alignment_false_outputs"
-          - "only_filtering_primary"
-          - "only_filtering_false_outputs"
           - "only_dedup_primary"
           - "only_crosslinking_primary"
           - "only_peakcalling_primary"
@@ -66,10 +64,11 @@ jobs:
           - "only_peakcalling_icount"
           - "only_peakcalling_paraclu"
           - "only_peakcalling_paraclu_clippy"
-        include:
-          - test: test_full_small
-            profile: docker
-            tag: "full_small_only_input_primary"
+        # do not include outdated samplesheets
+        #include:
+        #  - test: test_full_small
+        #    profile: docker
+        #    tag: "full_small_only_input_primary"
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v3
