@@ -13,7 +13,7 @@ process GET_CONSENSUS_COUNTS {
     val(output_name)
 
     output:
-    path "*.tsv"         , emit: tsv
+    tuple val(meta), path ("*.tsv")         , emit: tsv
     path  "versions.yml" , emit: versions
 
     when:

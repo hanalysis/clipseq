@@ -60,6 +60,10 @@ if ((caller_list + callers).unique().size() != caller_list.size()) {
 ch_dummy_file  = file("$projectDir/assets/dummy_file.txt", checkIfExists: true)
 ch_dummy_file2 = file("$projectDir/assets/dummy_file2.txt", checkIfExists: true)
 
+// deseq2 header files:
+ch_multiqc_merged_replicate_deseq2_pca_header        = file("$projectDir/assets/merged_replicate_deseq2_pca_header.txt", checkIfExists: true)
+ch_multiqc_merged_replicate_deseq2_clustering_header = file("$projectDir/assets/merged_replicate_deseq2_clustering_header.txt", checkIfExists: true)
+
 // // Check if an AWS iGenome has been provided to use the appropriate version of STAR
 // def is_aws_igenome = false
 // if (params.fasta && params.gtf) {
@@ -442,7 +446,7 @@ workflow CLIPSEQ {
 
         ICOUNTMINI_SUMMARY (
             ch_genome_crosslink_group_resolved_bed,
-            ch_regions_resolved_gtf.collect{ it[1] }
+            ch_regions_resolved_gtf
         )
 
         MERGE_SUMMARY (
@@ -459,7 +463,7 @@ workflow CLIPSEQ {
 
         ICOUNTMINI_METAGENE (
             ch_genome_crosslink_group_resolved_bed,
-            ch_regions_resolved_gtf.collect{ it[1] }
+            ch_regions_resolved_gtf
         )
 
         if(params.consensus_peak){
@@ -539,9 +543,13 @@ workflow CLIPSEQ {
                 CLIPPY_CONSENSUS_PEAK_TABLE (
                     ch_all_crosslinks,
                     CLIPPY_GENOME_CONSENSUS.out.peaks,
+                    ch_fasta,
                     ch_fasta_fai,
-                    ch_regions_resolved_gtf,
-                    "Clippy_Consensus_AllCounts.tsv"
+                    ch_regions_resolved_gtf.collect{ it[1] },
+                    "Clippy_Consensus_AllCounts.tsv",
+                    ch_multiqc_merged_replicate_deseq2_pca_header,
+                    ch_multiqc_merged_replicate_deseq2_clustering_header,
+                    params.skip_deseq2_qc
                 )
                 ch_versions = ch_versions.mix(CLIPPY_CONSENSUS_PEAK_TABLE.out.versions)
             }
@@ -563,7 +571,7 @@ workflow CLIPSEQ {
 
             ICOUNTMINI_SIGXLS (
                 ch_genome_crosslink_group_resolved_bed,
-                ch_seg_resolved_gtf.collect{ it[1]}
+                ch_seg_resolved_gtf
                 
             )
 
@@ -601,7 +609,7 @@ workflow CLIPSEQ {
             if(params.consensus_peak){
                 CONSENSUS_ICOUNTMINI_SIGXLS (
                     ch_consensus_crosslinks_final_bed,
-                    ch_seg_resolved_gtf.collect{ it[1]}
+                    ch_seg_resolved_gtf
                 )
                 // CHANNEL: Create combined channel of input crosslinks and sigxls
                 ch_consensus_peaks_input = ch_consensus_crosslinks_final_bed
@@ -622,9 +630,13 @@ workflow CLIPSEQ {
                 ICOUNT_CONSENSUS_PEAK_TABLE (
                     ch_all_crosslinks,
                     CONSENSUS_GUNZIP_ICOUNTMINI_PEAKS.out.gunzip,
+                    ch_fasta,
                     ch_fasta_fai,
                     ch_regions_resolved_gtf,
-                    "iCount-Mini_Consensus_AllCounts.tsv"
+                    "iCount-Mini_Consensus_AllCounts.tsv",
+                    ch_multiqc_merged_replicate_deseq2_pca_header,
+                    ch_multiqc_merged_replicate_deseq2_clustering_header,
+                    params.skip_deseq2_qc
                 )
                 ch_versions = ch_versions.mix(ICOUNT_CONSENSUS_PEAK_TABLE.out.versions)
             }
@@ -635,7 +647,8 @@ workflow CLIPSEQ {
                     ch_genome_crosslink_group_resolved_bed,
                     ch_fasta.collect{ it[1] },
                     ch_fasta_fai.collect{ it[1] },
-                    ch_regions_resolved_gtf.collect{ it[1] }
+                    ch_regions_resolved_gtf
+                    //ch_regions_resolved_gtf.collect{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_ICOUNT.out.versions)
             }
@@ -663,9 +676,13 @@ workflow CLIPSEQ {
                 PARACLU_CONSENSUS_PEAK_TABLE (
                     ch_all_crosslinks,
                     PARACLU_GENOME_CONSENSUS.out.bed,
+                    ch_fasta,
                     ch_fasta_fai,
                     ch_regions_resolved_gtf,
-                    "Paraclu_Consensus_AllCounts.tsv"
+                    "Paraclu_Consensus_AllCounts.tsv",
+                    ch_multiqc_merged_replicate_deseq2_pca_header,
+                    ch_multiqc_merged_replicate_deseq2_clustering_header,
+                    params.skip_deseq2_qc
                 )
                 ch_versions = ch_versions.mix(PARACLU_CONSENSUS_PEAK_TABLE.out.versions)
             }
@@ -676,7 +693,7 @@ workflow CLIPSEQ {
                     ch_genome_crosslink_group_resolved_bed,
                     ch_fasta.collect{ it[1] },
                     ch_fasta_fai.collect{ it[1] },
-                    ch_regions_resolved_gtf.collect{ it[1] }
+                    ch_regions_resolved_gtf
                 )
                 ch_versions = ch_versions.mix(PEKA_PARACLU.out.versions)
             }
