@@ -272,9 +272,6 @@ workflow CLIPSEQ {
         ch_genome_index               = PREPARE_GENOME.out.genome_index
         ch_ncrna_genome_index         = PREPARE_GENOME.out.ncrna_index
     }
-    
-    //ch_ncrna_genome_index.view()
-    ch_ncrna_genome_index.collect().view()
 
 
     //
@@ -825,8 +822,6 @@ workflow CLIPSEQ {
             //CLIPPY_GENOME.out.peaks.map{ it[1] }
         )
 
-        //CLIPQC.out.txt.view()
-
         //
         // MODULE: Run multiqc
         //
@@ -849,10 +844,7 @@ workflow CLIPSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(ch_genome_log.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(CLIPQC.out.tsv.collect().ifEmpty([]))
 
-        //ch_multiqc_files.collect().view()
         ch_tmp = ch_ncrna_log.collect{it[1]}
-        ch_tmp.view()
-        //ch_genome_log.collect().view()
 
         MULTIQC (
             ch_multiqc_files.collect(),
