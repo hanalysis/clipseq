@@ -427,11 +427,17 @@ workflow CLIPSEQ {
             ch_regions_used.map{ it[1] }
         )
 
+        ch_merged_summaries = ICOUNTMINI_SUMMARY.out.summary_type
+            .join( ICOUNTMINI_SUMMARY.out.summary_subtype, by: [0])
+            .join( ICOUNTMINI_SUMMARY.out.summary_gene, by: [0])
+            .join( ch_ncrna_k1_crosslink_group_resolved_bed, by: [0])
+            .map { meta, type, subtype, gene, bed -> 
+                [meta, [type, subtype, gene, bed]]
+            }
+
+
         MERGE_SUMMARY (
-            ICOUNTMINI_SUMMARY.out.summary_type,
-            ICOUNTMINI_SUMMARY.out.summary_subtype,
-            ICOUNTMINI_SUMMARY.out.summary_gene,
-            ch_ncrna_k1_crosslink_group_resolved_bed
+            ch_merged_summaries
         )
         ch_versions = ch_versions.mix(MERGE_SUMMARY.out.versions)
 
