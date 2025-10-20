@@ -3,9 +3,15 @@ include { SAMTOOLS_INDEX as SAMTOOLS_GROUP_INDEX                    } from '../.
 include { GET_CROSSLINKS as CALC_CROSSLINKS_INDIVIDUAL              } from '../../modules/local/get_crosslinks'
 include { GET_CROSSLINKS as CALC_CROSSLINKS_INDIVIDUAL_HASGROUP     } from '../../modules/local/get_crosslinks'
 include { GET_CROSSLINKS as CALC_CROSSLINKS_GROUP_HASGROUP          } from '../../modules/local/get_crosslinks'
-include { UCSC_BEDGRAPHTOBIGWIG as BIGWIGGENOME_INDIVIDUAL          } from "../../modules/nf-core/ucsc/bedgraphtobigwig/main"
-include { UCSC_BEDGRAPHTOBIGWIG as BIGWIGGENOME_INDIVIDUAL_HASGROUP } from "../../modules/nf-core/ucsc/bedgraphtobigwig/main"
-include { UCSC_BEDGRAPHTOBIGWIG as BIGWIGGENOME_GROUP_HASGROUP      } from "../../modules/nf-core/ucsc/bedgraphtobigwig/main"
+include { BEDGRAPH_STRAND_SPLIT as STRAND_SPLIT_INDIVIDUAL          } from '../../modules/local/bedgraph_strand_split/main'
+include { BEDGRAPH_STRAND_SPLIT as STRAND_SPLIT_INDIVIDUAL_HASGROUP } from '../../modules/local/bedgraph_strand_split/main'
+include { BEDGRAPH_STRAND_SPLIT as STRAND_SPLIT_GROUP_HASGROUP      } from '../../modules/local/bedgraph_strand_split/main'
+include { UCSC_BEDGRAPHTOBIGWIG as BIGWIG_POS_INDIVIDUAL            } from "../../modules/nf-core/ucsc/bedgraphtobigwig/main"
+include { UCSC_BEDGRAPHTOBIGWIG as BIGWIG_NEG_INDIVIDUAL            } from "../../modules/nf-core/ucsc/bedgraphtobigwig/main"
+include { UCSC_BEDGRAPHTOBIGWIG as BIGWIG_POS_INDIVIDUAL_HASGROUP   } from "../../modules/nf-core/ucsc/bedgraphtobigwig/main"
+include { UCSC_BEDGRAPHTOBIGWIG as BIGWIG_NEG_INDIVIDUAL_HASGROUP   } from "../../modules/nf-core/ucsc/bedgraphtobigwig/main"
+include { UCSC_BEDGRAPHTOBIGWIG as BIGWIG_POS_GROUP_HASGROUP        } from "../../modules/nf-core/ucsc/bedgraphtobigwig/main"
+include { UCSC_BEDGRAPHTOBIGWIG as BIGWIG_NEG_GROUP_HASGROUP        } from "../../modules/nf-core/ucsc/bedgraphtobigwig/main"
 
 workflow RESOLVE_GROUPS_AND_CROSSLINKS {
     take:
@@ -21,16 +27,12 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
     ch_bam.branch {
         hasGroup: it[0].group  // Branch condition for samples with a group
         noGroup: it[0].group == ''  // Branch condition for samples without a group
-    }.set { ch_bam_branches }  // Capture branching result into ch_branches
+    }.set { ch_bam_branches }
 
     ch_bai.branch {
         hasGroup: it[0].group  // Branch condition for samples with a group
         noGroup: it[0].group == ''  // Branch condition for samples without a group
-    }.set { ch_bai_branches }  // Capture branching result into ch_branches
-
-    // After branching
-    // ch_branches.hasGroup.view { item -> "Has group: $item" }
-    // ch_branches.noGroup.view { item -> "No group: $item" }
+    }.set { ch_bai_branches }
 
     ch_bam_branches.hasGroup
         .map { item ->
@@ -52,7 +54,6 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
 
             return [newMeta, bam]
         }
-        //.view { "Grouped and remapped: $it" }
         .set { ch_grouped_bam }
 
     SAMTOOLS_MERGE (
@@ -63,19 +64,13 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
     ch_versions = ch_versions.mix(SAMTOOLS_MERGE.out.versions)
     ch_grouped_bam = SAMTOOLS_MERGE.out.bam
 
-    //ch_grouped_bam.view { item -> "Grouped BAM: $item" }
-
-    // merge with the noGroup branch
     ch_grouped_bam.concat(ch_bam_branches.noGroup).set { ch_peakcalling_bam }
-    //ch_peakcalling_bam.view { item -> "Grouped BAM and non-grouped BAMs: $item" }
 
     SAMTOOLS_GROUP_INDEX (
         ch_peakcalling_bam
     )
     ch_versions = ch_versions.mix(SAMTOOLS_GROUP_INDEX.out.versions)
     ch_peakcalling_bai = SAMTOOLS_GROUP_INDEX.out.bai
-
-    //ch_peakcalling_bai.view { item -> "Grouped BAI and non-grouped BAIs: $item" }
 
     //
     // MODULE: Run crosslink calculation for samples without a group
@@ -90,18 +85,32 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
     ch_crosslink_INDIVIDUAL_bedgraph   = CALC_CROSSLINKS_INDIVIDUAL.out.bedgraph
 
     //
-    // MODULE: Convert crosslinks bedgraph to bigwig for samples without a group
+    // MODULE: Split bedgraph by strand for samples without a group
     //
 
-    BIGWIGGENOME_INDIVIDUAL (
-        ch_crosslink_INDIVIDUAL_bedgraph, 
+    STRAND_SPLIT_INDIVIDUAL (
+        ch_crosslink_INDIVIDUAL_bedgraph
+    )
+    ch_versions = ch_versions.mix(STRAND_SPLIT_INDIVIDUAL.out.versions)
+
+    //
+    // MODULE: Convert strand-specific bedgraphs to bigwig for samples without a group
+    //
+
+    BIGWIG_POS_INDIVIDUAL (
+        STRAND_SPLIT_INDIVIDUAL.out.pos_bedgraph, 
         ch_chrom_sizes
     )
-    ch_versions                        = ch_versions.mix(BIGWIGGENOME_INDIVIDUAL.out.versions)
-    ch_crosslink_INDIVIDUAL_bigwig     = BIGWIGGENOME_INDIVIDUAL.out.bigwig
+    ch_versions = ch_versions.mix(BIGWIG_POS_INDIVIDUAL.out.versions)
+
+    BIGWIG_NEG_INDIVIDUAL (
+        STRAND_SPLIT_INDIVIDUAL.out.neg_bedgraph, 
+        ch_chrom_sizes
+    )
+    ch_versions = ch_versions.mix(BIGWIG_NEG_INDIVIDUAL.out.versions)
 
     //
-    // SUBWORKFLOW: Run crosslink calculation for samples WITH A GROUP indidivually
+    // MODULE: Run crosslink calculation for samples WITH A GROUP individually
     //
 
     CALC_CROSSLINKS_INDIVIDUAL_HASGROUP (
@@ -113,18 +122,32 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
     ch_crosslink_INDIVIDUAL_HASGROUP_bedgraph   = CALC_CROSSLINKS_INDIVIDUAL_HASGROUP.out.bedgraph
 
     //
-    // MODULE: Convert crosslinks bedgraph to bigwig for samples WITH A GROUP individually
+    // MODULE: Split bedgraph by strand for samples WITH A GROUP individually
     //
 
-    BIGWIGGENOME_INDIVIDUAL_HASGROUP (
-        ch_crosslink_INDIVIDUAL_HASGROUP_bedgraph, 
+    STRAND_SPLIT_INDIVIDUAL_HASGROUP (
+        ch_crosslink_INDIVIDUAL_HASGROUP_bedgraph
+    )
+    ch_versions = ch_versions.mix(STRAND_SPLIT_INDIVIDUAL_HASGROUP.out.versions)
+
+    //
+    // MODULE: Convert strand-specific bedgraphs to bigwig for samples WITH A GROUP individually
+    //
+
+    BIGWIG_POS_INDIVIDUAL_HASGROUP (
+        STRAND_SPLIT_INDIVIDUAL_HASGROUP.out.pos_bedgraph, 
         ch_chrom_sizes
     )
-    ch_versions                                 = ch_versions.mix(BIGWIGGENOME_INDIVIDUAL_HASGROUP.out.versions)
-    ch_crosslink_INDIVIDUAL_HASGROUP_bigwig     = BIGWIGGENOME_INDIVIDUAL_HASGROUP.out.bigwig
+    ch_versions = ch_versions.mix(BIGWIG_POS_INDIVIDUAL_HASGROUP.out.versions)
+
+    BIGWIG_NEG_INDIVIDUAL_HASGROUP (
+        STRAND_SPLIT_INDIVIDUAL_HASGROUP.out.neg_bedgraph, 
+        ch_chrom_sizes
+    )
+    ch_versions = ch_versions.mix(BIGWIG_NEG_INDIVIDUAL_HASGROUP.out.versions)
 
     //
-    // SUBWORKFLOW: Run crosslink calculation for samples WITH A GROUP AS A GROUP
+    // MODULE: Run crosslink calculation for samples WITH A GROUP AS A GROUP
     //
     
     CALC_CROSSLINKS_GROUP_HASGROUP (
@@ -136,32 +159,57 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
     ch_crosslink_GROUP_HASGROUP_bedgraph   = CALC_CROSSLINKS_GROUP_HASGROUP.out.bedgraph
 
     //
-    // MODULE: Convert crosslinks bedgraph to bigwig for samples WITH A GROUP AS A GROUP
+    // MODULE: Split bedgraph by strand for samples WITH A GROUP AS A GROUP
     //
 
-    BIGWIGGENOME_GROUP_HASGROUP (
-        ch_crosslink_GROUP_HASGROUP_bedgraph, 
+    STRAND_SPLIT_GROUP_HASGROUP (
+        ch_crosslink_GROUP_HASGROUP_bedgraph
+    )
+    ch_versions = ch_versions.mix(STRAND_SPLIT_GROUP_HASGROUP.out.versions)
+
+    //
+    // MODULE: Convert strand-specific bedgraphs to bigwig for samples WITH A GROUP AS A GROUP
+    //
+
+    BIGWIG_POS_GROUP_HASGROUP (
+        STRAND_SPLIT_GROUP_HASGROUP.out.pos_bedgraph, 
         ch_chrom_sizes
     )
-    ch_versions                                 = ch_versions.mix(BIGWIGGENOME_GROUP_HASGROUP.out.versions)
-    ch_crosslink_GROUP_HASGROUP_bigwig          = BIGWIGGENOME_GROUP_HASGROUP.out.bigwig
+    ch_versions = ch_versions.mix(BIGWIG_POS_GROUP_HASGROUP.out.versions)
+
+    BIGWIG_NEG_GROUP_HASGROUP (
+        STRAND_SPLIT_GROUP_HASGROUP.out.neg_bedgraph, 
+        ch_chrom_sizes
+    )
+    ch_versions = ch_versions.mix(BIGWIG_NEG_GROUP_HASGROUP.out.versions)
 
     //
     // Combine crosslinking results for moving forwards
     //
 
     ch_crosslink_bed = ch_crosslink_INDIVIDUAL_bed.mix(ch_crosslink_GROUP_HASGROUP_bed)
+    ch_crosslink_combined_pos_bigwig          = BIGWIG_POS_INDIVIDUAL.out.bigwig.mix(BIGWIG_POS_GROUP_HASGROUP.out.bigwig)
+    ch_crosslink_combined_neg_bigwig          = BIGWIG_NEG_INDIVIDUAL.out.bigwig.mix(BIGWIG_NEG_GROUP_HASGROUP.out.bigwig)
 
     emit:
-    versions                              = ch_versions
-    crosslink_group_resolved              = ch_crosslink_bed                         // channel: [ val(meta), [ bed ] ] 
-    crosslink_INDIVIDUAL                  = ch_crosslink_INDIVIDUAL_bed              // channel: [ val(meta), [ bed ] ] 
-    crosslink_INDIVIDUAL_HASGROUP         = ch_crosslink_INDIVIDUAL_HASGROUP_bed     // channel: [ val(meta), [ bed ] ] 
-    crosslink_GROUP_HASGROUP              = ch_crosslink_GROUP_HASGROUP_bed          // channel: [ val(meta), [ bed ] ]
-    crosslink_INDIVIDUAL_bigwig           = ch_crosslink_INDIVIDUAL_bigwig           // channel: [ val(meta), [ bigwig ] ]
-    crosslink_INDIVIDUAL_HASGROUP_bigwig  = ch_crosslink_INDIVIDUAL_HASGROUP_bigwig  // channel: [ val(meta), [ bigwig ] ]
-    crosslink_GROUP_HASGROUP_bigwig       = ch_crosslink_GROUP_HASGROUP_bigwig       // channel: [ val(meta), [ bigwig ] ]
-    genome_peakcalling_bam                = ch_peakcalling_bam                       // channel: [ val(meta), [ bam ] ]
-    genome_peakcalling_bai                = ch_peakcalling_bai                       // channel: [ val(meta), [ bai ] ]
+    versions                               = ch_versions
+    crosslink_group_resolved               = ch_crosslink_bed                          // channel: [ val(meta), [ bed ] ] 
+    crosslink_INDIVIDUAL                   = ch_crosslink_INDIVIDUAL_bed               // channel: [ val(meta), [ bed ] ] 
+    crosslink_INDIVIDUAL_HASGROUP          = ch_crosslink_INDIVIDUAL_HASGROUP_bed      // channel: [ val(meta), [ bed ] ] 
+    crosslink_GROUP_HASGROUP               = ch_crosslink_GROUP_HASGROUP_bed           // channel: [ val(meta), [ bed ] ]
+    
+    // Combined BigWigs
+    crosslink_combined_pos_bigwig          = ch_crosslink_combined_pos_bigwig          // channel: [ val(meta), [ bigwig ] ]
+    crosslink_combined_neg_bigwig          = ch_crosslink_combined_neg_bigwig          // channel: [ val(meta), [ bigwig ] ]
 
+    // Strand-specific BigWig outputs
+    crosslink_INDIVIDUAL_pos_bigwig        = BIGWIG_POS_INDIVIDUAL.out.bigwig          // channel: [ val(meta), [ bigwig ] ]
+    crosslink_INDIVIDUAL_neg_bigwig        = BIGWIG_NEG_INDIVIDUAL.out.bigwig          // channel: [ val(meta), [ bigwig ] ]
+    crosslink_INDIVIDUAL_HASGROUP_pos_bigwig = BIGWIG_POS_INDIVIDUAL_HASGROUP.out.bigwig // channel: [ val(meta), [ bigwig ] ]
+    crosslink_INDIVIDUAL_HASGROUP_neg_bigwig = BIGWIG_NEG_INDIVIDUAL_HASGROUP.out.bigwig // channel: [ val(meta), [ bigwig ] ]
+    crosslink_GROUP_HASGROUP_pos_bigwig    = BIGWIG_POS_GROUP_HASGROUP.out.bigwig      // channel: [ val(meta), [ bigwig ] ]
+    crosslink_GROUP_HASGROUP_neg_bigwig    = BIGWIG_NEG_GROUP_HASGROUP.out.bigwig      // channel: [ val(meta), [ bigwig ] ]
+    
+    genome_peakcalling_bam                 = ch_peakcalling_bam                        // channel: [ val(meta), [ bam ] ]
+    genome_peakcalling_bai                 = ch_peakcalling_bai                        // channel: [ val(meta), [ bai ] ]
 }
