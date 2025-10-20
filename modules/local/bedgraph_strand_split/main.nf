@@ -23,11 +23,9 @@ process BEDGRAPH_STRAND_SPLIT {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    # Extract positive strand (4th column > 0)
-    awk '\$4 > 0' ${bedgraph} > ${prefix}.pos.bedgraph
-    
-    # Extract negative strand (4th column < 0) and make values positive
-    awk '\$4 < 0 {print \$1"\\t"\$2"\\t"\$3"\\t"(-\$4)}' ${bedgraph} > ${prefix}.neg.bedgraph
+    # Extract positive and negative strands (4th column > 0 and < 0)
+    awk '\$4 > 0 {printf "%s\\t%s\\t%s\\t%.8g\\n", \$1, \$2, \$3, \$4}' ${bedgraph} > ${prefix}.pos.bedgraph
+    awk '\$4 < 0 {printf "%s\\t%s\\t%s\\t%.8g\\n", \$1, \$2, \$3, -\$4}' ${bedgraph} > ${prefix}.neg.bedgraph
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
