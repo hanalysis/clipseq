@@ -162,8 +162,10 @@ workflow PREPARE_GENOME {
     //
     // MODULE: Calc genome chrom sizes
     //
-    ch_genome_chrom_sizes = genome_chrom_sizes
-    if(!genome_chrom_sizes) {
+    ch_genome_chrom_sizes = Channel.empty()
+    if(genome_chrom_sizes) {
+        ch_genome_chrom_sizes = Channel.of([ [id:genome_chrom_sizes.baseName], genome_chrom_sizes ])
+    } else {
         ch_genome_chrom_sizes = GENOME_CHROM_SIZE ( ch_fasta ).sizes
         ch_versions  = ch_versions.mix(GENOME_CHROM_SIZE.out.versions)
     }
@@ -171,8 +173,10 @@ workflow PREPARE_GENOME {
     //
     // MODULE: Calc ncrna chrom sizes
     //
-    ch_ncrna_chrom_sizes = ncrna_chrom_sizes
-    if(!ncrna_chrom_sizes) {
+    ch_ncrna_chrom_sizes = Channel.empty()
+    if(ncrna_chrom_sizes) {
+        ch_ncrna_chrom_sizes = Channel.of([ [id:ncrna_chrom_sizes.baseName], ncrna_chrom_sizes ])
+    } else {
         ch_ncrna_chrom_sizes = NCRNA_CHROM_SIZE ( ch_ncrna_fasta ).sizes
         ch_versions  = ch_versions.mix(NCRNA_CHROM_SIZE.out.versions)
     }

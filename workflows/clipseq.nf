@@ -415,7 +415,7 @@ workflow CLIPSEQ {
             ch_genome_unique_dedupe_bai ,
             ch_fasta,
             ch_fasta_fai,
-            ch_genome_chrom_sizes.collect{ it }
+            ch_genome_chrom_sizes.map{ meta, sizes -> sizes }.collect()
         )
         ch_versions                                  = ch_versions.mix(GENOME_RESOLVE_GROUPS_AND_CROSSLINKS.out.versions)
         ch_genome_crosslink_group_resolved_bed       = GENOME_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_group_resolved
@@ -430,7 +430,7 @@ workflow CLIPSEQ {
             ch_ncrna_k1_bai,
             ch_ncrna_fasta,
             ch_ncrna_fasta_fai,
-            ch_ncrna_chrom_sizes.collect{ it }
+            ch_ncrna_chrom_sizes.map{ meta, sizes -> sizes }.collect()
         )
         ch_versions                                    = ch_versions.mix(NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.versions)
         ch_ncrna_k1_crosslink_group_resolved_bed       = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_group_resolved
