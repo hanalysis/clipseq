@@ -130,7 +130,8 @@ workflow PREPARE_GENOME {
     } else {
         GENOME_INDEX (
             ch_fasta,
-            [[],[]]
+            [[],[]],
+	    false
         )
         ch_fasta_fai = GENOME_INDEX.out.fai
         ch_versions = ch_versions.mix(GENOME_INDEX.out.versions)
@@ -147,7 +148,8 @@ workflow PREPARE_GENOME {
     } else {
         NCRNA_INDEX (
             ch_ncrna_fasta,
-            [[],[]]
+            [[],[]],
+            false
         )
         ch_ncrna_fasta_fai = NCRNA_INDEX.out.fai
         ch_versions = ch_versions.mix(NCRNA_INDEX.out.versions)
