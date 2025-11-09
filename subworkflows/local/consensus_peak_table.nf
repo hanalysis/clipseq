@@ -5,8 +5,9 @@
 //
 // MODULES
 //
-include { BEDTOOLS_SORT as CONSENSUS_PEAKS_SORT } from '../../modules/nf-core/bedtools/sort/main'
-include { BEDTOOLS_MAP  as CONSENSUS_MAP        } from '../../modules/nf-core/bedtools/map/main'
+include { BEDTOOLS_SORT as CONSENSUS_PEAKS_SORT  } from '../../modules/nf-core/bedtools/sort/main'
+include { BEDTOOLS_SORT as CROSSLINKS_SORT       } from '../../modules/nf-core/bedtools/sort/main'
+include { BEDTOOLS_MAP  as CONSENSUS_MAP         } from '../../modules/nf-core/bedtools/map/main'
 //
 // SUBWORKFLOWS
 //
@@ -24,13 +25,21 @@ workflow CONSENSUS_PEAK_TABLE {
     main:
     ch_versions = Channel.empty()
 
+    // Sort consensus peaks according to genome file order
     CONSENSUS_PEAKS_SORT (
         consensus_peaks,
         genome_fai.map{ it[1] }
     )
 
+    // Sort crosslinks according to genome file order
+    CROSSLINKS_SORT (
+        all_crosslinks,
+        genome_fai.map{ it[1] }
+    )
+
+    // Combine sorted peaks with sorted crosslinks
     CONSENSUS_PEAKS_SORT.out.sorted
-        .combine(all_crosslinks)
+        .combine(CROSSLINKS_SORT.out.sorted)
         .map{ meta1, consensuspeaks, meta2, crosslink -> [meta2, consensuspeaks, crosslink] }
         .set { ch_consensus_map }
     
