@@ -24,18 +24,9 @@ workflow CONSENSUS_PEAK_TABLE {
     main:
     ch_versions = Channel.empty()
 
-    // Sort consensus peaks according to genome file order before mapping
-    // Transform consensus_peaks from [ meta, [ peaks.bed ] ] to [ meta, peaks.bed ]
-    consensus_peaks
-        .map{ meta, peaks -> [meta, peaks[0]] }
-        .set { ch_consensus_peaks_for_sort }
-
-    // Extract genome file path from genome_fai channel
-    ch_genome_file = genome_fai.map{ it[1][0] }.first()
-
     CONSENSUS_PEAKS_SORT (
-        ch_consensus_peaks_for_sort,
-        ch_genome_file
+        consensus_peaks,
+        genome_fai.map{ it[1] }
     )
 
     CONSENSUS_PEAKS_SORT.out.sorted
