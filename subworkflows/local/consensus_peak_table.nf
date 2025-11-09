@@ -31,11 +31,9 @@ workflow CONSENSUS_PEAK_TABLE {
 
     CONSENSUS_PEAKS_SORT.out.sorted
         .combine(all_crosslinks)
-        .map{ meta1, consensuspeaks, meta2, crosslinks -> [meta2, consensuspeaks, crosslinks[0]] }
+        .map{ meta1, consensuspeaks, meta2, crosslink -> [meta2, consensuspeaks, crosslink] }
         .set { ch_consensus_map }
-
-    //ch_consensus_map.view { item -> "consensus for bedtools map: $item" }
-
+    
     CONSENSUS_MAP (
         ch_consensus_map,
         genome_fai
