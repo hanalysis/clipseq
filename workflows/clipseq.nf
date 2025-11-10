@@ -137,10 +137,6 @@ include { ICOUNTMINI_PEAKS                                          } from "../m
 include { GUNZIP as GUNZIP_ICOUNTMINI_SIGXLS                        } from "../modules/nf-core/gunzip/main"
 include { GUNZIP as GUNZIP_ICOUNTMINI_PEAKS                         } from "../modules/nf-core/gunzip/main"
 
-include { ICOUNTMINI_SIGXLS as CONSENSUS_ICOUNTMINI_SIGXLS          } from "../modules/nf-core/icountmini/sigxls/main"
-include { ICOUNTMINI_PEAKS as CONSENSUS_ICOUNTMINI_PEAKS            } from "../modules/nf-core/icountmini/peaks/main"
-include { GUNZIP as CONSENSUS_GUNZIP_ICOUNTMINI_SIGXLS              } from "../modules/nf-core/gunzip/main"
-include { GUNZIP as CONSENSUS_GUNZIP_ICOUNTMINI_PEAKS               } from "../modules/nf-core/gunzip/main"
 include { PARACLU as PARACLU_GENOME                                 } from "../modules/nf-core/paraclu/main"
 include { PARACLU as PARACLU_GENOME_CONSENSUS                       } from "../modules/nf-core/paraclu/main"
 
@@ -594,41 +590,6 @@ workflow CLIPSEQ {
 
             ch_versions                      = ch_versions.mix(GUNZIP_ICOUNTMINI_PEAKS.out.versions)
             ch_icountmini_peaks              = GUNZIP_ICOUNTMINI_PEAKS.out.gunzip
-
-            if(params.consensus_peak){
-                CONSENSUS_ICOUNTMINI_SIGXLS (
-                    ch_consensus_crosslinks_final_bed,
-                    ch_seg_gtf.collect{ it[1]}
-                )
-                // CHANNEL: Create combined channel of input crosslinks and sigxls
-                ch_consensus_peaks_input = ch_consensus_crosslinks_final_bed
-                    .map{ [ it[0].id, it[0], it[1] ] }
-                    .join( CONSENSUS_ICOUNTMINI_SIGXLS.out.sigxls.map{ [ it[0].id, it[0], it[1] ] } )
-                    .map { [ it[1], it[2], it[4] ] }
-                //EXAMPLE CHANNEL STRUCT: [ [id:test], BED(crosslinks), BED(sigxls) ]
-                CONSENSUS_ICOUNTMINI_PEAKS (
-                    ch_consensus_peaks_input
-                )
-                ch_consensus_peaks = CONSENSUS_ICOUNTMINI_PEAKS.out.peaks
-                CONSENSUS_GUNZIP_ICOUNTMINI_SIGXLS (
-                    CONSENSUS_ICOUNTMINI_SIGXLS.out.sigxls
-                )
-                CONSENSUS_GUNZIP_ICOUNTMINI_PEAKS (
-                    CONSENSUS_ICOUNTMINI_PEAKS.out.peaks
-                )
-                ICOUNT_CONSENSUS_PEAK_TABLE (
-                    ch_all_crosslinks,
-                    CONSENSUS_GUNZIP_ICOUNTMINI_PEAKS.out.gunzip,
-                    ch_fasta,
-                    ch_fasta_fai,
-                    ch_regions_used,
-                    "iCount-Mini_Consensus_AllCounts.tsv",
-                    ch_multiqc_merged_replicate_deseq2_pca_header,
-                    ch_multiqc_merged_replicate_deseq2_clustering_header,
-                    params.skip_deseq2_qc
-                )
-                ch_versions = ch_versions.mix(ICOUNT_CONSENSUS_PEAK_TABLE.out.versions)
-            }
 
             if(params.run_peka) {
                 PEKA_ICOUNT (
