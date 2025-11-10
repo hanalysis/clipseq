@@ -1,5 +1,5 @@
 process MERGE_SUMMARY {
-    tag "$gtf"
+    tag "$summaries"
     label "process_single"
 
     conda "conda-forge::pandas=1.4.3"
