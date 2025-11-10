@@ -19,7 +19,6 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
     ch_bai         // channel: [ val(meta), [ bai ] ]
     ch_fasta       // channel: [ val(meta), fasta ]
     ch_fasta_fai   // channel: [ val(meta), fasta.fai ]
-    ch_chrom_sizes // channel: [ val(meta), chrom_sizes ]
 
     main:
     ch_versions = Channel.empty()
@@ -72,7 +71,6 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
     ch_versions = ch_versions.mix(SAMTOOLS_GROUP_INDEX.out.versions)
     ch_peakcalling_bai = SAMTOOLS_GROUP_INDEX.out.bai
 
-    ch_chrom_sizes_path = ch_chrom_sizes.flatten() // Flatten the collected list [file] to get file as a reusable value channel
 
     //
     // MODULE: Run crosslink calculation for samples without a group
@@ -101,13 +99,13 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
 
     BIGWIG_POS_INDIVIDUAL (
         STRAND_SPLIT_INDIVIDUAL.out.pos_bedgraph, 
-        ch_chrom_sizes_path
+        ch_fasta_fai.map{ it[1] }
     )
     ch_versions = ch_versions.mix(BIGWIG_POS_INDIVIDUAL.out.versions)
 
     BIGWIG_NEG_INDIVIDUAL (
         STRAND_SPLIT_INDIVIDUAL.out.neg_bedgraph, 
-        ch_chrom_sizes_path
+        ch_fasta_fai.map{ it[1] }
     )
     ch_versions = ch_versions.mix(BIGWIG_NEG_INDIVIDUAL.out.versions)
 
@@ -138,13 +136,13 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
 
     BIGWIG_POS_INDIVIDUAL_HASGROUP (
         STRAND_SPLIT_INDIVIDUAL_HASGROUP.out.pos_bedgraph, 
-        ch_chrom_sizes_path
+        ch_fasta_fai.map{ it[1] }
     )
     ch_versions = ch_versions.mix(BIGWIG_POS_INDIVIDUAL_HASGROUP.out.versions)
 
     BIGWIG_NEG_INDIVIDUAL_HASGROUP (
         STRAND_SPLIT_INDIVIDUAL_HASGROUP.out.neg_bedgraph, 
-        ch_chrom_sizes_path
+        ch_fasta_fai.map{ it[1] }
     )
     ch_versions = ch_versions.mix(BIGWIG_NEG_INDIVIDUAL_HASGROUP.out.versions)
 
@@ -175,13 +173,13 @@ workflow RESOLVE_GROUPS_AND_CROSSLINKS {
 
     BIGWIG_POS_GROUP_HASGROUP (
         STRAND_SPLIT_GROUP_HASGROUP.out.pos_bedgraph, 
-        ch_chrom_sizes_path
+        ch_fasta_fai.map{ it[1] }
     )
     ch_versions = ch_versions.mix(BIGWIG_POS_GROUP_HASGROUP.out.versions)
 
     BIGWIG_NEG_GROUP_HASGROUP (
         STRAND_SPLIT_GROUP_HASGROUP.out.neg_bedgraph, 
-        ch_chrom_sizes_path
+        ch_fasta_fai.map{ it[1] }
     )
     ch_versions = ch_versions.mix(BIGWIG_NEG_GROUP_HASGROUP.out.versions)
 
