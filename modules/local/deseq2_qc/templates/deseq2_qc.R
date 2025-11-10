@@ -118,7 +118,7 @@ dds     <- DESeqDataSetFromMatrix(countData=round(counts), colData=coldata, desi
 dds     <- estimateSizeFactors(dds)
 if (min(dim(count.table))<=1)  { # No point if only one sample, or one gene
     save(dds,file=DDSFile)
-    saveRDS(dds, file = paste(opt$output_prefix,".rds", sep = '.'))
+    saveRDS(dds, file = paste(opt$output_prefix,"rds", sep = '.'))
     warning("Not enough samples or genes in counts file for PCA.", call.=FALSE)
     quit(save = "no", status = 0, runLast = FALSE)
 }
@@ -132,7 +132,7 @@ if (!opt$vst) {
 
 assay(dds, vst_name) <- assay(rld)
 save(dds,file=DDSFile)
-saveRDS(dds, file = paste(opt$output_prefix, ".rds", sep = '.'))
+saveRDS(dds, file = paste(opt$output_prefix, "rds", sep = '.'))
 
 ################################################
 ################################################

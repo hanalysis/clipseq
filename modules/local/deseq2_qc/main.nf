@@ -37,7 +37,7 @@ process DESEQ2_QC {
     -i ${counts} \
     -c 3 \
     -d "PeakID" \
-    -o results/${prefix} \
+    -o ${prefix} \
     --vst
     """
 
