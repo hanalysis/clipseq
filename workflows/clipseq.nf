@@ -388,6 +388,28 @@ workflow CLIPSEQ {
         //ch_umi_log      = NCRNA_K1_DEDUP.out.umi_log
     }
 
+    // TEtranscripts insert
+
+    if(params.run_te) {
+        // Check rmsk GTF has been provided
+        if (!params.te_gtf) {
+            error "ERROR: --te_gtf is required when --run_te is specified"
+        }
+
+        ch_te_gtf = Channel.fromPath(params.te_gtf, checkIfExists: true)
+
+        // Faux control .bam as not using DESeq2 aspect of TEtranscripts
+        ch_bam_c = Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/tree/modules/data/genomics/homo_sapiens/illumina/bam/test2.paired_end.sorted.bam')
+
+        TETRANSCRIPTS(
+            UMICOLLAPSE.out.bam, // tx bam
+            ch_bam_c, // control bam
+            ch_gtf, // genome GTF
+            ch_te_gtf //
+        )
+        ch_versions = ch_versions.mix(TETRANSCRIPTS.out.versions)
+    }
+
     //
     // RESOLVE GROUPS AND GET CROSSLINKS: At this point, if groups have been specified, then we need to merge corresponding BAM files
     //
@@ -432,7 +454,7 @@ workflow CLIPSEQ {
             .join( ICOUNTMINI_SUMMARY.out.summary_subtype, by: [0])
             .join( ICOUNTMINI_SUMMARY.out.summary_gene, by: [0])
             .join( ch_ncrna_k1_crosslink_group_resolved_bed, by: [0])
-            .map { meta, type, subtype, gene, bed -> 
+            .map { meta, type, subtype, gene, bed ->
                 [meta, [type, subtype, gene, bed]]
             }
 
