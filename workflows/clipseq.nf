@@ -149,6 +149,7 @@ include { PEKA as PEKA_PURECLIP                                     } from '../m
 include { ICOUNTMINI_SUMMARY                                        } from '../modules/nf-core/icountmini/summary/main'
 include { ICOUNTMINI_METAGENE                                       } from '../modules/nf-core/icountmini/metagene/main'
 
+include { TETRANSCRIPTS                                             } from '../modules/nf-core/tetranscripts/main'
 
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
