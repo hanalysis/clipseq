@@ -402,12 +402,12 @@ workflow CLIPSEQ {
         ch_bam_c = Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/tree/modules/data/genomics/homo_sapiens/illumina/bam/test2.paired_end.sorted.bam')
 
         TETRANSCRIPTS(
-            UMICOLLAPSE.out.bam, // tx bam
+            ch_genome_multi_bam_bai, // tx bam
             ch_bam_c, // control bam
             ch_gtf, // genome GTF
             ch_te_gtf //
         )
-        ch_versions = ch_versions.mix(TETRANSCRIPTS.out.versions)
+//        ch_versions = ch_versions.mix(TETRANSCRIPTS.out.versions)
     }
 
     //
