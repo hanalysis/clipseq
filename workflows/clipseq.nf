@@ -290,6 +290,18 @@ workflow CLIPSEQ {
     // SUBWORKFLOW: Align reads to ncrna and primary genomes
     //
     if(params.source == "fastq" & params.run_alignment) {
+
+        ch_fastq
+            .view { "ALIGN FASTQ: $it" }
+        ch_ncrna_genome_index
+            .view { "ALIGN ncRNA: $it" }
+        ch_genome_index
+            .view { "ALIGN GENOME INDEX: $it" }
+        ch_gtf
+            .view { "ALIGN GTF: $it" }
+        ch_fasta
+            .view { "ALIGN FASTA: $it" }
+
         RNA_ALIGN (
             ch_fastq,
             ch_ncrna_genome_index,
@@ -399,13 +411,31 @@ workflow CLIPSEQ {
         ch_te_gtf = Channel.fromPath(params.te_gtf, checkIfExists: true)
 
         // Faux control .bam as not using DESeq2 aspect of TEtranscripts
-        ch_bam_c = Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/tree/modules/data/genomics/homo_sapiens/illumina/bam/test2.paired_end.sorted.bam')
+        ch_bam_c = Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test2.paired_end.sorted.bam')
+
+        // Debugging
+        ch_genome_multi_bam_bai
+            .view { "INPUT BAM CHANNEL: $it" }
+            .set { ch_genome_multi_bam_bai_debug }
+
+        ch_bam_c
+            .view { "CONTROL BAM CHANNEL: $it" }
+            .set {ch_bam_c_debug }
+
+        PREPARE_GENOME.out.gtf
+            .map { mera, file -> file } // extracting just path not tuple
+            .view { "GTF CHANNEL: $it" }
+            .set { ch_gtf_debug }
+
+        ch_te_gtf
+            .view { "TE GTF CHANNEL :$it" }
+            .set { ch_te_gtf_debug }
 
         TETRANSCRIPTS(
-            ch_genome_multi_bam_bai, // tx bam
-            ch_bam_c, // control bam
-            ch_gtf, // genome GTF
-            ch_te_gtf //
+            ch_genome_multi_bam_bai_debug, // tx bam
+            ch_bam_c_debug, // control bam
+            ch_gtf_debug, // genome GTF
+            ch_te_gtf_debug //
         )
 //        ch_versions = ch_versions.mix(TETRANSCRIPTS.out.versions)
     }
