@@ -5,7 +5,7 @@
 //
 // MODULES
 //
-include { BEDTOOLS_SORT as CONSENSUS_PEAKS_SORT  } from '../../modules/nf-core/bedtools/sort/main'
+include { LINUX_COMMAND as CONSENSUS_PEAKS_SORT  } from '../modules/local/linux_command'
 include { BEDTOOLS_SORT as CROSSLINKS_SORT       } from '../../modules/nf-core/bedtools/sort/main'
 include { BEDTOOLS_MAP  as CONSENSUS_MAP         } from '../../modules/nf-core/bedtools/map/main'
 //
@@ -42,7 +42,7 @@ workflow CONSENSUS_PEAK_TABLE {
         .combine(CROSSLINKS_SORT.out.sorted)
         .map{ meta1, consensuspeaks, meta2, crosslink -> [meta2, consensuspeaks, crosslink] }
         .set { ch_consensus_map }
-    
+
     CONSENSUS_MAP (
         ch_consensus_map,
         genome_fai
