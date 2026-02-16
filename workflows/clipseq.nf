@@ -414,7 +414,7 @@ workflow CLIPSEQ {
         ch_bam_c = Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test2.paired_end.sorted.bam')
 
         TETRANSCRIPTS(
-            ch_genome_multi_bam_bai, // tx bam
+            GENOME_MULTI_DEDUP.out.bam, // tx bam
             ch_bam_c, // control bam
             ch_gtf, // genome GTF
             ch_te_gtf // te GTF
