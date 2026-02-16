@@ -413,29 +413,11 @@ workflow CLIPSEQ {
         // Faux control .bam as not using DESeq2 aspect of TEtranscripts
         ch_bam_c = Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test2.paired_end.sorted.bam')
 
-        // Debugging
-        ch_genome_multi_bam_bai
-            .view { "INPUT BAM CHANNEL: $it" }
-            .set { ch_genome_multi_bam_bai_debug }
-
-        ch_bam_c
-            .view { "CONTROL BAM CHANNEL: $it" }
-            .set {ch_bam_c_debug }
-
-        PREPARE_GENOME.out.gtf
-            .map { mera, file -> file } // extracting just path not tuple
-            .view { "GTF CHANNEL: $it" }
-            .set { ch_gtf_debug }
-
-        ch_te_gtf
-            .view { "TE GTF CHANNEL :$it" }
-            .set { ch_te_gtf_debug }
-
         TETRANSCRIPTS(
-            ch_genome_multi_bam_bai_debug, // tx bam
-            ch_bam_c_debug, // control bam
-            ch_gtf_debug, // genome GTF
-            ch_te_gtf_debug //
+            GENOME_MULTI_DEDUP.out.bam, // tx bam
+            ch_bam_c, // control bam
+            ch_gtf, // genome GTF
+            ch_te_gtf // te GTF
         )
 //        ch_versions = ch_versions.mix(TETRANSCRIPTS.out.versions)
     }
