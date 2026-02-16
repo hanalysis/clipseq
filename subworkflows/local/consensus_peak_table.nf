@@ -5,7 +5,7 @@
 //
 // MODULES
 //
-include { LINUX_COMMAND as CONSENSUS_PEAKS_SORT  } from '../modules/local/linux_command'
+include { LINUX_COMMAND as CONSENSUS_PEAKS_SORT  } from '../../modules/local/linux_command'
 include { BEDTOOLS_SORT as CROSSLINKS_SORT       } from '../../modules/nf-core/bedtools/sort/main'
 include { BEDTOOLS_MAP  as CONSENSUS_MAP         } from '../../modules/nf-core/bedtools/map/main'
 //
