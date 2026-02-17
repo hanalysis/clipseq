@@ -121,7 +121,7 @@ include { CONSENSUS_PEAK_TABLE as ICOUNT_CONSENSUS_PEAK_TABLE                   
 
 
 include { BEDTOOLS_GROUPBY as CONSENSUS_CROSSLINKS_BEDTOOLS_GROUPBY } from '../modules/nf-core/bedtools/groupby/main'
-include { BEDTOOLS_SORT as CONSENSUS_CROSSLINKS_BEDTOOLS_SORT       } from '../modules/nf-core/bedtools/sort/main'
+include { LINUX_COMMAND as CONSENSUS_CROSSLINKS_SORT                } from '../modules/local/linux_command'
 include { BEDTOOLS_MAP as CLIPPY_CONSENSUS_MAP                      } from '../modules/nf-core/bedtools/map/main'
 include { CAT_CAT as CONSENSUS_CROSSLINKS_CAT_CAT                   } from '../modules/nf-core/cat/cat/main'
 include { MULTIQC                                                   } from '../modules/nf-core/multiqc/main'
@@ -497,13 +497,14 @@ workflow CLIPSEQ {
                 ch_consensus_crosslinks_bed
             )
 
-            CONSENSUS_CROSSLINKS_BEDTOOLS_SORT(
+            CONSENSUS_CROSSLINKS_SORT(
                 CONSENSUS_CROSSLINKS_CAT_CAT.out.file_out,
-                []
+                [],
+                false
             )
             // sum the counts to remove repeat entries
             CONSENSUS_CROSSLINKS_BEDTOOLS_GROUPBY(
-                CONSENSUS_CROSSLINKS_BEDTOOLS_SORT.out.sorted,
+                CONSENSUS_CROSSLINKS_SORT.out.file,
                 5
             )
 
@@ -611,7 +612,7 @@ workflow CLIPSEQ {
             if(params.consensus_peak){
                 CONSENSUS_ICOUNTMINI_SIGXLS (
                     ch_consensus_crosslinks_final_bed,
-                    ch_seg_gtf.collect{ it[1]}
+                    ch_seg_gtf.map{ it[1]}
                 )
                 // CHANNEL: Create combined channel of input crosslinks and sigxls
                 ch_consensus_peaks_input = ch_consensus_crosslinks_final_bed
