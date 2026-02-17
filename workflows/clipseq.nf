@@ -409,9 +409,11 @@ workflow CLIPSEQ {
         }
 
         ch_te_gtf = Channel.fromPath(params.te_gtf, checkIfExists: true)
+             .map { file -> [[id: 'te_annotations'], file] }
 
         // Faux control .bam as not using DESeq2 aspect of TEtranscripts
         ch_bam_c = Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test2.paired_end.sorted.bam')
+             .map { file -> [[id: 'te_annotations'], file] }
 
         TETRANSCRIPTS(
             GENOME_MULTI_DEDUP.out.bam, // tx bam
