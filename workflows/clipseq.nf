@@ -412,7 +412,7 @@ workflow CLIPSEQ {
              .map { file -> [[id: 'te_annotations'], file] }
 
         // Faux control .bam as not using DESeq2 aspect of TEtranscripts
-        ch_bam_c = Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test2.paired_end.sorted.bam')
+        ch_bam_c = Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test.rna.paired_end.bam')
              .map { file -> [[id: 'control'], file] }
 
         ch_all_t_bams = GENOME_MULTI_DEDUP.out.bam
