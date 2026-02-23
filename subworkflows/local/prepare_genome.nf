@@ -133,7 +133,6 @@ workflow PREPARE_GENOME {
             false
         )
         ch_fasta_fai = GENOME_INDEX.out.fai
-        ch_versions = ch_versions.mix(GENOME_INDEX.out.versions)
     }
     // EXAMPLE CHANNEL STRUCT: [[meta], fai]
     //ch_fasta_fai | view
@@ -150,7 +149,6 @@ workflow PREPARE_GENOME {
             false
         )
         ch_ncrna_fasta_fai = NCRNA_INDEX.out.fai
-        ch_versions = ch_versions.mix(NCRNA_INDEX.out.versions)
     }
     // EXAMPLE CHANNEL STRUCT: [[meta], fai]
     //ch_fasta_fai | view
@@ -167,7 +165,6 @@ workflow PREPARE_GENOME {
             true
         )
         ch_genome_chrom_sizes = GENOME_CHROM_SIZE.out.sizes
-        ch_versions  = ch_versions.mix(GENOME_CHROM_SIZE.out.versions)
     }
 
     //
@@ -182,7 +179,6 @@ workflow PREPARE_GENOME {
             true
         )
         ch_ncrna_chrom_sizes = NCRNA_CHROM_SIZE.out.sizes
-        ch_versions  = ch_versions.mix(NCRNA_CHROM_SIZE.out.versions)
     }
 
     //
