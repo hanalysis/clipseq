@@ -1,5 +1,5 @@
 process TELESCOPE_ASSIGN {
-    tag "$meta.id"
+    tag "$meta_bam.id"
     label 'process_single'
 
     //conda "${moduleDir}/environment.yml" -- No conda at the moment
@@ -31,6 +31,7 @@ process TELESCOPE_ASSIGN {
         assign \\
         $bam \\
         $gtf \\
+        --exp_tag ${prefix} \\
         $args \\
         > telescope.log 2>&1
 
