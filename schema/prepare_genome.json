@@ -22,8 +22,8 @@
                     "fileset_pattern": "gtf$",
                     "description": "An annotation for the genome."
                 },
-                "smrna_fasta": {
-                    "name": "smRNA FASTA",
+                "ncrna_fasta": {
+                    "name": "ncRNA FASTA",
                     "type": "data",
                     "pattern": "fasta|fa$",
                     "required": true,
