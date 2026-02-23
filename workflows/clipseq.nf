@@ -150,6 +150,7 @@ include { ICOUNTMINI_SUMMARY                                        } from '../m
 include { ICOUNTMINI_METAGENE                                       } from '../modules/nf-core/icountmini/metagene/main'
 
 include { TETRANSCRIPTS                                             } from '../modules/nf-core/tetranscripts/main'
+include { TELESCOPE_ASSIGN                                          } from '../modules/local/telescope/assign/main'
 
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
@@ -400,7 +401,7 @@ workflow CLIPSEQ {
         //ch_umi_log      = NCRNA_K1_DEDUP.out.umi_log
     }
 
-    // TEtranscripts insert
+    // TE quantifcation insert
 
     if(params.run_te) {
         // Check rmsk GTF has been provided
@@ -426,7 +427,12 @@ workflow CLIPSEQ {
             ch_gtf, // genome GTF
             ch_te_gtf // te GTF
         )
-//        ch_versions = ch_versions.mix(TETRANSCRIPTS.out.versions)
+
+        TELESCOPE_ASSIGN(
+            GENOME_MULTI_DEDUP.out.bam,
+            ch_te_gtf
+        )
+
     }
 
     //
