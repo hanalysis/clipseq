@@ -12,7 +12,7 @@
                     "required": true,
                     "takes_samples": true,
                     "sample_types": ["CLIP"],
-                    "columns": [sample_name,group_name,input_name,fastq
+                    "columns": [
                         {
                             "name": "sample_name",
                             "type": "string",
@@ -284,6 +284,12 @@
                     "name": "UMI header format",
                     "description": "Format of the UMI header to extract.",
                     "type": "string"
+                },
+                "source": {
+                    "name": "Input Source",
+                    "description": "Input file type. Only fastq supported right now!!!",
+                    "type": "string",
+                    "default": "fastq"
                 },
                 "skip_umi_dedupe": {
                     "name": "Skip UMI Deduplication",
