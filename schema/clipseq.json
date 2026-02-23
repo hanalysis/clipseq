@@ -12,31 +12,30 @@
                     "required": true,
                     "takes_samples": true,
                     "sample_types": ["CLIP"],
-                    "columns": [
+                    "columns": [sample_name,group_name,input_name,fastq
                         {
-                            "name": "group",
+                            "name": "sample_name",
                             "type": "string",
                             "required": true,
                             "render": true
                         },
                         {
-                            "name": "replicate",
+                            "name": "group_name",
                             "type": "string",
-                            "required": true,
+                            "required": false,
                             "render": true
                         },
                         {
-                            "name": "fastq_1",
+                            "name": "input_name",
+                            "type": "string",
+                            "required": false,
+                            "render": true
+                        },
+                        {
+                            "name": "fastq",
                             "type": "data",
                             "from_sample": 1,
                             "required": true,
-                            "render": false
-                        },
-                        {
-                            "name": "fastq_2",
-                            "type": "data",
-                            "from_sample": 2,
-                            "required": false,
                             "render": false
                         }
                     ]
@@ -276,12 +275,6 @@
             "description": "Additional pipeline configuration options.",
             "advanced": true,
             "params": {
-                "crosslink_position": {
-                    "name": "Crosslink position",
-                    "description": "The position of the crosslink in the read. Options are 'start', 'end' or 'middle'. Note that 'start' and 'end' correspond to start and end of read minus and plus 1 respectively.",
-                    "type": "string",
-                    "default": "start"
-                },
                 "move_umi_to_header": {
                     "name": "Extract UMI to header",
                     "description": "Runs UMI to header extraction based on the head format provided in UMI header format.",
@@ -312,7 +305,7 @@
         },
         {
             "name": "Command Line Options",
-            "description": "Proide customised command line options to specific processes",
+            "description": "Provide customised command line options to specific processes",
             "advanced": true,
             "params": {
                 "bowtie_params": {
