@@ -1,5 +1,5 @@
 process TELESCOPE_ASSIGN {
-    tag "$meta_bam.id"
+    tag "$meta.id"
     label 'process_single'
 
     //conda "${moduleDir}/environment.yml" -- No conda at the moment
@@ -38,7 +38,7 @@ process TELESCOPE_ASSIGN {
 
     stub:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta_bam.id}"
+    def prefix = task.ext.prefix ?: "{$meta.id}"
 
     """
     echo $args
