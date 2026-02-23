@@ -4,7 +4,6 @@ include { PREPARE_GENOME } from '../../subworkflows/local/prepare_genome.nf'
 
 workflow  {
     // Prepare mandatory params
-    ch_input       = file(params.input)
     ch_fasta       = file(params.fasta)
     ch_ncrna_fasta = file(params.ncrna_fasta)
     ch_gtf         = file(params.gtf)
