@@ -15,8 +15,8 @@ include { STAR_GENOMEGENERATE                                                   
 include { SAMTOOLS_FAIDX as GENOME_INDEX                                         } from '../../modules/nf-core/samtools/faidx/main'
 include { SAMTOOLS_FAIDX as NCRNA_INDEX                                          } from '../../modules/nf-core/samtools/faidx/main'
 include { LINUX_COMMAND as REMOVE_GTF_BRACKETS                                   } from '../../modules/local/linux_command'
-include { CUSTOM_GETCHROMSIZES as GENOME_CHROM_SIZE                              } from '../../modules/nf-core/custom/getchromsizes/main'
-include { CUSTOM_GETCHROMSIZES as NCRNA_CHROM_SIZE                               } from '../../modules/nf-core/custom/getchromsizes/main'
+include { SAMTOOLS_FAIDX as GENOME_CHROM_SIZE                                    } from '../../modules/nf-core/samtools/faidx/main'
+include { SAMTOOLS_FAIDX as NCRNA_CHROM_SIZE                                     } from '../../modules/nf-core/samtools/faidx/main'
 include { FILTER_GTF_BY_TRANSCRIPT                                               } from '../../modules/local/filter_gtf_by_transcript/main'
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_GTF                                   } from '../../modules/nf-core/icountmini/segment/main'
 include { ICOUNTMINI_SEGMENT as ICOUNT_SEG_FILTGTF                               } from '../../modules/nf-core/icountmini/segment/main'
@@ -129,9 +129,8 @@ workflow PREPARE_GENOME {
         ch_fasta_fai = Channel.of([ [id:fasta_fai.baseName], fasta_fai ])
     } else {
         GENOME_INDEX (
-            ch_fasta,
-            [[],[]],
-	    false
+            ch_fasta.map{ meta, fasta -> [ meta, fasta, [] ] },
+            false
         )
         ch_fasta_fai = GENOME_INDEX.out.fai
         ch_versions = ch_versions.mix(GENOME_INDEX.out.versions)
@@ -147,8 +146,7 @@ workflow PREPARE_GENOME {
         ch_ncrna_fasta_fai = Channel.of([ [id:ncrna_fasta_fai.baseName], fasta_fai ])
     } else {
         NCRNA_INDEX (
-            ch_ncrna_fasta,
-            [[],[]],
+            ch_ncrna_fasta.map{ meta, fasta -> [ meta, fasta, [] ] },
             false
         )
         ch_ncrna_fasta_fai = NCRNA_INDEX.out.fai
@@ -164,7 +162,11 @@ workflow PREPARE_GENOME {
     if(genome_chrom_sizes) {
         ch_genome_chrom_sizes = Channel.of([ [id:genome_chrom_sizes.baseName], genome_chrom_sizes ])
     } else {
-        ch_genome_chrom_sizes = GENOME_CHROM_SIZE ( ch_fasta ).sizes
+        GENOME_CHROM_SIZE (
+            ch_fasta.map{ meta, fasta -> [ meta, fasta, [] ] },
+            true
+        )
+        ch_genome_chrom_sizes = GENOME_CHROM_SIZE.out.sizes
         ch_versions  = ch_versions.mix(GENOME_CHROM_SIZE.out.versions)
     }
 
@@ -175,7 +177,11 @@ workflow PREPARE_GENOME {
     if(ncrna_chrom_sizes) {
         ch_ncrna_chrom_sizes = Channel.of([ [id:ncrna_chrom_sizes.baseName], ncrna_chrom_sizes ])
     } else {
-        ch_ncrna_chrom_sizes = NCRNA_CHROM_SIZE ( ch_ncrna_fasta ).sizes
+        NCRNA_CHROM_SIZE (
+            ch_ncrna_fasta.map{ meta, fasta -> [ meta, fasta, [] ] },
+            true
+        )
+        ch_ncrna_chrom_sizes = NCRNA_CHROM_SIZE.out.sizes
         ch_versions  = ch_versions.mix(NCRNA_CHROM_SIZE.out.versions)
     }
 
