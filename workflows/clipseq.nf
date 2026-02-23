@@ -4,12 +4,16 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
+// Import the validation functions from the plugin
+include { paramsSummaryMap } from 'plugin/nf-validation'
+
+// Get parameter summary
+def summary_params = paramsSummaryMap(workflow, params)
 
 // Validate input parameters
 WorkflowClipseq.initialise(params, log)
 
-// Check manditory input parameters to see if the files exist if they have been specified
+// Check mandatory input parameters to see if the files exist if they have been specified
 check_param_list = [
     input: params.input,
     fasta: params.fasta,
@@ -18,7 +22,7 @@ check_param_list = [
 ]
 for (param in check_param_list) {
     if (!param.value) {
-        exit 1, "Required parameter not specified: ${param.key}"
+        error "Required parameter not specified: ${param.key}"
     }
     else {
         file(param.value, checkIfExists: true)
