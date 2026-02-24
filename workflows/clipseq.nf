@@ -409,8 +409,7 @@ workflow CLIPSEQ {
             error "ERROR: --te_gtf is required when --run_te is specified"
         }
 
-        ch_te_gtf = Channel.fromPath(params.te_gtf, checkIfExists: true)
-             .map { file -> [[id: 'te_annotations'], file] }
+        ch_te_gtf = Channel.value([[id: 'te_annotations'], params.te_gtf, checkIfExists: true])
 
         // Faux control .bam as not using DESeq2 aspect of TEtranscripts
         ch_bam_c = Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test.rna.paired_end.bam')
