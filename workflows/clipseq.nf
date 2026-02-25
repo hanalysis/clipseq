@@ -89,6 +89,7 @@ include { DUMP_SOFTWARE_VERSIONS                                          } from
 include { CLIPQC                                                          } from '../modules/local/clipqc'
 include { LINUX_COMMAND as CONSENSUS_CROSSLINKS_REORDER_BED               } from '../modules/local/linux_command'
 include { MERGE_SUMMARY                                                   } from '../modules/local/merge_summary'
+include { ENCODE_MOVEUMI                                                  } from '../modules/local/encode_moveumi/main'
 
 
 //
@@ -266,7 +267,13 @@ workflow CLIPSEQ {
     }
     //EXAMPLE CHANNEL STRUCT: [[sample_name:h3k27me3_R1, group_name:h3k27me3, input_name:input, single_end:true, fastq:dsgsgh.fq.gz], [FASTQ]]
     // ch_fastq | view
-
+    if(params.encode_eclip){
+        ENCODE_MOVEUMI (
+            ch_fastq
+        )
+        ch_versions = ch_versions.mix(ENCODE_MOVEUMI.out.versions)
+        ch_fastq    = ENCODE_MOVEUMI.out.reads
+    }
     //
     // SUBWORKFLOW: Extract UMI, trim and run b4 and after fastqc
     //
