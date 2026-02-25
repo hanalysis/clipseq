@@ -5,7 +5,7 @@
             "description": "Parameters relating to the sample(s) being analysed",
             "advanced": false,
             "params": {
-                "input": {
+                "samplesheet": {
                     "name": "Samples",
                     "description": "The samples to process with this pipeline.",
                     "type": "csv",
@@ -176,7 +176,7 @@
                     "pattern": "gtf$",
                     "required": false,
                     "execution_output": {
-                        "process": "ICOUNT_SEG.*",
+                        "process": "ICOUNT_SEG_FILTGTF",
                         "pattern": "\\.gtf$"
                     },
                     "description": "GTF segmented for use in iCount peak calling using iCount segment command."
@@ -221,9 +221,14 @@
             "description": "Additional pipeline configuration options.",
             "advanced": true,
             "params": {
-                "move_umi_to_header": {
-                    "name": "Extract UMI to header",
-                    "description": "Runs UMI to header extraction based on the head format provided in UMI header format.",
+                "skip_umi_extract": {
+                    "name": "Skip extracting UMI to header?",
+                    "description": "Skips UMI to header extraction based on the head format provided in UMI header format.",
+                    "type": "boolean"
+                },
+                "encode_eclip": {
+                    "name" : "ENCODE eCLIP?",
+                    "description": "This is an option for data downloaded from the ENCODE resource, which moves the random barcode from the start of the read header to the end delimited by _rbc:",
                     "type": "boolean"
                 },
                 "umi_header_format": {
