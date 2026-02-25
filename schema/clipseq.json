@@ -5,7 +5,7 @@
             "description": "Parameters relating to the sample(s) being analysed",
             "advanced": false,
             "params": {
-                "samplesheet": {
+                "input": {
                     "name": "Samples",
                     "description": "The samples to process with this pipeline.",
                     "type": "csv",
