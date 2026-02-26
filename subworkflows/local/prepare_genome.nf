@@ -141,11 +141,11 @@ workflow PREPARE_GENOME {
     // MODULE: Create fasta fai if required for ncrna genome
     //
     ch_ncrna_fasta_fai = Channel.empty()
-    if (fasta_fai) {
-        ch_ncrna_fasta_fai = Channel.of([ [id:ncrna_fasta_fai.baseName], fasta_fai ])
+    if (ncnra_fasta_fai) {
+        ch_ncrna_fasta_fai = Channel.of([ [id:ncrna_fasta_fai.baseName], ncrna_fasta_fai ])
     } else {
         NCRNA_INDEX (
-            ch_ncrna_fasta.map{ meta, fasta -> [ meta, ncrna_fasta, [] ] },
+            ch_ncrna_fasta.map{ meta, fasta -> [ meta, fasta, [] ] },
             false
         )
         ch_ncrna_fasta_fai = NCRNA_INDEX.out.fai
