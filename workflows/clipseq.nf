@@ -425,7 +425,6 @@ workflow CLIPSEQ {
         }
 
         ch_tetranscripts_gtf = Channel.value([[id: 'te_annotations'], file(params.tetranscripts_gtf, checkIfExists: true)])
-        ch_telescope_gtf = Channel.value([[id: 'te_annotations'], file(params.tetelescope_gtf, checkIfExists: true)])
 
         // Faux control .bam as not using DESeq2 aspect of TEtranscripts
         ch_bam_c = Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test.rna.paired_end.bam')
@@ -445,7 +444,7 @@ workflow CLIPSEQ {
 
         TELESCOPE_ASSIGN(
             GENOME_MULTI_DEDUP.out.bam,
-            ch_telescope
+            ch_tetranscripts_gtf
         )
 
     // FILTER FOR UNIQUE MAPPERS ONLY FROM TELESCOPE OUTPUT
@@ -466,17 +465,17 @@ workflow CLIPSEQ {
         .set { bams_to_merge }
 
         MERGE_TE_BAMS{
-             bams_to_merge,
-             [[],[]],
-             [[],[]]
+            bams_to_merge,
+            [[],[]],
+            [[],[]]
         }
 
         INDEX_TE_BAMS{
             MERGE_TE_BAMS.out.bam
         }
 
-    MERGE_TE_BAMS.out.bam.set { ch_genome_unique_dedupe_bam }
-    INDEX_TE_BAMS.out.bai.set { ch_genome_unique_dedupe_bai }
+        MERGE_TE_BAMS.out.bam.set { ch_genome_unique_dedupe_bam }
+        INDEX_TE_BAMS.out.bai.set { ch_genome_unique_dedupe_bai }
 
     }
 
