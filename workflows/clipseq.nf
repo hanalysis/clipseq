@@ -152,7 +152,7 @@ include { ICOUNTMINI_METAGENE                                       } from '../m
 
 include { TETRANSCRIPTS                                             } from '../modules/nf-core/tetranscripts/main'
 include { TELESCOPE_ASSIGN                                          } from '../modules/local/telescope/assign/main'
-include { SAMTOOLS_MERGE                                            } from '../modules/nf-core/samtools/merge/main'
+include { SAMTOOLS_VIEW AS FILTER_UNIQUE_MAP                        } from '../modules/nf-core/samtools/view/main'
 
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
@@ -441,6 +441,11 @@ workflow CLIPSEQ {
         )
 
     }
+
+
+    // FILTER FOR UNIQUE MAPPERS ONLY FROM TELESCOPE OUTPUT
+
+    FILTER_UNIQUE_MAP
 
     //
     // RESOLVE GROUPS AND GET CROSSLINKS: At this point, if groups have been specified, then we need to merge corresponding BAM files
