@@ -155,6 +155,7 @@ include { TELESCOPE_ASSIGN                                          } from '../m
 include { SAMTOOLS_VIEW AS FILTER_UNIQUE_MAP_UPDATED                } from '../modules/nf-core/samtools/view/main'
 include { SAMTOOLS_VIEW AS FILTER_UNIQUE_MAP_OTHER                  } from '../modules/nf-core/samtools/view/main'
 include { SAMTOOLS_MERGE AS MERGE_TE_BAMS                           } from '../modules/nf-core/samtools/merge/main'
+include { SAMTOOLS_INDEX AS INDEX_TE_BAMS                           } from '../modules/nf-core/samtools/index/main'
 
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
@@ -447,31 +448,38 @@ workflow CLIPSEQ {
             ch_telescope
         )
 
-    }
-
-
     // FILTER FOR UNIQUE MAPPERS ONLY FROM TELESCOPE OUTPUT
 
-    FILTER_UNIQUE_MAP_UPDATED{
-        TELESCOPE_ASSIGN.out.updated_bam
-    }
+        FILTER_UNIQUE_MAP_UPDATED{
+            TELESCOPE_ASSIGN.out.updated_bam
+        }
 
-    FILTER_UNIQUE_MAP_OTHER{
-        TELESCOPE_ASSIGN.out.other_bam
-    }
+        FILTER_UNIQUE_MAP_OTHER{
+            TELESCOPE_ASSIGN.out.other_bam
+        }
 
     // MERGE TELESCOPE BAMS TOGETHER FOR PEAK CALLING
 
-    FILTER_UNIQUE_MAP_UPDATED.out.bam
-    .join(FILTER_UNIQUE_MAP_OTHER.out.bam)
-    .map { meta, bam1, bam2 -> [meta, [bam1, bam2]] }
-    .set { bams_to_merge }
+        FILTER_UNIQUE_MAP_UPDATED.out.bam
+        .join(FILTER_UNIQUE_MAP_OTHER.out.bam)
+        .map { meta, bam1, bam2 -> [meta, [bam1, bam2]] }
+        .set { bams_to_merge }
 
-    MERGE_TE_BAMS{
-         bams_to_merge,
-         [[],[]],
-         [[],[]]
+        MERGE_TE_BAMS{
+             bams_to_merge,
+             [[],[]],
+             [[],[]]
+        }
+
+        INDEX_TE_BAMS{
+            MERGE_TE_BAMS.out.bam
+        }
+
+    MERGE_TE_BAMS.out.bam.set { ch_genome_unique_dedupe_bam }
+    INDEX_TE_BAMS.out.bai.set { ch_genome_unique_dedupe_bai }
+
     }
+
 
     //
     // RESOLVE GROUPS AND GET CROSSLINKS: At this point, if groups have been specified, then we need to merge corresponding BAM files
