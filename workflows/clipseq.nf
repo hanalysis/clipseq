@@ -413,11 +413,16 @@ workflow CLIPSEQ {
 
     if(params.run_te) {
         // Check rmsk GTF has been provided
-        if (!params.te_gtf) {
-            error "ERROR: --te_gtf is required when --run_te is specified"
+        if (!params.tetranscripts_gtf) {
+            error "ERROR: --tetranscripts_gtf is required when --run_te is specified"
+        }
+        // Check rmsk GTF has been provided
+        if (!params.telescope_gtf) {
+            error "ERROR: --telescope_gtf is required when --run_te is specified"
         }
 
-        ch_te_gtf = Channel.value([[id: 'te_annotations'], file(params.te_gtf, checkIfExists: true)])
+        ch_tetranscripts_gtf = Channel.value([[id: 'te_annotations'], file(params.tetranscripts_gtf, checkIfExists: true)])
+        ch_telescope_gtf = Channel.value([[id: 'te_annotations'], file(params.tetelescope_gtf, checkIfExists: true)])
 
         // Faux control .bam as not using DESeq2 aspect of TEtranscripts
         ch_bam_c = Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test.rna.paired_end.bam')
@@ -432,12 +437,12 @@ workflow CLIPSEQ {
             ch_all_t_bams, // tx bam
             ch_bam_c, // control bam
             ch_gtf, // genome GTF
-            ch_te_gtf // te GTF
+            ch_tetranscripts_gtf // te GTF
         )
 
         TELESCOPE_ASSIGN(
             GENOME_MULTI_DEDUP.out.bam,
-            ch_te_gtf
+            ch_telescope
         )
 
     }
