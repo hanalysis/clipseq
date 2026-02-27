@@ -152,6 +152,7 @@ include { ICOUNTMINI_METAGENE                                       } from '../m
 
 include { TETRANSCRIPTS                                             } from '../modules/nf-core/tetranscripts/main'
 include { TELESCOPE_ASSIGN                                          } from '../modules/local/telescope/assign/main'
+include { SAMTOOLS_MERGE                                            } from '../modules/nf-core/samtools/merge/main'
 
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
