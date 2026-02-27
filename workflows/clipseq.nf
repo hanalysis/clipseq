@@ -450,13 +450,13 @@ workflow CLIPSEQ {
 
     // FILTER FOR UNIQUE MAPPERS ONLY FROM TELESCOPE OUTPUT
 
-        FILTER_UNIQUE_MAP_UPDATED{
+        FILTER_UNIQUE_MAP_UPDATED(
             TELESCOPE_ASSIGN.out.updated_bam
-        }
+        )
 
-        FILTER_UNIQUE_MAP_OTHER{
+        FILTER_UNIQUE_MAP_OTHER(
             TELESCOPE_ASSIGN.out.other_bam
-        }
+        )
 
     // MERGE TELESCOPE BAMS TOGETHER FOR PEAK CALLING
 
@@ -465,15 +465,15 @@ workflow CLIPSEQ {
         .map { meta, bam1, bam2 -> [meta, [bam1, bam2]] }
         .set { bams_to_merge }
 
-        MERGE_TE_BAMS{
+        MERGE_TE_BAMS(
             bams_to_merge,
             [[],[]],
             [[],[]]
-        }
+        )
 
-        INDEX_TE_BAMS{
+        INDEX_TE_BAMS(
             MERGE_TE_BAMS.out.bam
-        }
+        )
 
         MERGE_TE_BAMS.out.bam.set { ch_genome_unique_dedupe_bam }
         INDEX_TE_BAMS.out.bai.set { ch_genome_unique_dedupe_bai }
