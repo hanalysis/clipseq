@@ -152,7 +152,9 @@ include { ICOUNTMINI_METAGENE                                       } from '../m
 
 include { TETRANSCRIPTS                                             } from '../modules/nf-core/tetranscripts/main'
 include { TELESCOPE_ASSIGN                                          } from '../modules/local/telescope/assign/main'
-include { SAMTOOLS_VIEW AS FILTER_UNIQUE_MAP                        } from '../modules/nf-core/samtools/view/main'
+include { SAMTOOLS_VIEW AS FILTER_UNIQUE_MAP_UPDATED                } from '../modules/nf-core/samtools/view/main'
+include { SAMTOOLS_VIEW AS FILTER_UNIQUE_MAP_OTHER                  } from '../modules/nf-core/samtools/view/main'
+include { SAMTOOLS_MERGE AS MERGE_TE_BAMS                           } from '../modules/nf-core/samtools/merge/main'
 
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
@@ -445,7 +447,26 @@ workflow CLIPSEQ {
 
     // FILTER FOR UNIQUE MAPPERS ONLY FROM TELESCOPE OUTPUT
 
-    FILTER_UNIQUE_MAP
+    FILTER_UNIQUE_MAP_UPDATED{
+        TELESCOPE_ASSIGN.out.updated_bam
+    }
+
+    FILTER_UNIQUE_MAP_OTHER{
+        TELESCOPE_ASSIGN.out.other_bam
+    }
+
+    // MERGE TELESCOPE BAMS TOGETHER FOR PEAK CALLING
+
+    FILTER_UNIQUE_MAP_UPDATED.out.bam
+    .join(FILTER_UNIQUE_MAP_OTHER.out.bam)
+    .map { meta, bam1, bam2 -> [meta, [bam1, bam2]] }
+    .set { bams_to_merge }
+
+    MERGE_TE_BAMS{
+         bams_to_merge,
+         [[],[]],
+         [[],[]]
+    }
 
     //
     // RESOLVE GROUPS AND GET CROSSLINKS: At this point, if groups have been specified, then we need to merge corresponding BAM files
