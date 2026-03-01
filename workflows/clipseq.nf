@@ -451,13 +451,13 @@ workflow CLIPSEQ {
     // FILTER FOR UNIQUE MAPPERS ONLY FROM TELESCOPE OUTPUT
 
         FILTER_UNIQUE_MAP_UPDATED(
-            TELESCOPE_ASSIGN.out.updated_bam,
+            TELESCOPE_ASSIGN.out.updated_bam.map { meta, bam -> [meta, bam, []] },
             [[],[]],
             []
         )
 
         FILTER_UNIQUE_MAP_OTHER(
-            TELESCOPE_ASSIGN.out.other_bam,
+            TELESCOPE_ASSIGN.out.other_bam.map { meta, bam -> [meta, bam, []] },
              [[],[]],
             []
         )
