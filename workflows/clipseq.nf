@@ -485,7 +485,7 @@ workflow CLIPSEQ {
             SORT_TE_BAMS.out.bam
         )
 
-        MERGE_TE_BAMS.out.bam.set { ch_genome_unique_dedupe_bam }
+        SORT_TE_BAMS.out.bam.set { ch_genome_unique_dedupe_bam }
         INDEX_TE_BAMS.out.bai.set { ch_genome_unique_dedupe_bai }
 
     }
