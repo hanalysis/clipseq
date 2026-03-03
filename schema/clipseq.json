@@ -322,9 +322,14 @@
                     "description": "Run module which will quantify transposable elements in provided reads?",
                     "type": "boolean"
                 },
-                "te_gtf": {
+                "tetranscripts_gtf": {
                     "name": "TEtranscripts GTF file",
                     "description": "Requires an appropriate GTF annotation, for details see: https://www.mghlab.org/software/tetranscripts",
+                    "type": "data"
+                },
+                "telescope_gtf": {
+                    "name": "Telescope GTF file",
+                    "description": "An extension of TETranscripts GTF file including also the repetitive ncRNAs: snRNA, snoRNA, 7SK, Y RNA",
                     "type": "data"
                 },
                 "tetranscripts_params": {
