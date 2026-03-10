@@ -1,4 +1,5 @@
 include { SAMPLESHEET_CHECK } from '../../modules/local/samplesheet_check'
+include { CAT_FASTQ } from '../../modules/nf-core/cat/fastq'
 
 workflow INPUT_CHECK {
     take:
@@ -13,7 +14,24 @@ workflow INPUT_CHECK {
             .csv
             .splitCsv ( header:true, sep:',' )
             .map { create_fastq_channel(it) }
-            .set { reads }
+            .map {
+                meta, fastq ->
+                    meta.id = meta.id.split("_")[0..-2].join("_")
+                    [ meta, fastq ] }
+            .groupTuple(by: [0])
+            .branch {
+                meta, fastq ->
+                    single  : fastq.size() == 1
+                        return [ meta, fastq.flatten() ]
+                    multiple: fastq.size() > 1
+                        return [ meta, fastq.flatten() ]
+            }
+             .set { ch_fastq }
+             CAT_FASTQ (
+                 ch_fastq.multiple
+             )
+             ch_versions  = ch_versions.mix(CAT_FASTQ.out.versions)
+             reads = CAT_FASTQ.out.reads.mix(ch_fastq.single)
             break;
         case 'dedupe_bam': // dedupe bam ready for grouped crosslink/peak analysis
             SAMPLESHEET_CHECK ( samplesheet, source )
@@ -59,7 +77,7 @@ def create_dedupe_bam_channel(LinkedHashMap row) {
     // Check fastq files exist
     def array = []
     if (!file(row.dedupe_bam).exists()) {
-        exit 1, "ERROR: Please check input samplesheet -> Read 1 FastQ file does not exist!\n${row.fastq}"
+        exit 1, "ERROR: Please check input samplesheet -> Read 1 bam file does not exist!\n${row.fastq}"
     }
     array = [ meta, [ file(row.dedupe_bam) ] ]
     return array

@@ -9,4 +9,4 @@ testing*
 .nf-test/
 clipseq*.out
 *.nextflow.log*
-
+conf/test_dedup_fastq.config
