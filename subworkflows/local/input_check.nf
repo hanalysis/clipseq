@@ -8,6 +8,8 @@ workflow INPUT_CHECK {
 
     main:
 
+    ch_versions = Channel.empty() // initialise for this workflow
+
     switch(source) {
         case 'fastq': // fastq ready for alignment
             SAMPLESHEET_CHECK ( samplesheet, source )
