@@ -26,10 +26,9 @@ workflow MERGE_AND_SORT_TELESCOPE_BAMS {
 
     // MERGE TELESCOPE BAMS TOGETHER FOR PEAK CALLING
 
-    FILTER_UNIQUE_MAP_UPDATED.out.bam
+    bams_to_merge = FILTER_UNIQUE_MAP_UPDATED.out.bam
         .join(FILTER_UNIQUE_MAP_OTHER.out.bam)
         .map { meta, bam1, bam2 -> [meta, [bam1, bam2]] }
-        .set { bams_to_merge }
 
     MERGE_TE_BAMS(
         bams_to_merge,
@@ -45,9 +44,6 @@ workflow MERGE_AND_SORT_TELESCOPE_BAMS {
     INDEX_TE_BAMS(
         SORT_TE_BAMS.out.bam
     )
-
-    SORT_TE_BAMS.out.bam.set { ch_genome_unique_dedupe_bam }
-    INDEX_TE_BAMS.out.bai.set { ch_genome_unique_dedupe_bai }
 
     emit:
     bam = SORT_TE_BAMS.out.bam
