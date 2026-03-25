@@ -1,8 +1,8 @@
-include { SAMTOOLS_VIEW as FILTER_UNIQUE_MAP_UPDATED                } from '../modules/nf-core/samtools/view/main'
-include { SAMTOOLS_VIEW as FILTER_UNIQUE_MAP_OTHER                  } from '../modules/nf-core/samtools/view/main'
-include { SAMTOOLS_MERGE as MERGE_TE_BAMS                           } from '../modules/nf-core/samtools/merge/main'
-include { SAMTOOLS_SORT as SORT_TE_BAMS                           } from '../modules/nf-core/samtools/sort/main'
-include { SAMTOOLS_INDEX as INDEX_TE_BAMS                           } from '../modules/nf-core/samtools/index/main'
+include { SAMTOOLS_VIEW as FILTER_UNIQUE_MAP_UPDATED                } from '../../modules/nf-core/samtools/view/main'
+include { SAMTOOLS_VIEW as FILTER_UNIQUE_MAP_OTHER                  } from '../../modules/nf-core/samtools/view/main'
+include { SAMTOOLS_MERGE as MERGE_TE_BAMS                           } from '../../modules/nf-core/samtools/merge/main'
+include { SAMTOOLS_SORT as SORT_TE_BAMS                           } from '../../modules/nf-core/samtools/sort/main'
+include { SAMTOOLS_INDEX as INDEX_TE_BAMS                           } from '../../modules/nf-core/samtools/index/main'
 
 workflow MERGE_AND_SORT_TELESCOPE_BAMS {
     take:
