@@ -450,7 +450,8 @@ workflow CLIPSEQ {
         )
 
         MERGE_AND_SORT_TELESCOPE_BAMS(
-            TELESCOPE_ASSIGN.out
+            TELESCOPE_ASSIGN.out.updated_bam,
+            TELESCOPE_ASSIGN.out.other_bam
         )
 
     ch_genome_unique_dedupe_bam = SORT_TE_BAMS.out.bam.out.bam

@@ -6,19 +6,20 @@ include { SAMTOOLS_INDEX as INDEX_TE_BAMS                           } from '../.
 
 workflow MERGE_AND_SORT_TELESCOPE_BAMS {
     take:
-    telescope_out
+    telescope_out_updated
+    telescope_out_other
 
     main:
     // FILTER FOR UNIQUE MAPPERS ONLY FROM TELESCOPE OUTPUT
 
     FILTER_UNIQUE_MAP_UPDATED(
-        telescope_out.out.updated_bam.map { meta, bam -> [meta, bam, []] },
+        telescope_out_updated.map { meta, bam -> [meta, bam, []] },
         [[],[]],
         []
     )
 
     FILTER_UNIQUE_MAP_OTHER(
-        telescope_out.out.other_bam.map { meta, bam -> [meta, bam, []] },
+        telescope_out_other.map { meta, bam -> [meta, bam, []] },
         [[],[]],
         []
         )
