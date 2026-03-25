@@ -108,7 +108,7 @@ include { TRANSCRIPTOME_PROCESSING                                              
 include { CONSENSUS_PEAK_TABLE as CLIPPY_CONSENSUS_PEAK_TABLE                   } from '../subworkflows/local/consensus_peak_table'
 include { CONSENSUS_PEAK_TABLE as PARACLU_CONSENSUS_PEAK_TABLE                  } from '../subworkflows/local/consensus_peak_table'
 include { CONSENSUS_PEAK_TABLE as ICOUNT_CONSENSUS_PEAK_TABLE                   } from '../subworkflows/local/consensus_peak_table'
-
+include { MERGE_AND_SORT_TELESCOPE_BAMS                                         } from '../subworkflows/local/merge_and_sort_telescope_bams'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -449,48 +449,14 @@ workflow CLIPSEQ {
             ch_telescope_gtf
         )
 
-    // FILTER FOR UNIQUE MAPPERS ONLY FROM TELESCOPE OUTPUT
-
-        FILTER_UNIQUE_MAP_UPDATED(
-            TELESCOPE_ASSIGN.out.updated_bam.map { meta, bam -> [meta, bam, []] },
-            [[],[]],
-            []
+        MERGE_AND_SORT_TELESCOPE_BAMS(
+            TELESCOPE_ASSIGN.out
         )
 
-        FILTER_UNIQUE_MAP_OTHER(
-            TELESCOPE_ASSIGN.out.other_bam.map { meta, bam -> [meta, bam, []] },
-             [[],[]],
-            []
-        )
-
-    // MERGE TELESCOPE BAMS TOGETHER FOR PEAK CALLING
-
-        FILTER_UNIQUE_MAP_UPDATED.out.bam
-        .join(FILTER_UNIQUE_MAP_OTHER.out.bam)
-        .map { meta, bam1, bam2 -> [meta, [bam1, bam2]] }
-        .set { bams_to_merge }
-
-        MERGE_TE_BAMS(
-            bams_to_merge,
-            [[],[]],
-            [[],[]]
-        )
-
-        SORT_TE_BAMS(
-            MERGE_TE_BAMS.out.bam,
-            [[],[]]
-        )
-
-        INDEX_TE_BAMS(
-            SORT_TE_BAMS.out.bam
-        )
-
-        SORT_TE_BAMS.out.bam.set { ch_genome_unique_dedupe_bam }
-        INDEX_TE_BAMS.out.bai.set { ch_genome_unique_dedupe_bai }
+    ch_genome_unique_dedupe_bam = SORT_TE_BAMS.out.bam.out.bam
+    ch_genome_unique_dedupe_bai = MERGE_AND_SORT_TELESCOPE_BAMS.out.bai
 
     }
-
-
     //
     // RESOLVE GROUPS AND GET CROSSLINKS: At this point, if groups have been specified, then we need to merge corresponding BAM files
     //
