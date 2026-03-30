@@ -151,7 +151,7 @@ include { ICOUNTMINI_SUMMARY                                        } from '../m
 include { ICOUNTMINI_METAGENE                                       } from '../modules/nf-core/icountmini/metagene/main'
 
 include { TETRANSCRIPTS                                             } from '../modules/nf-core/tetranscripts/main'
-include { TELESCOPE_ASSIGN                                          } from '../modules/local/telescope/assign/main'
+include { TELESCOPE_ASSIGN                                          } from '../modules/nf-core/telescope/assign/main'
 include { SAMTOOLS_VIEW as FILTER_UNIQUE_MAP_UPDATED                } from '../modules/nf-core/samtools/view/main'
 include { SAMTOOLS_VIEW as FILTER_UNIQUE_MAP_OTHER                  } from '../modules/nf-core/samtools/view/main'
 include { SAMTOOLS_MERGE as MERGE_TE_BAMS                           } from '../modules/nf-core/samtools/merge/main'
