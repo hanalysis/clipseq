@@ -10,10 +10,10 @@ process CLIPQC {
     path("mapped/*")
     path("collapse/*")
     path("xlinks/*")
-    path("icount/*") , optional: true
-    path("paraclu/*"), optional: true
-    path("clippy/*"), optional: true
-    path("pureclip/*"), optional: true
+    path("icount/*")
+    path("paraclu/*")
+    path("clippy/*")
+    path("pureclip/*")
     path("summary_type/*")
     path("summary_subtype/*")
     path("summary_gene/*")
