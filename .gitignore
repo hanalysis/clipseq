@@ -7,3 +7,4 @@ testing/
 testing*
 *.pyc
 .nf-test/
+Homo_sapiens.GRCh38.111.gtf/Homo_sapiens.GRCh38.111.gtf

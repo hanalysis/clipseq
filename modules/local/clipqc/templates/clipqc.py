@@ -248,7 +248,9 @@ def main(process_name):
     # Peaks
     # ==========
 
-    peakcallers = ["icount", "paraclu", "clippy", "pureclip"]
+  #  peakcallers = ["icount", "paraclu", "clippy", "pureclip"]
+  # Only referring to peak callers which were actually used
+    peakcallers = [c.strip().strip("[]") for c in "!{callers}".split(",")]
 
     def get_peaks_metrics(peakcaller):
         peak_files = sorted([peakcaller + "/" + f for f in os.listdir(peakcaller) if f.endswith(".bed")])

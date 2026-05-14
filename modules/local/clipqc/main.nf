@@ -5,14 +5,15 @@ process CLIPQC {
     container "quay.io/goodwright/mulled-v2-9617f1b1a927f74fecc0c8b26ec773df8a8593b7:78688d5e3c856e3fbba8a63a7740b414dc4c0c5a-0"
 
     input:
+    val callers
     path("premap/*")
     path("mapped/*")
     path("collapse/*")
     path("xlinks/*")
-    path("icount/*")
-    path("paraclu/*")
-    path("clippy/*")
-    path("pureclip/*")
+    path("icount/*") , optional: true
+    path("paraclu/*"), optional: true
+    path("clippy/*"), optional: true
+    path("pureclip/*"), optional: true
     path("summary_type/*")
     path("summary_subtype/*")
     path("summary_gene/*")

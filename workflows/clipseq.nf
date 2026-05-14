@@ -52,6 +52,9 @@ if ((caller_list + callers).unique().size() != caller_list.size()) {
     exit 1, "Invalid variant caller option: ${params.peakcaller}. Valid options: ${caller_list.join(', ')}"
 }
 
+// Creating a channel of callers to pass to CLIPQC later
+ch_callers = Channel.value(callers)
+
 // // Stage dummy files to be used as an optional input where required
 ch_dummy_file  = file("$projectDir/assets/dummy_file.txt", checkIfExists: true)
 ch_dummy_file2 = file("$projectDir/assets/dummy_file2.txt", checkIfExists: true)
@@ -432,7 +435,7 @@ workflow CLIPSEQ {
             .join( ICOUNTMINI_SUMMARY.out.summary_subtype, by: [0])
             .join( ICOUNTMINI_SUMMARY.out.summary_gene, by: [0])
             .join( ch_ncrna_k1_crosslink_group_resolved_bed, by: [0])
-            .map { meta, type, subtype, gene, bed -> 
+            .map { meta, type, subtype, gene, bed ->
                 [meta, [type, subtype, gene, bed]]
             }
 
@@ -504,7 +507,7 @@ workflow CLIPSEQ {
     ch_peka_clippy_peaks            = Channel.empty()
     ch_peka_paraclu_peaks           = Channel.empty()
     ch_peka_pureclip_peaks          = Channel.empty()
-    
+
 
     if(params.run_peakcalling) {
 
@@ -746,25 +749,26 @@ workflow CLIPSEQ {
     }
 
     if(params.run_reporting) {
-        
+
         // MODULE: Collect software versions
-        
+
         // DUMP_SOFTWARE_VERSIONS (
         //     ch_versions.unique().collectFile()
         // )
 
-        
+
        // MODULE: Run clipqc
-        
+
         CLIPQC (
+            ch_callers,
             ch_ncrna_log.collect{ it[1] },
             ch_genome_log.collect{ it[1] },
             ch_umi_log.collect{ it[1] },
-            ch_genome_crosslink_group_resolved_bed.collect{ it[1] },
-            ch_icountmini_peaks.collect{ it[1] },
-            ch_paraclu_genome_peaks.collect {it[1]},
-            ch_clippy_genome_peaks.collect {it[1]},
-            ch_pureclip_genome_peaks.collect {it[1] },
+            ch_genome_crosslink_group_resolved_bed.collect{ it[1] } : [],
+            'icount' in callers ? ch_icountmini_peaks.collect{ it[1] } : [],
+            'paraclu' in callers ? ch_paraclu_genome_peaks.collect {it[1]} : [],
+            'clippy' in callers ? ch_clippy_genome_peaks.collect {it[1]} : [],
+            'pureclip' in callers ? ch_pureclip_genome_peaks.collect {it[1] } : [],
             ch_merged_summary_type.collect{it[1]},
             ch_merged_summary_subtype.collect{it[1]},
             ch_merged_summary_gene.collect{it[1]},
@@ -788,7 +792,7 @@ workflow CLIPSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
         //ch_multiqc_files = ch_multiqc_files.mix(DUMP_SOFTWARE_VERSIONS.out.mqc_yml.collect())
         //ch_multiqc_files = ch_multiqc_files.mix(DUMP_SOFTWARE_VERSIONS.out.mqc_unique_yml.collect())
-        
+
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.fastqc_zip.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_zip.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_log.collect{it[1]}.ifEmpty([]))
