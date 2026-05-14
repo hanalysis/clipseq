@@ -764,7 +764,7 @@ workflow CLIPSEQ {
             ch_ncrna_log.collect{ it[1] },
             ch_genome_log.collect{ it[1] },
             ch_umi_log.collect{ it[1] },
-            ch_genome_crosslink_group_resolved_bed.collect{ it[1] } : [],
+            ch_genome_crosslink_group_resolved_bed.collect{ it[1] },
             'icount' in callers ? ch_icountmini_peaks.collect{ it[1] } : [],
             'paraclu' in callers ? ch_paraclu_genome_peaks.collect {it[1]} : [],
             'clippy' in callers ? ch_clippy_genome_peaks.collect {it[1]} : [],
