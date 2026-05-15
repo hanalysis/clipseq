@@ -9,8 +9,8 @@ process DESEQ2_QC {
 
     input:
     tuple val(meta), path(counts)
-    path deseq2_pca_header
-    path deseq2_clustering_header
+    path ch_multiqc_merged_replicate_deseq2_pca_header
+    path ch_multiqc_merged_replicate_deseq2_clustering_header
 
     output:
     path "*.pdf"                , optional:true, emit: pdf
@@ -31,7 +31,7 @@ process DESEQ2_QC {
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
-    //template 'deseq2_qc.R' 
+    //template 'deseq2_qc.R'
     """
     Rscript $projectDir/modules/local/deseq2_qc/templates/deseq2_qc.R \
     -i ${counts} \
@@ -51,15 +51,15 @@ process DESEQ2_QC {
     touch ${meta.id}.sample.dists.txt
     touch ${meta.id}.sample.dists_mqc.tsv
     touch ${meta.id}.log
-    path "size_factors" 
+    path "size_factors"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bioconductor-deseq2: \$(Rscript -e "library(DESeq2); cat(as.character(packageVersion('DESeq2')))")
     END_VERSIONS
     """
-    
-   
+
+
 }
 
 
