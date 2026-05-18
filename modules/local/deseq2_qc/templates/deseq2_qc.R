@@ -111,7 +111,7 @@ if (decompose) {
     }
 }
 
-DDSFile <- paste(opt$outprefix,".dds.RData",sep="")
+DDSFile <- paste(opt$output_prefix,".dds.RData",sep="")
 
 counts  <- count.table[,samples.vec,drop=FALSE]
 dds     <- DESeqDataSetFromMatrix(countData=round(counts), colData=coldata, design=~ 1)
@@ -167,7 +167,7 @@ plotPCA_vst <- function (object,  ntop = 500, assay=length(assays(object))) {
     return(df)
 }
 
-PlotFile <- paste(opt$outprefix,".plots.pdf",sep="")
+PlotFile <- paste(opt$output_prefix,".plots.pdf",sep="")
 
 pdf(file=PlotFile, onefile=TRUE, width=7, height=7)
 ## PCA
@@ -211,7 +211,7 @@ for (n_top_var in ntop) {
 pca.vals           <- pca.data[,c("PC1","PC2")]
 colnames(pca.vals) <- paste0(colnames(pca.vals), ": ", percentVar[1:2], '% variance')
 pca.vals           <- cbind(sample = rownames(pca.vals), pca.vals)
-write.table(pca.vals, file = paste(opt$outprefix, ".pca.vals.txt", sep=""),
+write.table(pca.vals, file = paste(opt$output_prefix, ".pca.vals.txt", sep=""),
             row.names = FALSE, col.names = TRUE, sep = "\t", quote = TRUE)
 
 ## SAMPLE CORRELATION HEATMAP
@@ -227,7 +227,7 @@ pheatmap(
 )
 
 ## WRITE SAMPLE DISTANCES TO FILE
-write.table(cbind(sample = rownames(sampleDistMatrix), sampleDistMatrix),file=paste(opt$outprefix, ".sample.dists.txt", sep=""),
+write.table(cbind(sample = rownames(sampleDistMatrix), sampleDistMatrix),file=paste(opt$output_prefix, ".sample.dists.txt", sep=""),
             row.names=FALSE, col.names=TRUE, sep="\t", quote=FALSE)
 dev.off()
 
@@ -242,7 +242,7 @@ if (file.exists(SizeFactorsDir) == FALSE) {
     dir.create(SizeFactorsDir, recursive=TRUE)
 }
 
-NormFactorsFile <- paste(SizeFactorsDir,opt$outprefix, ".size_factors.RData", sep="")
+NormFactorsFile <- paste(SizeFactorsDir,opt$output_prefix, ".size_factors.RData", sep="")
 
 normFactors <- sizeFactors(dds)
 save(normFactors, file=NormFactorsFile)
