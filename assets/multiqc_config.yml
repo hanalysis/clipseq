@@ -118,9 +118,14 @@ custom_data:
     section_name: "Counts"
     description: "The total number of peaks called by each peak caller"
     plot_type: "bargraph"
+    cats:
+      - clippy
+      - icount
+      - paraclu
+      - pureclip
     pconfig:
       ylab: "Number of peaks"
-      #stacking: False
+      stacking: "group"
       cpswitch: False
       tt_percentages: False
   xlinks_in_peaks:
@@ -129,10 +134,15 @@ custom_data:
     file_format: "tsv"
     section_name: "Crosslinks positions in peaks"
     description: "The total percentage of crosslinks within peaks for each peak caller"
-    #plot_type: 'bargraph'
+    plot_type: 'bargraph'
+    cats:
+      - clippy
+      - icount
+      - paraclu
+      - pureclip
     pconfig:
       ylab: "Percentage of crosslinks"
-      #stacking: False
+      stacking: "group"
       cpswitch: False
       tt_percentages: False
       tt_decimals: 2
