@@ -90,9 +90,12 @@ custom_data:
     section_name: "Counts"
     description: "The number of crosslinks or crosslink sites for each experiment"
     plot_type: "bargraph"
+    cats:
+      - number_of_cDNAs
+      - total_positions_of_crosslinks
     pconfig:
       ylab: "Count"
-      #stacking: False
+      stacking: "group"
       cpswitch: False
       tt_percentages: False
   crosslinks_ratio:
