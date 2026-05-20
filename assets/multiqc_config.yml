@@ -83,18 +83,6 @@ custom_data:
       #stacking: False
       cpswitch: False
       tt_percentages: False
-  dedup_mean_umis:
-    parent_id: dedup
-    parent_name: "Deduplication"
-    file_format: "tsv"
-    section_name: "Mean UMIs"
-    description: "Mean number of unique UMIs per position for each experiment"
-    plot_type: "bargraph"
-    pconfig:
-      ylab: "Mean number"
-      #stacking: False
-      cpswitch: False
-      tt_percentages: False
   crosslinks_counts:
     parent_id: crosslinks
     parent_name: "Crosslinks"
@@ -206,8 +194,6 @@ sp:
     fn: "dedup_reads.tsv"
   dedup_ratio:
     fn: "dedup_ratio.tsv"
-  dedup_mean_umis:
-    fn: "dedup_mean_umis.tsv"
   crosslinks_counts:
     fn: "xlinks_counts.tsv"
   crosslinks_ratio:
