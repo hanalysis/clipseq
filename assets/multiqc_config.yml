@@ -63,9 +63,12 @@ custom_data:
     section_name: "Reads"
     description: "The number of reads before and after PCR deduplication for each experiment"
     plot_type: "bargraph"
+    cats:
+      - input_reads
+      - output_reads
     pconfig:
       ylab: "Count"
-      #stacking: False
+      stacking: "group"
       cpswitch: False
       tt_percentages: False
   dedup_ratio:
