@@ -76,7 +76,7 @@ custom_data:
     parent_name: "Deduplication"
     file_format: "tsv"
     section_name: "Ratio"
-    description: "The PCR deduplication ratio for each experiment"
+    description: "The PCR deduplication ratio for each experiment (input reads/reads left after deduplication)"
     plot_type: "bargraph"
     pconfig:
       ylab: "Ratio"
