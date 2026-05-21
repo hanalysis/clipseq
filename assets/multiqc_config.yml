@@ -17,26 +17,12 @@ disable_version_detection: true
 # Run only these modules
 run_modules:
   - custom_content
-  - fastqc
   - cutadapt
   - bowtie1
   - star
 
 module_order:
-  - fastqc:
-      name: "FastQC (raw)"
-      anchor: "fastqc_raw"
-      info: "This section of the report shows FastQC results before adapter trimming."
-      path_filters:
-        - "*_fastqc.zip"
   - cutadapt
-  - fastqc:
-      name: "FastQC (trimmed)"
-      anchor: "fastqc_trimmed"
-      info: "This section of the report shows FastQC results after adapter trimming."
-      genome: ""
-      path_filters:
-        - "*_trimmed_fastqc.zip"
   - bowtie1:
       name: "BOWTIE ncRNA Alignment"
       path_filters:
