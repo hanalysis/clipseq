@@ -68,7 +68,7 @@ custom_data:
       - output_reads
     pconfig:
       ylab: "Count"
-      stacking: "group"
+      stacking: null
       cpswitch: False
       tt_percentages: False
   dedup_ratio:
@@ -95,7 +95,7 @@ custom_data:
       - total_positions_of_crosslinks
     pconfig:
       ylab: "Count"
-      stacking: "group"
+      stacking: null
       cpswitch: False
       tt_percentages: False
   crosslinks_ratio:
@@ -125,7 +125,7 @@ custom_data:
       - pureclip
     pconfig:
       ylab: "Number of peaks"
-      stacking: "group"
+      stacking: null
       cpswitch: False
       tt_percentages: False
   xlinks_in_peaks:
@@ -142,7 +142,7 @@ custom_data:
       - pureclip
     pconfig:
       ylab: "Percentage of crosslinks"
-      stacking: "group"
+      stacking: null
       cpswitch: False
       tt_percentages: False
       tt_decimals: 2
