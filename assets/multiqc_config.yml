@@ -153,10 +153,15 @@ custom_data:
     file_format: "tsv"
     section_name: "Crosslinks positions in peaks"
     description: "The total percentage of crosslink sites within peaks for each peak caller"
-    #plot_type: 'bargraph'
+    plot_type: 'bargraph'
+    cats:
+      - clippy
+      - icount
+      - paraclu
+      - pureclip
     pconfig:
       ylab: "Percentage of crosslink sites"
-      #stacking: False
+      stacking: null
       cpswitch: False
       tt_percentages: False
       tt_decimals: 2
@@ -168,9 +173,14 @@ custom_data:
     section_name: "Peak-crosslink coverage"
     description: "The total percentage of nucleotides within peaks covered by a crosslink site"
     plot_type: "bargraph"
+    cats:
+      - clippy
+      - icount
+      - paraclu
+      - pureclip
     pconfig:
       ylab: "Percentage of nucleotides within peaks"
-      #stacking: False
+      stacking: null
       cpswitch: False
       tt_percentages: False
       tt_decimals: 2
@@ -193,10 +203,15 @@ custom_data:
     file_format: "tsv"
     section_name: "Percentage of cDNA premap"
     description: "The total percentage of cDNA summary mapped"
-    #plot_type: 'bargraph'
+    plot_type: 'bargraph'
+    cats:
+      - CDS
+      - ncRNA
+      - intergenic
+      - premapped RNA
     pconfig:
       ylab: "Type"
-      #stacking: False
+      stacking: null
       cpswitch: False
       tt_percentages: False
   summary_subtype:
