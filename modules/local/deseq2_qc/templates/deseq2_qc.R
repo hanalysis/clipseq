@@ -171,12 +171,17 @@ PlotFile <- paste(opt$output_prefix,".plots.pdf",sep="")
 
 pdf(file=PlotFile, onefile=TRUE, width=7, height=7)
 ## PCA
+
+plots <- list()
+plot_titles <- list()
+index <- 1
+
 ntop <- c(500, Inf)
 for (n_top_var in ntop) {
     pca.data      <- plotPCA_vst(dds, assay=vst_name, ntop=n_top_var)
     percentVar    <- round(attr(pca.data, "percentVar")$percentVar)
     plot_subtitle <- ifelse(n_top_var==Inf, "All peaks", paste("Top", n_top_var, "peaks"))
-    pl <- ggplot(pca.data, aes(PC1, PC2, label=paste0(" ", sample, " "))) +
+    plots[[index]] <- ggplot(pca.data, aes(PC1, PC2, label=paste0(" ", sample, " "))) +
         geom_point() +
         geom_text(check_overlap=TRUE, vjust=0.5, hjust="inward") +
         xlab(paste0("PC1: ",percentVar[1],"% variance")) +
@@ -187,7 +192,8 @@ for (n_top_var in ntop) {
             panel.grid.minor = element_blank(),
             panel.background = element_blank(),
             panel.border = element_rect(colour = "black", fill=NA, size=1))
-    print(pl)
+    print(plots[[index]])
+    plot_titles[[index]] <- gsub(" ", "_", paste0("First PCs on ", vst_name, "-transformed data"))
 
     if (decompose) {
         pc_names <- paste0("PC", attr(pca.data, "percentVar")$PC)
@@ -197,14 +203,17 @@ for (n_top_var in ntop) {
         long_pc_grp <- subset(long_pc_grp, grouper<=5)
         long_pc_grp$component <- paste("PC", long_pc_grp$component)
         long_pc_grp$grouper <- paste0(long_pc_grp$grouper, c("st","nd","rd","th","th")[long_pc_grp$grouper], " prefix")
-        pl <- ggplot(long_pc_grp, aes(x=Group, y=PC)) +
+        plots[[index]]  <- ggplot(long_pc_grp, aes(x=Group, y=PC)) +
             geom_point() +
             stat_summary(fun=mean, geom="line", aes(group = 1)) +
             labs(x=NULL, y=NULL, subtitle = plot_subtitle, title="PCs split by sample-name prefixes") +
             facet_grid(component~grouper, scales="free_x") +
             scale_x_discrete(guide = guide_axis(n.dodge = 3))
-        print(pl)
+        print(plots[[index]])
+        plot_titles[[index]] <- gsub(" ", "_", "PCs split by sample-name prefixes")
     }
+
+    index <- index + 1
 } # at end of loop, we'll be using the user-defined ntop if any, else all genes
 
 ## WRITE PC1 vs PC2 VALUES TO FILE
@@ -218,7 +227,7 @@ write.table(pca.vals, file = paste(opt$output_prefix, ".pca.vals.txt", sep=""),
 sampleDists      <- dist(t(assay(dds, vst_name)))
 sampleDistMatrix <- as.matrix(sampleDists)
 colors           <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
-pheatmap(
+corr_heatmap <- pheatmap(
     sampleDistMatrix,
     clustering_distance_rows=sampleDists,
     clustering_distance_cols=sampleDists,
@@ -226,9 +235,25 @@ pheatmap(
     main=paste("Euclidean distance between", vst_name, "of samples")
 )
 
+print(corr_heatmap)
+
 ## WRITE SAMPLE DISTANCES TO FILE
 write.table(cbind(sample = rownames(sampleDistMatrix), sampleDistMatrix),file=paste(opt$output_prefix, ".sample.dists.txt", sep=""),
             row.names=FALSE, col.names=TRUE, sep="\t", quote=FALSE)
+dev.off()
+
+## Save PCA plots and correlation heatmap separately to include in MULTIQC
+
+png(filename = paste0(plot_titles[1], "_1_mqc.png"), width = 7, height = 7, units = "in", res = 300)
+print(plots[[1]])
+dev.off()
+
+png(filename = paste0(plot_titles[2], "_2_mqc.png"), width = 7, height = 7, units = "in", res = 300)
+print(plots[[2]])
+dev.off()
+
+png(filename = "sample_correlation_heatmap_mqc.png", width = 7, height = 7, units = "in", res = 300)
+print(corr_heatmap)
 dev.off()
 
 ################################################

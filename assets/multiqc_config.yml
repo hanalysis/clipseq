@@ -175,6 +175,18 @@ custom_data:
       tt_percentages: False
       tt_decimals: 2
       tt_suffix: "%"
+  deseq2_qc_plot_1:
+      parent_id: deseq2_qc
+      parent_name: PCA
+      section_name: "PCA analysis of consensus peaks"
+  deseq2_qc_plot_2:
+      parent_id: deseq2_qc
+      parent_name: PCA
+      section_name: "PCA analysis of consensus peaks 2"
+  deseq2_qc_heatmap:
+      parent_id: deseq2_qc
+      parent_name: Heatmap
+      section_name: "Heatmap of consensus peaks"
   summary_type:
     parent_id: Summary
     parent_name: "Summary"
@@ -219,10 +231,18 @@ sp:
     fn: "xlinksites_in_peaks.tsv"
   peaks_xlinksite_coverage:
     fn: "peaks_xlinksite_coverage.tsv"
+  deseq2_qc_plot_1:
+    fn: "*1_mqc.png"
+  deseq2_qc_plot_2:
+    fn: "*2_mqc.png"
+  deseq2_qc_heatmap:
+    fn: "*heatmap_mqc.png"
   summary_type:
     fn: "summary_type_metrics.tsv"
   summary_subtype:
-    fn: '"summary_subtype_metrics.tsv'
+    fn: 'summary_subtype_metrics.tsv'
+
+ignore_images: false
 
 custom_content:
   order:
