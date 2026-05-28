@@ -544,7 +544,7 @@ workflow CLIPSEQ {
                     params.skip_deseq2_qc
                 )
                 ch_versions = ch_versions.mix(CLIPPY_CONSENSUS_PEAK_TABLE.out.versions)
-                ch_multiqc_files = ch_deseq2_qc_plots.mix(CLIPPY_CONSENSUS_PEAK_TABLE.out.deseq2_qc_plots)
+                ch_deseq2_qc_plots = ch_deseq2_qc_plots.mix(CLIPPY_CONSENSUS_PEAK_TABLE.out.deseq2_qc_plots)
             }
 
             if(params.run_peka) {
@@ -642,7 +642,7 @@ workflow CLIPSEQ {
                     params.skip_deseq2_qc
                 )
                 ch_versions = ch_versions.mix(PARACLU_CONSENSUS_PEAK_TABLE.out.versions)
-                ch_multiqc_files = ch_deseq2_qc_plots.mix(PARACLU_CONSENSUS_PEAK_TABLE.out.deseq2_qc_plots)
+                ch_deseq2_qc_plots = ch_deseq2_qc_plots.mix(PARACLU_CONSENSUS_PEAK_TABLE.out.deseq2_qc_plots)
             }
 
             if(params.run_peka) {
