@@ -67,7 +67,7 @@ custom_data:
       - output_reads
     pconfig:
       ylab: "Count"
-      stacking: null
+      stacking: "group"
       cpswitch: False
       tt_percentages: False
   dedup_ratio:
