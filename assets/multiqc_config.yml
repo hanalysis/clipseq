@@ -294,6 +294,14 @@ general_stats_columns:
         title: "Genomic mapping - total uniqely mapped reads"
         shared_key: premap
 
+table_columns_visible:
+  fastqc_raw:
+    percent_duplicates: False
+    percent_gc: False
+  fastqc_trimmed:
+    percent_duplicates: False
+    percent_gc: False
+
 ignore_images: false
 
 custom_content:
