@@ -509,6 +509,10 @@ workflow CLIPSEQ {
     ch_peka_pureclip_peaks          = Channel.empty()
 
 
+    // Create empty channel for DESEQ2_QC for conditional use
+    // initialise before the if(params.run_peakcalling) block
+    ch_deseq2_qc_plots = Channel.empty()
+
     if(params.run_peakcalling) {
 
         if('clippy' in callers) {
@@ -540,6 +544,7 @@ workflow CLIPSEQ {
                     params.skip_deseq2_qc
                 )
                 ch_versions = ch_versions.mix(CLIPPY_CONSENSUS_PEAK_TABLE.out.versions)
+                ch_multiqc_files = ch_deseq2_qc_plots.mix(CLIPPY_CONSENSUS_PEAK_TABLE.out.deseq2_qc_plots)
             }
 
             if(params.run_peka) {
@@ -637,6 +642,7 @@ workflow CLIPSEQ {
                     params.skip_deseq2_qc
                 )
                 ch_versions = ch_versions.mix(PARACLU_CONSENSUS_PEAK_TABLE.out.versions)
+                ch_multiqc_files = ch_deseq2_qc_plots.mix(PARACLU_CONSENSUS_PEAK_TABLE.out.deseq2_qc_plots)
             }
 
             if(params.run_peka) {
@@ -799,9 +805,7 @@ workflow CLIPSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(ch_ncrna_log.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(ch_genome_log.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(CLIPQC.out.tsv.collect().ifEmpty([]))
-        ch_multiqc_files = ch_multiqc_files.mix(CLIPPY_CONSENSUS_PEAK_TABLE.out.deseq2_qc_plots.flatten().collect().ifEmpty([]))
-        ch_multiqc_files = ch_multiqc_files.mix(PARACLU_CONSENSUS_PEAK_TABLE.out.deseq2_qc_plots.flatten().collect().ifEmpty([]))
- //       ch_multiqc_files = ch_multiqc_files.mix(ICOUNT_CONSENSUS_PEAK_TABLE.out.deseq2_qc_plots.flatten().collect().ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(ch_deseq2_qc_plots.flatten().collect().ifEmpty([]))
 
         ch_tmp = ch_ncrna_log.collect{it[1]}
 
