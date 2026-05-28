@@ -256,51 +256,25 @@ sp:
   summary_subtype:
     fn: 'summary_subtype_metrics.tsv'
 
-general_stats_columns:
-  fastqc_raw:
-    columns:
-      median_sequence_length:
-        title: "Median raw read length"
-        shared_key: raw
-      total_sequences:
-        title: "Total raw sequences"
-        shared_key: raw
-  cutadapt:
-    columns:
-      percent_trimmed:
-        title: "Percentage reads trimmed"
-  fastqc_trimmed:
-    columns:
-      median_sequence_length:
-        title: "Median trimmed read length"
-        shared_key: trimmed
-      total_sequences:
-        title: "Total trimmed sequences"
-        shared_key: trimmed
-  bowtie1:
-    columns:
-      reads_aligned_percentage:
-        title: "Pre-mapped % reads aligned"
-        shared_key: premap
-      reads_aligned:
-        title: "Pre-mapped total reads aligned"
-        shared_key: premap
-  star:
-    columns:
-      uniquely_mapped_percent:
-        title: "Genomic mapping - % uniquely mapped reads"
-        shared_key: premap
-      uniquely_mapped:
-        title: "Genomic mapping - total uniqely mapped reads"
-        shared_key: premap
-
 table_columns_visible:
-  fastqc_raw:
+  "FASTQC (raw)":
+    median_sequence_length: True
+    percent_trimmed: True
     percent_duplicates: False
     percent_gc: False
-  fastqc_trimmed:
+  cutadapt:
+    percent_trimmed: True
+  "FASTQC (trimmed)":
+    median_sequence_length: True
+    percent_trimmed: True
     percent_duplicates: False
     percent_gc: False
+  "BOWTIE ncRNA Alignment":
+    reads_aligned_percentage: True
+    reads_aligned: True
+  "STAR Genome Alignment":
+    uniquely_mapped_percent: True
+    uniquely_mapped: True
 
 ignore_images: false
 
