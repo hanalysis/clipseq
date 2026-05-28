@@ -25,7 +25,7 @@ workflow CONSENSUS_PEAK_TABLE {
     table_name               // val "Clippy_Consensus_Counts.tsv" must end in tsv
     ch_deseq2_pca_header_multiqc
     ch_deseq2_clustering_header_multiqc
-    skip_deseq2_qc   
+    skip_deseq2_qc
 
     main:
     ch_versions = Channel.empty()
@@ -47,7 +47,7 @@ workflow CONSENSUS_PEAK_TABLE {
         .combine(CROSSLINKS_SORT.out.sorted)
         .map{ meta1, consensuspeaks, meta2, crosslink -> [meta2, consensuspeaks, crosslink] }
         .set { ch_consensus_map }
-    
+
     CONSENSUS_MAP (
         ch_consensus_map,
         genome_fai,
@@ -76,6 +76,8 @@ workflow CONSENSUS_PEAK_TABLE {
     ch_deseq2_qc_dists_multiqc = Channel.empty()
     ch_deseq2_qc_log           = Channel.empty()
     ch_deseq2_qc_size_factors  = Channel.empty()
+    ch_deseq2_qc_plots         = Channel.empty()
+
     if (!skip_deseq2_qc) {
         DESEQ2_QC (
             GET_CONSENSUS_COUNTS.out.tsv,
@@ -91,6 +93,7 @@ workflow CONSENSUS_PEAK_TABLE {
         ch_deseq2_qc_dists_multiqc = DESEQ2_QC.out.dists_multiqc
         ch_deseq2_qc_log           = DESEQ2_QC.out.log
         ch_deseq2_qc_size_factors  = DESEQ2_QC.out.size_factors
+        ch_deseq2_qc_plots         = DESEQ2_QC.out.plots
         ch_versions = ch_versions.mix(DESEQ2_QC.out.versions)
     }
 
@@ -107,5 +110,6 @@ workflow CONSENSUS_PEAK_TABLE {
     deseq2_qc_dists_multiqc = ch_deseq2_qc_dists_multiqc        // channel: [ txt ]
     deseq2_qc_log           = ch_deseq2_qc_log                  // channel: [ txt ]
     deseq2_qc_size_factors  = ch_deseq2_qc_size_factors         // channel: [ txt ]
+    deseq2_qc_plots         = ch_deseq2_qc_plots                // channel: [plots]
     versions         = ch_versions                   // channel: [ versions.yml ]
 }
