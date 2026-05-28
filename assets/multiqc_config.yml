@@ -34,7 +34,6 @@ module_order:
       name: "FastQC (trimmed)"
       anchor: "fastqc_trimmed"
       info: "This section of the report shows FastQC results after adapter trimming."
-      genome: ""
       path_filters:
         - "*_trimmed_fastqc.zip"
   - bowtie1:
