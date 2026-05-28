@@ -259,14 +259,14 @@ sp:
 table_columns_visible:
   "FASTQC (raw)":
     median_sequence_length: True
-    percent_trimmed: True
+    total_sequences: True
     percent_duplicates: False
     percent_gc: False
   cutadapt:
     percent_trimmed: True
   "FASTQC (trimmed)":
     median_sequence_length: True
-    percent_trimmed: True
+    total_sequences: True
     percent_duplicates: False
     percent_gc: False
   "BOWTIE ncRNA Alignment":
