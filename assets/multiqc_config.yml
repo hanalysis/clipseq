@@ -246,11 +246,11 @@ sp:
   peaks_xlinksite_coverage:
     fn: "peaks_xlinksite_coverage.tsv"
   deseq2_qc_plot_1:
-    fn: "*1_mqc.png"
+    fn: "*1.png"
   deseq2_qc_plot_2:
-    fn: "*2_mqc.png"
+    fn: "*2.png"
   deseq2_qc_heatmap:
-    fn: "*heatmap_mqc.png"
+    fn: "*heatmap.png"
   summary_type:
     fn: "summary_type_metrics.tsv"
   summary_subtype:
