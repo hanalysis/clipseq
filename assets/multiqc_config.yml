@@ -187,11 +187,11 @@ custom_data:
   deseq2_qc_plot_1:
       parent_id: deseq2_qc
       parent_name: PCA
-      section_name: "PCA analysis of consensus peaks"
+      section_name: "PCA analysis of top 500 consensus peaks"
   deseq2_qc_plot_2:
       parent_id: deseq2_qc
       parent_name: PCA
-      section_name: "PCA analysis of consensus peaks 2"
+      section_name: "PCA analysis of all consensus peaks"
   deseq2_qc_heatmap:
       parent_id: deseq2_qc
       parent_name: Heatmap
