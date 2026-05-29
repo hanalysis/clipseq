@@ -22,6 +22,7 @@ suppressPackageStartupMessages({
     library(ggplot2)
     library(RColorBrewer)
     library(pheatmap)
+    library(ggrepel)
 })
 
 ################################################
@@ -183,7 +184,7 @@ for (n_top_var in ntop) {
     plot_subtitle <- ifelse(n_top_var==Inf, "All peaks", paste("Top", n_top_var, "peaks"))
     plots[[index]] <- ggplot(pca.data, aes(PC1, PC2, label=paste0(" ", sample, " "))) +
         geom_point() +
-        geom_text(check_overlap=TRUE, vjust=0.5, hjust="inward") +
+        geom_text_repel() +
         xlab(paste0("PC1: ",percentVar[1],"% variance")) +
         ylab(paste0("PC2: ",percentVar[2],"% variance")) +
         labs(title = paste0("First PCs on ", vst_name, "-transformed data"), subtitle = plot_subtitle) +
