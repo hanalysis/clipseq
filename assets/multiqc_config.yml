@@ -94,7 +94,7 @@ custom_data:
       - total_positions_of_crosslinks
     pconfig:
       ylab: "Count"
-      stacking: null
+      stacking: "group"
       cpswitch: False
       tt_percentages: False
   crosslinks_ratio:
@@ -124,7 +124,7 @@ custom_data:
       - pureclip
     pconfig:
       ylab: "Number of peaks"
-      stacking: null
+      stacking: "group"
       cpswitch: False
       tt_percentages: False
   xlinks_in_peaks:
@@ -141,7 +141,7 @@ custom_data:
       - pureclip
     pconfig:
       ylab: "Percentage of crosslinks"
-      stacking: null
+      stacking: "group"
       cpswitch: False
       tt_percentages: False
       tt_decimals: 2
@@ -207,10 +207,10 @@ custom_data:
       - CDS
       - ncRNA
       - intergenic
-      - premapped RNA
+      - "premapped RNA"
     pconfig:
       ylab: "Type"
-      stacking: null
+      stacking: "group"
       cpswitch: False
       tt_percentages: False
   summary_subtype:
