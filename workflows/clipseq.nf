@@ -96,6 +96,7 @@ include { DUMP_SOFTWARE_VERSIONS                                          } from
 include { CLIPQC                                                          } from '../modules/local/clipqc'
 include { LINUX_COMMAND as CONSENSUS_CROSSLINKS_REORDER_BED               } from '../modules/local/linux_command'
 include { MERGE_SUMMARY                                                   } from '../modules/local/merge_summary'
+include { PEKA_MQC_PLOTS                                              } from '../modules/local/peka_mqc_plots'
 
 
 //
@@ -509,9 +510,10 @@ workflow CLIPSEQ {
     ch_peka_pureclip_peaks          = Channel.empty()
 
 
-    // Create empty channel for DESEQ2_QC for conditional use
+    // Create empty channel for DESEQ2_QC and PEKA_MQC_PLOTS for conditional use
     // initialise before the if(params.run_peakcalling) block
     ch_deseq2_qc_plots = Channel.empty()
+    ch_peka_mqc_plots = Channel.empty()
 
     if(params.run_peakcalling) {
 
@@ -556,6 +558,7 @@ workflow CLIPSEQ {
                     ch_regions_used.map{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_CLIPPY.out.versions)
+                ch_peka_mqc_plots = ch_peka_mqc_plots.mix(PEKA_CLIPPY.out.distribution)
             }
 
         }
@@ -608,6 +611,7 @@ workflow CLIPSEQ {
                     ch_regions_used.map{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_ICOUNT.out.versions)
+                ch_peka_mqc_plots = ch_peka_mqc_plots.mix(PEKA_ICOUNT.out.distribution)
             }
 
         }
@@ -654,6 +658,7 @@ workflow CLIPSEQ {
                     ch_regions_used.map{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_PARACLU.out.versions)
+                ch_peka_mqc_plots = ch_peka_mqc_plots.mix(PEKA_PARACLU.out.distribution)
             }
         }
 
@@ -750,6 +755,7 @@ workflow CLIPSEQ {
                     ch_regions_used.map{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_PURECLIP.out.versions)
+                ch_peka_mqc_plots = ch_peka_mqc_plots.mix(PEKA_PURECLIP.out.distribution)
             }
         }
     }
@@ -784,6 +790,12 @@ workflow CLIPSEQ {
             //CLIPPY_GENOME.out.peaks.map{ it[1] }
         )
 
+        // MODULE: Run peka multiqc plots
+
+        PEKA_MQC_PLOTS (
+            ch_peka_mqc_plots.collect{ it[1] }.flatten().collect()
+        )
+
         //
         // MODULE: Run multiqc
         //
@@ -806,6 +818,7 @@ workflow CLIPSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(ch_genome_log.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(CLIPQC.out.tsv.collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(ch_deseq2_qc_plots.flatten().collect().ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(PEKA_MQC_PLOTS.out.plots.collect{it[1]}.ifEmpty([]))
 
         ch_tmp = ch_ncrna_log.collect{it[1]}
 

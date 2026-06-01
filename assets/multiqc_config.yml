@@ -196,6 +196,12 @@ custom_data:
       parent_id: deseq2_qc
       parent_name: Heatmap
       section_name: "Heatmap of consensus peaks"
+  peka_mqc_plots_clustermap:
+      parent_id: peka_mqc
+      section_name: "PEKA clustermap"
+  peka_mqc_plots_heatmap:
+      parent_id: peka_mqc
+      section_name: "PEKA heatmap"
   summary_type:
     parent_id: Summary
     parent_name: "Summary"
@@ -250,7 +256,11 @@ sp:
   deseq2_qc_plot_2:
     fn: "*2.png"
   deseq2_qc_heatmap:
-    fn: "*heatmap.png"
+    fn: "*correlation_heatmap.png"
+  peka_mqc_plots_clustermap:
+    fn: "*clustermap.png"
+  peka_mqc_plots_heatmap:
+    fn: "*kmer_heatmap.png"
   summary_type:
     fn: "summary_type_metrics.tsv"
   summary_subtype:
