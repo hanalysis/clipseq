@@ -19,7 +19,7 @@ process PEKA_MQC_PLOTS {
 
     // Klara's PEKA MQC script
     """
-    python ${projectDir}/modules/local/peka_mqc_plots/templates/peka_multiqc_summary.py --tsv_string "${ch_peka_mqc_plots.join(' ')}"
+    python ${projectDir}/modules/local/peka_mqc_plots/templates/peka_multiqc_summary.py ${ch_peka_mqc_plots.join(' ')}
     """
 
     stub:
