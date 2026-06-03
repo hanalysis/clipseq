@@ -245,11 +245,11 @@ dev.off()
 
 ## Save PCA plots and correlation heatmap separately to include in MULTIQC
 
-png(filename = paste0(plot_titles[1], "_1.png"), width = 7, height = 7, units = "in", res = 300)
+png(filename = paste0(plot_titles[1], "_1.png"), width = 3, height = 3, units = "in", res = 300)
 print(plots[[1]])
 dev.off()
 
-png(filename = paste0(plot_titles[2], "_2.png"), width = 7, height = 7, units = "in", res = 300)
+png(filename = paste0(plot_titles[2], "_2.png"), width = 3, height = 3, units = "in", res = 300)
 print(plots[[2]])
 dev.off()
 

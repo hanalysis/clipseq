@@ -818,7 +818,7 @@ workflow CLIPSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(ch_genome_log.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(CLIPQC.out.tsv.collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(ch_deseq2_qc_plots.flatten().collect().ifEmpty([]))
-        ch_multiqc_files = ch_multiqc_files.mix(PEKA_MQC_PLOTS.out.plots.collect{it[1]}.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(PEKA_MQC_PLOTS.out.plots.flatten().collect().ifEmpty([]))
 
         ch_tmp = ch_ncrna_log.collect{it[1]}
 
