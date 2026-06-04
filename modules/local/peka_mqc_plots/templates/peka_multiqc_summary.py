@@ -67,12 +67,12 @@ def plot_topk_heatmap(zmat, out_png, cluster=True, topk=20):
             sub,
             cmap='Blues',
             figsize=(sub.shape[1]*0.6, sub.shape[0]*0.4),
-            dendrogram_ratio=(.1, .4),
+            dendrogram_ratio=(.1, .1),
         )
         cg.fig.suptitle(f'Top {topk} k-mers per sample')
         cg.savefig(out_png)
         plt.close(cg.fig)
-    
+
         # SIZE ADJUST, move cbar, perhaps make into a heatmap instead of clustermap - add dendrogram separately.Font adjustment, always position words parallel to x-axis
         # CHANGE INPUT TO PATH - script collects samples itself
 
@@ -95,7 +95,7 @@ def main():
     p.add_argument('-o', '--outdir', type=Path, default=Path('.'),
                    help='output directory for PNGs')
     args = p.parse_args()
-    
+
     # convert input string to Path objects
     tsv_paths = [Path(x) for x in args.tsv_string.split()]
 
