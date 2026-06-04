@@ -5,9 +5,11 @@
 //
 // MODULES
 //
+
+include { LINUX_COMMAND as CONSENSUS_PEAKS_SORT  } from '../../modules/local/linux_command'
+include { LINUX_COMMAND as CROSSLINKS_SORT       } from '../../modules/local/linux_command'
+include { LINUX_COMMAND as SORT_FAI              } from '../../modules/local/linux_command'
 include { DESEQ2_QC              } from '../../modules/local/deseq2_qc'
-include { BEDTOOLS_SORT as CONSENSUS_PEAKS_SORT  } from '../../modules/nf-core/bedtools/sort/main'
-include { BEDTOOLS_SORT as CROSSLINKS_SORT       } from '../../modules/nf-core/bedtools/sort/main'
 include { BEDTOOLS_MAP  as CONSENSUS_MAP         } from '../../modules/nf-core/bedtools/map/main'
 //
 // SUBWORKFLOWS
@@ -30,27 +32,34 @@ workflow CONSENSUS_PEAK_TABLE {
     main:
     ch_versions = Channel.empty()
 
+    SORT_FAI (
+        genome_fai,
+        [],
+        false
+    )
     // Sort consensus peaks according to genome file order
     CONSENSUS_PEAKS_SORT (
         consensus_peaks,
-        genome_fai.map{ it[1] }
+        [],
+        false
     )
 
     // Sort crosslinks according to genome file order
     CROSSLINKS_SORT (
         all_crosslinks,
-        genome_fai.map{ it[1] }
+        [],
+        false
     )
 
     // Combine sorted peaks with sorted crosslinks
-    CONSENSUS_PEAKS_SORT.out.sorted
-        .combine(CROSSLINKS_SORT.out.sorted)
+    CONSENSUS_PEAKS_SORT.out.file
+        .combine(CROSSLINKS_SORT.out.file)
         .map{ meta1, consensuspeaks, meta2, crosslink -> [meta2, consensuspeaks, crosslink] }
         .set { ch_consensus_map }
 
     CONSENSUS_MAP (
         ch_consensus_map,
-        genome_fai,
+        SORT_FAI.out.file
     )
 
     CONSENSUS_MAP.out.mapped

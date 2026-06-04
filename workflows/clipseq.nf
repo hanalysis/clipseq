@@ -96,6 +96,7 @@ include { DUMP_SOFTWARE_VERSIONS                                          } from
 include { CLIPQC                                                          } from '../modules/local/clipqc'
 include { LINUX_COMMAND as CONSENSUS_CROSSLINKS_REORDER_BED               } from '../modules/local/linux_command'
 include { MERGE_SUMMARY                                                   } from '../modules/local/merge_summary'
+include { ENCODE_MOVEUMI                                                  } from '../modules/local/encode_moveumi/main'
 include { PEKA_MQC_PLOTS                                              } from '../modules/local/peka_mqc_plots'
 
 
@@ -115,7 +116,7 @@ include { TRANSCRIPTOME_PROCESSING                                              
 include { CONSENSUS_PEAK_TABLE as CLIPPY_CONSENSUS_PEAK_TABLE                   } from '../subworkflows/local/consensus_peak_table'
 include { CONSENSUS_PEAK_TABLE as PARACLU_CONSENSUS_PEAK_TABLE                  } from '../subworkflows/local/consensus_peak_table'
 include { CONSENSUS_PEAK_TABLE as ICOUNT_CONSENSUS_PEAK_TABLE                   } from '../subworkflows/local/consensus_peak_table'
-
+include { MERGE_AND_SORT_TELESCOPE_BAMS                                         } from '../subworkflows/local/merge_and_sort_telescope_bams'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -129,7 +130,7 @@ include { CONSENSUS_PEAK_TABLE as ICOUNT_CONSENSUS_PEAK_TABLE                   
 
 
 include { BEDTOOLS_GROUPBY as CONSENSUS_CROSSLINKS_BEDTOOLS_GROUPBY } from '../modules/nf-core/bedtools/groupby/main'
-include { BEDTOOLS_SORT as CONSENSUS_CROSSLINKS_BEDTOOLS_SORT       } from '../modules/nf-core/bedtools/sort/main'
+include { LINUX_COMMAND as CONSENSUS_CROSSLINKS_SORT                } from '../modules/local/linux_command'
 include { BEDTOOLS_MAP as CLIPPY_CONSENSUS_MAP                      } from '../modules/nf-core/bedtools/map/main'
 include { CAT_CAT as CONSENSUS_CROSSLINKS_CAT_CAT                   } from '../modules/nf-core/cat/cat/main'
 include { MULTIQC                                                   } from '../modules/nf-core/multiqc/main'
@@ -153,6 +154,13 @@ include { PEKA as PEKA_PURECLIP                                     } from '../m
 include { ICOUNTMINI_SUMMARY                                        } from '../modules/nf-core/icountmini/summary/main'
 include { ICOUNTMINI_METAGENE                                       } from '../modules/nf-core/icountmini/metagene/main'
 
+include { TETRANSCRIPTS                                             } from '../modules/nf-core/tetranscripts/main'
+include { TELESCOPE_ASSIGN                                          } from '../modules/nf-core/telescope/assign/main'
+include { SAMTOOLS_VIEW as FILTER_UNIQUE_MAP_UPDATED                } from '../modules/nf-core/samtools/view/main'
+include { SAMTOOLS_VIEW as FILTER_UNIQUE_MAP_OTHER                  } from '../modules/nf-core/samtools/view/main'
+include { SAMTOOLS_MERGE as MERGE_TE_BAMS                           } from '../modules/nf-core/samtools/merge/main'
+include { SAMTOOLS_SORT as SORT_TE_BAMS                           } from '../modules/nf-core/samtools/sort/main'
+include { SAMTOOLS_INDEX as INDEX_TE_BAMS                           } from '../modules/nf-core/samtools/index/main'
 
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
@@ -270,7 +278,13 @@ workflow CLIPSEQ {
     }
     //EXAMPLE CHANNEL STRUCT: [[sample_name:h3k27me3_R1, group_name:h3k27me3, input_name:input, single_end:true, fastq:dsgsgh.fq.gz], [FASTQ]]
     // ch_fastq | view
-
+    if(params.encode_eclip){
+        ENCODE_MOVEUMI (
+            ch_fastq
+        )
+        ch_versions = ch_versions.mix(ENCODE_MOVEUMI.out.versions)
+        ch_fastq    = ENCODE_MOVEUMI.out.reads
+    }
     //
     // SUBWORKFLOW: Extract UMI, trim and run before and after fastqc
     //
@@ -294,6 +308,18 @@ workflow CLIPSEQ {
     // SUBWORKFLOW: Align reads to ncrna and primary genomes
     //
     if(params.source == "fastq" & params.run_alignment) {
+
+        ch_fastq
+            .view { "ALIGN FASTQ: $it" }
+        ch_ncrna_genome_index
+            .view { "ALIGN ncRNA: $it" }
+        ch_genome_index
+            .view { "ALIGN GENOME INDEX: $it" }
+        ch_gtf
+            .view { "ALIGN GTF: $it" }
+        ch_fasta
+            .view { "ALIGN FASTA: $it" }
+
         RNA_ALIGN (
             ch_fastq,
             ch_ncrna_genome_index,
@@ -392,6 +418,51 @@ workflow CLIPSEQ {
         //ch_umi_log      = NCRNA_K1_DEDUP.out.umi_log
     }
 
+    // TE quantifcation insert
+
+    if(params.run_te) {
+        // Check rmsk GTF has been provided
+        if (!params.tetranscripts_gtf) {
+            error "ERROR: --tetranscripts_gtf is required when --run_te is specified"
+        }
+        // Check rmsk GTF has been provided
+        if (!params.telescope_gtf) {
+            error "ERROR: --telescope_gtf is required when --run_te is specified"
+        }
+
+        ch_tetranscripts_gtf = Channel.value([[id: 'te_annotations'], file(params.tetranscripts_gtf, checkIfExists: true)])
+        ch_telescope_gtf = Channel.value([[id: 'te_annotations'], file(params.telescope_gtf, checkIfExists: true)])
+
+        // Faux control .bam as not using DESeq2 aspect of TEtranscripts
+        ch_bam_c = Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test.rna.paired_end.bam')
+             .map { file -> [[id: 'control'], file] }
+
+        ch_all_t_bams = GENOME_MULTI_DEDUP.out.bam
+            .map { meta, bam -> bam }
+            .collect()
+            .map { bams -> [[id: 'all_samples'], bams] }
+
+        TETRANSCRIPTS(
+            ch_all_t_bams, // tx bam
+            ch_bam_c, // control bam
+            ch_gtf, // genome GTF
+            ch_tetranscripts_gtf // te GTF
+        )
+
+        TELESCOPE_ASSIGN(
+            GENOME_MULTI_DEDUP.out.bam,
+            ch_telescope_gtf
+        )
+
+        MERGE_AND_SORT_TELESCOPE_BAMS(
+            TELESCOPE_ASSIGN.out.updated_bam,
+            TELESCOPE_ASSIGN.out.other_bam
+        )
+
+    ch_genome_unique_dedupe_bam = MERGE_AND_SORT_TELESCOPE_BAMS.out.bam
+    ch_genome_unique_dedupe_bai = MERGE_AND_SORT_TELESCOPE_BAMS.out.bai
+
+    }
     //
     // RESOLVE GROUPS AND GET CROSSLINKS: At this point, if groups have been specified, then we need to merge corresponding BAM files
     //
@@ -471,13 +542,14 @@ workflow CLIPSEQ {
                 ch_consensus_crosslinks_bed
             )
 
-            CONSENSUS_CROSSLINKS_BEDTOOLS_SORT(
+            CONSENSUS_CROSSLINKS_SORT(
                 CONSENSUS_CROSSLINKS_CAT_CAT.out.file_out,
-                []
+                [],
+                false
             )
             // sum the counts to remove repeat entries
             CONSENSUS_CROSSLINKS_BEDTOOLS_GROUPBY(
-                CONSENSUS_CROSSLINKS_BEDTOOLS_SORT.out.sorted,
+                CONSENSUS_CROSSLINKS_SORT.out.file,
                 5
             )
 
@@ -601,6 +673,37 @@ workflow CLIPSEQ {
 
             ch_versions                      = ch_versions.mix(GUNZIP_ICOUNTMINI_PEAKS.out.versions)
             ch_icountmini_peaks              = GUNZIP_ICOUNTMINI_PEAKS.out.gunzip
+
+            if(params.consensus_peak){
+                CONSENSUS_ICOUNTMINI_SIGXLS (
+                    ch_consensus_crosslinks_final_bed,
+                    ch_seg_gtf.map{ it[1]}
+                )
+                // CHANNEL: Create combined channel of input crosslinks and sigxls
+                ch_consensus_peaks_input = ch_consensus_crosslinks_final_bed
+                    .map{ [ it[0].id, it[0], it[1] ] }
+                    .join( CONSENSUS_ICOUNTMINI_SIGXLS.out.sigxls.map{ [ it[0].id, it[0], it[1] ] } )
+                    .map { [ it[1], it[2], it[4] ] }
+                //EXAMPLE CHANNEL STRUCT: [ [id:test], BED(crosslinks), BED(sigxls) ]
+                CONSENSUS_ICOUNTMINI_PEAKS (
+                    ch_consensus_peaks_input
+                )
+                ch_consensus_peaks = CONSENSUS_ICOUNTMINI_PEAKS.out.peaks
+                CONSENSUS_GUNZIP_ICOUNTMINI_SIGXLS (
+                    CONSENSUS_ICOUNTMINI_SIGXLS.out.sigxls
+                )
+                CONSENSUS_GUNZIP_ICOUNTMINI_PEAKS (
+                    CONSENSUS_ICOUNTMINI_PEAKS.out.peaks
+                )
+                ICOUNT_CONSENSUS_PEAK_TABLE (
+                    ch_all_crosslinks,
+                    CONSENSUS_GUNZIP_ICOUNTMINI_PEAKS.out.gunzip,
+                    ch_fasta_fai,
+                    ch_regions_used,
+                    "iCount-Mini_Consensus_AllCounts.tsv"
+                )
+                ch_versions = ch_versions.mix(ICOUNT_CONSENSUS_PEAK_TABLE.out.versions)
+            }
 
             if(params.run_peka) {
                 PEKA_ICOUNT (

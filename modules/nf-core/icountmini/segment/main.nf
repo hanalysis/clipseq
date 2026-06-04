@@ -1,6 +1,6 @@
 process ICOUNTMINI_SEGMENT {
     tag "$gtf"
-    label "process_single"
+    label "process_high"
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

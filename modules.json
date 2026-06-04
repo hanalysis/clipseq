@@ -132,7 +132,7 @@
                     },
                     "samtools/faidx": {
                         "branch": "master",
-                        "git_sha": "b75d04926473d07bb85c08df19531f37bcf5fd4a",
+                        "git_sha": "b2e78932ef01165fd85829513eaca29eff8e640a",
                         "installed_by": ["modules"]
                     },
                     "samtools/flagstat": {
@@ -178,6 +178,11 @@
                     "star/genomegenerate": {
                         "branch": "master",
                         "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": ["modules"]
+                    },
+                    "tetranscripts": {
+                        "branch": "master",
+                        "git_sha": "debd168650ce6692d489c02e9db709eaebc9a1e5",
                         "installed_by": ["modules"]
                     },
                     "trimgalore": {
