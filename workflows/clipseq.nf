@@ -52,9 +52,16 @@ if ((caller_list + callers).unique().size() != caller_list.size()) {
     exit 1, "Invalid variant caller option: ${params.peakcaller}. Valid options: ${caller_list.join(', ')}"
 }
 
+// Creating a channel of callers to pass to CLIPQC later
+ch_callers = Channel.value(callers)
+
 // // Stage dummy files to be used as an optional input where required
 ch_dummy_file  = file("$projectDir/assets/dummy_file.txt", checkIfExists: true)
 ch_dummy_file2 = file("$projectDir/assets/dummy_file2.txt", checkIfExists: true)
+
+// deseq2 header files:
+ch_multiqc_merged_replicate_deseq2_pca_header        = file("$projectDir/assets/merged_replicate_deseq2_pca_header.txt", checkIfExists: true)
+ch_multiqc_merged_replicate_deseq2_clustering_header = file("$projectDir/assets/merged_replicate_deseq2_clustering_header.txt", checkIfExists: true)
 
 // // Check if an AWS iGenome has been provided to use the appropriate version of STAR
 // def is_aws_igenome = false
@@ -90,6 +97,7 @@ include { CLIPQC                                                          } from
 include { LINUX_COMMAND as CONSENSUS_CROSSLINKS_REORDER_BED               } from '../modules/local/linux_command'
 include { MERGE_SUMMARY                                                   } from '../modules/local/merge_summary'
 include { ENCODE_MOVEUMI                                                  } from '../modules/local/encode_moveumi/main'
+include { PEKA_MQC_PLOTS                                              } from '../modules/local/peka_mqc_plots'
 
 
 //
@@ -134,10 +142,6 @@ include { ICOUNTMINI_PEAKS                                          } from "../m
 include { GUNZIP as GUNZIP_ICOUNTMINI_SIGXLS                        } from "../modules/nf-core/gunzip/main"
 include { GUNZIP as GUNZIP_ICOUNTMINI_PEAKS                         } from "../modules/nf-core/gunzip/main"
 
-include { ICOUNTMINI_SIGXLS as CONSENSUS_ICOUNTMINI_SIGXLS          } from "../modules/nf-core/icountmini/sigxls/main"
-include { ICOUNTMINI_PEAKS as CONSENSUS_ICOUNTMINI_PEAKS            } from "../modules/nf-core/icountmini/peaks/main"
-include { GUNZIP as CONSENSUS_GUNZIP_ICOUNTMINI_SIGXLS              } from "../modules/nf-core/gunzip/main"
-include { GUNZIP as CONSENSUS_GUNZIP_ICOUNTMINI_PEAKS               } from "../modules/nf-core/gunzip/main"
 include { PARACLU as PARACLU_GENOME                                 } from "../modules/nf-core/paraclu/main"
 include { PARACLU as PARACLU_GENOME_CONSENSUS                       } from "../modules/nf-core/paraclu/main"
 
@@ -259,6 +263,7 @@ workflow CLIPSEQ {
         ch_ncrna_genome_index                = PREPARE_GENOME.out.ncrna_index.collect()
     }
 
+
     //
     // SUBWORKFLOW: Read in samplesheet, validate, stage input files and merge replicates
     //
@@ -281,7 +286,7 @@ workflow CLIPSEQ {
         ch_fastq    = ENCODE_MOVEUMI.out.reads
     }
     //
-    // SUBWORKFLOW: Extract UMI, trim and run b4 and after fastqc
+    // SUBWORKFLOW: Extract UMI, trim and run before and after fastqc
     //
     if(params.source == "fastq" & params.run_preprocessing) {
         FASTQ_FASTQC_UMITOOLS_TRIMGALORE (
@@ -392,7 +397,7 @@ workflow CLIPSEQ {
         ch_versions   = ch_versions.mix(GENOME_UNIQUE_DEDUP.out.versions)
         ch_genome_unique_dedupe_bam = GENOME_UNIQUE_DEDUP.out.bam
         ch_genome_unique_dedupe_bai = GENOME_UNIQUE_DEDUP.out.bai
-        //ch_umi_log    = GENOME_UNIQUE_DEDUP.out.umi_log
+        ch_umi_log    = GENOME_UNIQUE_DEDUP.out.umi_log
 
         GENOME_MULTI_DEDUP (
             ch_genome_multi_bam_bai
@@ -511,6 +516,10 @@ workflow CLIPSEQ {
             ch_merged_summaries
         )
         ch_versions = ch_versions.mix(MERGE_SUMMARY.out.versions)
+        ch_merged_summary_type = MERGE_SUMMARY.out.summary_type_adjusted
+        ch_merged_summary_subtype = MERGE_SUMMARY.out.summary_subtype_adjusted
+        ch_merged_summary_gene = MERGE_SUMMARY.out.summary_gene_adjusted
+
 
         ICOUNTMINI_METAGENE (
             ch_genome_crosslink_group_resolved_bed,
@@ -564,6 +573,20 @@ workflow CLIPSEQ {
     ch_icountmini_sigxls            = Channel.empty()
     ch_paraclu_genome_peaks         = Channel.empty()
 
+    //
+    // PEKA CHANNELS
+    //
+    ch_peka_icountmini_peaks        = Channel.empty()
+    ch_peka_clippy_peaks            = Channel.empty()
+    ch_peka_paraclu_peaks           = Channel.empty()
+    ch_peka_pureclip_peaks          = Channel.empty()
+
+
+    // Create empty channel for DESEQ2_QC and PEKA_MQC_PLOTS for conditional use
+    // initialise before the if(params.run_peakcalling) block
+    ch_deseq2_qc_plots = Channel.empty()
+    ch_peka_mqc_plots = Channel.empty()
+
     if(params.run_peakcalling) {
 
         if('clippy' in callers) {
@@ -586,11 +609,16 @@ workflow CLIPSEQ {
                 CLIPPY_CONSENSUS_PEAK_TABLE (
                     ch_all_crosslinks,
                     CLIPPY_GENOME_CONSENSUS.out.peaks,
+                    ch_fasta,
                     ch_fasta_fai,
                     ch_regions_used,
-                    "Clippy_Consensus_AllCounts.tsv"
+                    "Clippy_Consensus_AllCounts.tsv",
+                    ch_multiqc_merged_replicate_deseq2_pca_header,
+                    ch_multiqc_merged_replicate_deseq2_clustering_header,
+                    params.skip_deseq2_qc
                 )
                 ch_versions = ch_versions.mix(CLIPPY_CONSENSUS_PEAK_TABLE.out.versions)
+                ch_deseq2_qc_plots = ch_deseq2_qc_plots.mix(CLIPPY_CONSENSUS_PEAK_TABLE.out.deseq2_qc_plots)
             }
 
             if(params.run_peka) {
@@ -602,6 +630,7 @@ workflow CLIPSEQ {
                     ch_regions_used.map{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_CLIPPY.out.versions)
+                ch_peka_mqc_plots = ch_peka_mqc_plots.mix(PEKA_CLIPPY.out.distribution)
             }
 
         }
@@ -685,6 +714,7 @@ workflow CLIPSEQ {
                     ch_regions_used.map{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_ICOUNT.out.versions)
+                ch_peka_mqc_plots = ch_peka_mqc_plots.mix(PEKA_ICOUNT.out.distribution)
             }
 
         }
@@ -710,11 +740,16 @@ workflow CLIPSEQ {
                 PARACLU_CONSENSUS_PEAK_TABLE (
                     ch_all_crosslinks,
                     PARACLU_GENOME_CONSENSUS.out.bed,
+                    ch_fasta,
                     ch_fasta_fai,
                     ch_regions_used,
-                    "Paraclu_Consensus_AllCounts.tsv"
+                    "Paraclu_Consensus_AllCounts.tsv",
+                    ch_multiqc_merged_replicate_deseq2_pca_header,
+                    ch_multiqc_merged_replicate_deseq2_clustering_header,
+                    params.skip_deseq2_qc
                 )
                 ch_versions = ch_versions.mix(PARACLU_CONSENSUS_PEAK_TABLE.out.versions)
+                ch_deseq2_qc_plots = ch_deseq2_qc_plots.mix(PARACLU_CONSENSUS_PEAK_TABLE.out.deseq2_qc_plots)
             }
 
             if(params.run_peka) {
@@ -726,6 +761,7 @@ workflow CLIPSEQ {
                     ch_regions_used.map{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_PARACLU.out.versions)
+                ch_peka_mqc_plots = ch_peka_mqc_plots.mix(PEKA_PARACLU.out.distribution)
             }
         }
 
@@ -822,30 +858,46 @@ workflow CLIPSEQ {
                     ch_regions_used.map{ it[1] }
                 )
                 ch_versions = ch_versions.mix(PEKA_PURECLIP.out.versions)
+                ch_peka_mqc_plots = ch_peka_mqc_plots.mix(PEKA_PURECLIP.out.distribution)
             }
         }
     }
 
     if(params.run_reporting) {
-        //
+
         // MODULE: Collect software versions
-        //
-        DUMP_SOFTWARE_VERSIONS (
-            ch_versions.unique().collectFile()
+
+        // DUMP_SOFTWARE_VERSIONS (
+        //     ch_versions.unique().collectFile()
+        // )
+
+
+       // MODULE: Run clipqc
+
+        CLIPQC (
+            ch_callers,
+            ch_ncrna_log.collect{ it[1] },
+            ch_genome_log.collect{ it[1] },
+            ch_umi_log.collect{ it[1] },
+            ch_genome_crosslink_group_resolved_bed.collect{ it[1] },
+            'icount' in callers ? ch_icountmini_peaks.collect{ it[1] } : [],
+            'paraclu' in callers ? ch_paraclu_genome_peaks.collect {it[1]} : [],
+            'clippy' in callers ? ch_clippy_genome_peaks.collect {it[1]} : [],
+            'pureclip' in callers ? ch_pureclip_genome_peaks.collect {it[1] } : [],
+            ch_merged_summary_type.collect{it[1]},
+            ch_merged_summary_subtype.collect{it[1]},
+            ch_merged_summary_gene.collect{it[1]},
+
+            //ICOUNT_ANALYSE.out.bed_peaks.map{ it[1] },
+            //PARACLU_ANALYSE_GENOME.out.peaks.map{ it[1] },
+            //CLIPPY_GENOME.out.peaks.map{ it[1] }
         )
 
-        //
-        // MODULE: Run clipqc
-        //
-        // CLIPSEQ_CLIPQC (
-        //     ch_bt_log.map{ it[1] },
-        //     ch_star_log.map{ it[1] },
-        //     ch_umi_log.map{ it[1] },
-        //     ch_genome_crosslink_bed.map{ it[1] },
-        //     ICOUNT_ANALYSE.out.bed_peaks.map{ it[1] },
-        //     PARACLU_ANALYSE_GENOME.out.peaks.map{ it[1] },
-        //     CLIPPY_GENOME.out.peaks.map{ it[1] }
-        // )
+        // MODULE: Run peka multiqc plots
+
+        PEKA_MQC_PLOTS (
+            ch_peka_mqc_plots.collect{ it[1] }.flatten().collect()
+        )
 
         //
         // MODULE: Run multiqc
@@ -859,14 +911,19 @@ workflow CLIPSEQ {
         ch_multiqc_files = Channel.empty()
         ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
         ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
-        ch_multiqc_files = ch_multiqc_files.mix(DUMP_SOFTWARE_VERSIONS.out.mqc_yml.collect())
-        ch_multiqc_files = ch_multiqc_files.mix(DUMP_SOFTWARE_VERSIONS.out.mqc_unique_yml.collect())
+        //ch_multiqc_files = ch_multiqc_files.mix(DUMP_SOFTWARE_VERSIONS.out.mqc_yml.collect())
+        //ch_multiqc_files = ch_multiqc_files.mix(DUMP_SOFTWARE_VERSIONS.out.mqc_unique_yml.collect())
 
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.fastqc_zip.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_zip.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_log.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(ch_ncrna_log.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(ch_genome_log.collect{it[1]}.ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(CLIPQC.out.tsv.collect().ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(ch_deseq2_qc_plots.flatten().collect().ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(PEKA_MQC_PLOTS.out.plots.flatten().collect().ifEmpty([]))
+
+        ch_tmp = ch_ncrna_log.collect{it[1]}
 
         MULTIQC (
             ch_multiqc_files.collect(),
