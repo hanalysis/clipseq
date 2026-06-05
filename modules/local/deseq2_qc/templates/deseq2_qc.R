@@ -193,7 +193,7 @@ for (n_top_var in ntop) {
             panel.grid.minor = element_blank(),
             panel.background = element_blank(),
             panel.border = element_rect(colour = "black", fill=NA, size=1),
-            text = element_size(size = 7))
+            text = element_text(size = 7))
     print(plots[[index]])
     plot_titles[[index]] <- gsub(" ", "_", paste0("First PCs on ", vst_name, "-transformed data"))
 
@@ -211,7 +211,7 @@ for (n_top_var in ntop) {
             labs(x=NULL, y=NULL, subtitle = plot_subtitle, title="PCs split by sample-name prefixes") +
             facet_grid(component~grouper, scales="free_x") +
             scale_x_discrete(guide = guide_axis(n.dodge = 3)) +
-            theme(text = element_size(size = 7))
+            theme(text = element_text(size = 7))
         print(plots[[index]])
         plot_titles[[index]] <- gsub(" ", "_", "PCs split by sample-name prefixes")
     }
