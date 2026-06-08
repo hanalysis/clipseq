@@ -32,12 +32,12 @@ process TELESCOPE_ASSIGN {
     echo -n "" > "$prefix"_telescope.log
 
     telescope \\
-        assign \\
-        $bam \\
-        $gtf \\
-        --project $prefix \\
-        $args \\
-        > "$prefix"_telescope.log 2>&1
+    assign \\
+    $bam \\
+    $gtf \\
+    --project $prefix \\
+    $args \\
+    > "$prefix"_telescope.log 2>&1
 
     """
 
