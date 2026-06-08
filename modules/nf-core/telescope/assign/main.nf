@@ -29,14 +29,15 @@ process TELESCOPE_ASSIGN {
 
     """
 
-    echo -n "" > telescope.log
+    echo -n "" > "$prefix"_telescope.log
 
     telescope \\
         assign \\
         $bam \\
         $gtf \\
+        --project $prefix \\
         $args \\
-        > telescope.log 2>&1
+        > "$prefix"_telescope.log 2>&1
 
     """
 
