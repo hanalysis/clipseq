@@ -35,7 +35,7 @@ process TELESCOPE_ASSIGN {
     assign \\
     $bam \\
     $gtf \\
-    --project $prefix \\
+    --exp_tag $prefix \\
     $args \\
     > "$prefix"_telescope.log 2>&1
 
