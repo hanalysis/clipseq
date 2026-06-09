@@ -82,6 +82,55 @@ custom_data:
       #stacking: False
       cpswitch: False
       tt_percentages: False
+  telescope_genome_qc:
+    parent_id: TE qc
+    parent_name: "TE QC"
+    file_format: "tsv"
+    section_name: "Genome"
+    description: "Telescope output from mapping to reference genome"
+    parent_description: "QC metrics from telescope"
+    plot_type: "bargraph"
+    cats:
+      - "Fragments mapped to reference"
+      - "Unique alignments"
+      - "Multiple alignments"
+    pconfig:
+      ylab: "Reads"
+      stacking: "group"
+      cpswitch: False
+      tt_percentages: False
+  telescope_annotation_qc:
+    parent_id: TE qc
+    parent_name: "TE QC"
+    file_format: "tsv"
+    section_name: "TE annotation"
+    description: "Telescope output from mapping to TE annotation"
+    plot_type: "bargraph"
+    cats:
+      - "Fragments mapped to TE annotation"
+      - "One locus"
+      - "Multiple loci"
+    pconfig:
+      ylab: "Reads"
+      stacking: "group"
+      cpswitch: False
+      tt_percentages: False
+  tetranscripts_qc:
+    parent_id: TE qc
+    parent_name: "TE QC"
+    file_format: "tsv"
+    section_name: "TEtranscripts QC"
+    description: "Mapped reads from TEtranscripts"
+    plot_type: "bargraph"
+    cats:
+     - "Total annotated reads"
+     - "Total multi-mapping reads"
+     - "Total unannotated reads"
+    pconfig:
+      ylab: "Reads"
+      stacking: "group"
+      cpswitch: False
+      tt_percentages: False
   crosslinks_counts:
     parent_id: crosslinks
     parent_name: "Crosslinks"
@@ -243,6 +292,12 @@ sp:
     fn: "dedup_reads.tsv"
   dedup_ratio:
     fn: "dedup_ratio.tsv"
+  telescope_genome_qc:
+    fn: "ref_genome_telescope_qc.tsv"
+  telescope_annotation_qc:
+    fn: "te_ann_telescope_qc.tsv"
+  tetranscripts_qc:
+    fn: "tetranscripts_qc.tsv"
   crosslinks_counts:
     fn: "xlinks_counts.tsv"
   crosslinks_ratio:

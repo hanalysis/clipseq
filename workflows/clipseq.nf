@@ -98,7 +98,7 @@ include { LINUX_COMMAND as CONSENSUS_CROSSLINKS_REORDER_BED               } from
 include { MERGE_SUMMARY                                                   } from '../modules/local/merge_summary'
 include { ENCODE_MOVEUMI                                                  } from '../modules/local/encode_moveumi/main'
 include { PEKA_MQC_PLOTS                                              } from '../modules/local/peka_mqc_plots'
-
+include { TE_QC } from '../modules/local/te_qc'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -462,6 +462,16 @@ workflow CLIPSEQ {
     ch_genome_unique_dedupe_bam = MERGE_AND_SORT_TELESCOPE_BAMS.out.bam
     ch_genome_unique_dedupe_bai = MERGE_AND_SORT_TELESCOPE_BAMS.out.bai
 
+        // Collect and merge for TE QC
+        ch_te_qc = TELESCOPE_ASSIGN.out.log
+            .map { meta, log -> log }
+            .collect()
+            .combine( TETRANSCRIPTS.out.log.map {meta, log -> log } )
+            .map { tel_logs, tetr_log -> tel_logs + [tetr_log]}
+
+        TE_QC(
+            ch_te_qc
+        )
     }
     //
     // RESOLVE GROUPS AND GET CROSSLINKS: At this point, if groups have been specified, then we need to merge corresponding BAM files
