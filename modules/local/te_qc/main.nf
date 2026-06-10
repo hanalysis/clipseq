@@ -1,5 +1,4 @@
 process TE_QC{
-    tag "$meta.id"
     label "process_single"
 
     container ''
@@ -17,7 +16,6 @@ process TE_QC{
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
 
@@ -33,7 +31,6 @@ process TE_QC{
 
     stub:
     """
-    touch ${meta.id}.png
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         python: \$(python --version | sed 's/Python //')
