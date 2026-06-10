@@ -932,6 +932,11 @@ workflow CLIPSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(ch_deseq2_qc_plots.flatten().collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(PEKA_MQC_PLOTS.out.plots.flatten().collect().ifEmpty([]))
 
+        if(params.run_te) {
+            ch_multiqc_files = ch_multiqc_files.mix(TE_QC.out.tele_qc.collect().ifEmpty([]))
+            ch_multiqc_files = ch_multiqc_files.mix(TE_QC.out.tetr_qc.collect().ifEmpty([]))
+            }
+
         ch_tmp = ch_ncrna_log.collect{it[1]}
 
         MULTIQC (
