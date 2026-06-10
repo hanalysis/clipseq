@@ -1,7 +1,7 @@
 process TE_QC{
     label "process_single"
 
-    container ''
+    container 'community.wave.seqera.io/library/pandas_python:75380848c527810f'
 
     input:
     path ch_te_qc
