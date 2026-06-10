@@ -193,7 +193,7 @@ for (n_top_var in ntop) {
             panel.grid.minor = element_blank(),
             panel.background = element_blank(),
             panel.border = element_rect(colour = "black", fill=NA, size=1),
-            text = element_text(size = 7))
+            text = element_text(size = 3))
     print(plots[[index]])
     plot_titles[[index]] <- gsub(" ", "_", paste0("First PCs on ", vst_name, "-transformed data"))
 
@@ -211,7 +211,7 @@ for (n_top_var in ntop) {
             labs(x=NULL, y=NULL, subtitle = plot_subtitle, title="PCs split by sample-name prefixes") +
             facet_grid(component~grouper, scales="free_x") +
             scale_x_discrete(guide = guide_axis(n.dodge = 3)) +
-            theme(text = element_text(size = 7))
+            theme(text = element_text(size = 3))
         print(plots[[index]])
         plot_titles[[index]] <- gsub(" ", "_", "PCs split by sample-name prefixes")
     }
@@ -235,7 +235,7 @@ corr_heatmap <- pheatmap(
     clustering_distance_rows=sampleDists,
     clustering_distance_cols=sampleDists,
     col=colors,
-    fontsize = 7,
+    fontsize = 3,
     main=paste("Euclidean distance between", vst_name, "of samples")
 )
 
@@ -248,15 +248,15 @@ dev.off()
 
 ## Save PCA plots and correlation heatmap separately to include in MULTIQC
 
-png(filename = paste0(plot_titles[1], "_1.png"), width = 3, height = 3, units = "in", res = 300)
+png(filename = paste0(plot_titles[1], "_1.png"), width = 2, height = 2, units = "in", res = 300)
 print(plots[[1]])
 dev.off()
 
-png(filename = paste0(plot_titles[2], "_2.png"), width = 3, height = 3, units = "in", res = 300)
+png(filename = paste0(plot_titles[2], "_2.png"), width = 2, height = 2, units = "in", res = 300)
 print(plots[[2]])
 dev.off()
 
-png(filename = "sample_correlation_heatmap.png", width = 7, height = 7, units = "in", res = 300)
+png(filename = "sample_correlation_heatmap.png", width = 2, height = 2, units = "in", res = 300)
 print(corr_heatmap)
 dev.off()
 
