@@ -467,8 +467,6 @@ workflow CLIPSEQ {
             .map { meta, log -> log }
             .mix(TETRANSCRIPTS.out.log.map { meta, log -> log })
             .collect()
-            .combine( TETRANSCRIPTS.out.log.map {meta, log -> log } )
-            .map { tel_logs, tetr_log -> tel_logs + [tetr_log]}
 
         TE_QC(
             ch_te_qc
