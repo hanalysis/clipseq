@@ -183,8 +183,8 @@ for (n_top_var in ntop) {
     percentVar    <- round(attr(pca.data, "percentVar")$percentVar)
     plot_subtitle <- ifelse(n_top_var==Inf, "All peaks", paste("Top", n_top_var, "peaks"))
     plots[[index]] <- ggplot(pca.data, aes(PC1, PC2, label=paste0(" ", sample, " "))) +
-        geom_point() +
-        geom_text_repel() +
+        geom_point(size = 1) +
+        geom_text_repel(size = 1, aes(segment.alpha=0.5, segment.size = 0.2)) +
         xlab(paste0("PC1: ",percentVar[1],"% variance")) +
         ylab(paste0("PC2: ",percentVar[2],"% variance")) +
         labs(title = paste0("First PCs on ", vst_name, "-transformed data"), subtitle = plot_subtitle) +
@@ -206,7 +206,7 @@ for (n_top_var in ntop) {
         long_pc_grp$component <- paste("PC", long_pc_grp$component)
         long_pc_grp$grouper <- paste0(long_pc_grp$grouper, c("st","nd","rd","th","th")[long_pc_grp$grouper], " prefix")
         plots[[index]]  <- ggplot(long_pc_grp, aes(x=Group, y=PC)) +
-            geom_point() +
+            geom_point(size = 1) +
             stat_summary(fun=mean, geom="line", aes(group = 1)) +
             labs(x=NULL, y=NULL, subtitle = plot_subtitle, title="PCs split by sample-name prefixes") +
             facet_grid(component~grouper, scales="free_x") +
@@ -236,6 +236,10 @@ corr_heatmap <- pheatmap(
     clustering_distance_cols=sampleDists,
     col=colors,
     fontsize = 3,
+    cellwidth = 10,
+    cellheight=10,
+    treeheight_row = 20,
+    treeheight_col = 20,
     main=paste("Euclidean distance between", vst_name, "of samples")
 )
 
