@@ -5,7 +5,8 @@ process ICOUNTMINI_SUMMARY_MQC{
      container 'community.wave.seqera.io/library/r-tidyverse:2.0.0--386074aa810af1c3'
 
      input:
-     path ch_icountmini_summary_qc
+     path summary_types
+     path summary_subtypes
 
      output:
      path "summary_subtype_qc.tsv", emit: subtype
