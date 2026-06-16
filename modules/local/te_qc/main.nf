@@ -4,7 +4,8 @@ process TE_QC{
     container 'community.wave.seqera.io/library/pandas_python:75380848c527810f'
 
     input:
-    path ch_te_qc
+    path summary_types
+    path summary_subtypes
 
     output:
     path "*telescope_qc.tsv", optional: true, emit: tele_qc

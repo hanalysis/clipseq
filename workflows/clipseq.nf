@@ -99,6 +99,7 @@ include { MERGE_SUMMARY                                                   } from
 include { ENCODE_MOVEUMI                                                  } from '../modules/local/encode_moveumi/main'
 include { PEKA_MQC_PLOTS                                              } from '../modules/local/peka_mqc_plots'
 include { TE_QC } from '../modules/local/te_qc'
+include { ICOUNTMINI_SUMMARY_MQC } from '../modules/local/icountmini_summary_mqc'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -524,11 +525,18 @@ workflow CLIPSEQ {
         MERGE_SUMMARY (
             ch_merged_summaries
         )
+
         ch_versions = ch_versions.mix(MERGE_SUMMARY.out.versions)
         ch_merged_summary_type = MERGE_SUMMARY.out.summary_type_adjusted
         ch_merged_summary_subtype = MERGE_SUMMARY.out.summary_subtype_adjusted
         ch_merged_summary_gene = MERGE_SUMMARY.out.summary_gene_adjusted
 
+        // ICOUNTMINI_MERGE reformatting for mqc
+
+        ICOUNTMINI_SUMMARY_MQC (
+             MERGE_SUMMARY.out.summary_type_adjusted   .map { meta, f -> f }.collect(),
+             MERGE_SUMMARY.out.summary_subtype_adjusted.map { meta, f -> f }.collect()
+        )
 
         ICOUNTMINI_METAGENE (
             ch_genome_crosslink_group_resolved_bed,
@@ -931,6 +939,11 @@ workflow CLIPSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(CLIPQC.out.tsv.collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(ch_deseq2_qc_plots.flatten().collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(PEKA_MQC_PLOTS.out.plots.flatten().collect().ifEmpty([]))
+
+        if(params.run_crosslinking) {
+            ch_multiqc_files = ch_multiqc_files.mix(ICOUNTMINI_SUMMARY_MQC.out.subtype.collect{it[1]}.ifEmpty([]))
+            ch_multiqc_files = ch_multiqc_files.mix(ICOUNTMINI_SUMMARY_MQC.out.type.collect{it[1]}.ifEmpty([]))
+        }
 
         if(params.run_te) {
             ch_multiqc_files = ch_multiqc_files.mix(TE_QC.out.tele_qc.collect().ifEmpty([]))

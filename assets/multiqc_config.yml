@@ -255,6 +255,18 @@ custom_data:
       parent_name: "Motif analysis (PEKA)"
       section_name: "PEKA heatmap"
       description: "Motif enrichment heatmap for the top 20 k-mers per sample"
+  icountmini_summary_mqc_subtype:
+      parent_id: icountmini
+      parent_name: "ICount-Mini summaries"
+      section_name: "Subtype"
+      description: "Crosslinks by subtype"
+      plot_type: 'bargraph'
+  icountmini_summary_mqc_type:
+      parent_id: icountmini
+      parent_name: "ICount-Mini summaries"
+      section_name: "Type"
+      description: "Crosslinks by type"
+      plot_type: 'bargraph'
   summary_type:
     parent_id: Summary
     parent_name: "Summary"
@@ -320,6 +332,10 @@ sp:
     fn: "*clustermap.png"
   peka_mqc_plots_heatmap:
     fn: "*kmer_heatmap.png"
+  icountmini_summary_mqc_subtype:
+    fn: "summary_subtype_qc.tsv"
+  icountmini_summary_mqc_type:
+    fn: "summary_type_qc.tsv"
   summary_type:
     fn: "summary_type_metrics.tsv"
   summary_subtype:
