@@ -1,5 +1,4 @@
 process ICOUNTMINI_SUMMARY_MQC{
-     tag "$meta.id"
      label 'process_single'
 
      container 'community.wave.seqera.io/library/r-tidyverse:2.0.0--386074aa810af1c3'
