@@ -18,17 +18,19 @@ process ICOUNTMINI_SUMMARY_MQC{
      def args = task.ext.args ?: ''
 
      """
-     RScript $projectDir/modules/local/icountmini_summary_mqc/templates/icount_mini_summary_reformat.R
+     Rscript $projectDir/modules/local/icountmini_summary_mqc/templates/icount_mini_summary_reformat.R
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-    END_VERSIONS
-    """
+     cat <<-END_VERSIONS > versions.yml
+     "${task.process}":
+        r-tidyverse: \$(Rscript -e "library(tidyverse); cat(as.character(packageVersion('tidyverse')))")
+     END_VERSIONS
+     """
 
-    stub:
-    """
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-    END_VERSIONS
-    """
+     stub:
+     """
+     cat <<-END_VERSIONS > versions.yml
+     "${task.process}":
+        r-tidyverse: \$(Rscript -e "library(tidyverse); cat(as.character(packageVersion('tidyverse')))")
+     END_VERSIONS
+     """
 }
