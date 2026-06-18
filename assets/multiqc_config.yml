@@ -37,7 +37,7 @@ module_order:
       path_filters:
         - "*_trimmed_fastqc.zip"
   - bowtie1:
-      name: "BOWTIE ncRNA Alignment"
+      name: "BOWTIE rRNA Alignment (pre-mapping)"
       path_filters:
         - "*.out"
   - star:
@@ -60,74 +60,13 @@ custom_data:
     parent_name: "Deduplication"
     file_format: "tsv"
     section_name: "Reads"
-    description: "The number of reads before and after PCR deduplication for each experiment"
+    description: "The number of reads before PCR deduplication, and number of cDNAs after, for each experiment"
     plot_type: "bargraph"
     cats:
       - input_reads
       - output_reads
     pconfig:
       ylab: "Count"
-      stacking: "group"
-      cpswitch: False
-      tt_percentages: False
-  dedup_ratio:
-    parent_id: dedup
-    parent_name: "Deduplication"
-    file_format: "tsv"
-    section_name: "Ratio"
-    description: "The PCR deduplication ratio for each experiment (input reads/reads left after deduplication)"
-    plot_type: "bargraph"
-    pconfig:
-      ylab: "Ratio"
-      #stacking: False
-      cpswitch: False
-      tt_percentages: False
-  telescope_genome_qc:
-    parent_id: TE qc
-    parent_name: "TE QC"
-    file_format: "tsv"
-    section_name: "Genome"
-    description: "Telescope output from mapping to reference genome"
-    parent_description: "QC metrics from telescope"
-    plot_type: "bargraph"
-    cats:
-      - "Fragments mapped to reference"
-      - "Unique alignments"
-      - "Multiple alignments"
-    pconfig:
-      ylab: "Reads"
-      stacking: "group"
-      cpswitch: False
-      tt_percentages: False
-  telescope_annotation_qc:
-    parent_id: TE qc
-    parent_name: "TE QC"
-    file_format: "tsv"
-    section_name: "TE annotation"
-    description: "Telescope output from mapping to TE annotation"
-    plot_type: "bargraph"
-    cats:
-      - "Fragments mapped to TE annotation"
-      - "One locus"
-      - "Multiple loci"
-    pconfig:
-      ylab: "Reads"
-      stacking: "group"
-      cpswitch: False
-      tt_percentages: False
-  tetranscripts_qc:
-    parent_id: TE qc
-    parent_name: "TE QC"
-    file_format: "tsv"
-    section_name: "TEtranscripts QC"
-    description: "Mapped reads from TEtranscripts"
-    plot_type: "bargraph"
-    cats:
-     - "Total annotated reads"
-     - "Total multi-mapping reads"
-     - "Total unannotated reads"
-    pconfig:
-      ylab: "Reads"
       stacking: "group"
       cpswitch: False
       tt_percentages: False
@@ -146,19 +85,6 @@ custom_data:
       stacking: "group"
       cpswitch: False
       tt_percentages: False
-  crosslinks_ratio:
-    parent_id: crosslinks
-    parent_name: "Crosslinks"
-    file_format: "tsv"
-    section_name: "Ratios"
-    description: "The ratio of number of cDNA mapping to crosslink positions for each experiment"
-    #plot_type: 'bargraph'
-    pconfig:
-      ylab: "Count"
-      #stacking: False
-      cpswitch: False
-      tt_percentages: False
-      tt_decimals: 2
   peaks_counts:
     parent_id: peaks
     parent_name: "Peaks"
@@ -176,25 +102,6 @@ custom_data:
       stacking: "group"
       cpswitch: False
       tt_percentages: False
-  xlinks_in_peaks:
-    parent_id: peaks
-    parent_name: "Peaks"
-    file_format: "tsv"
-    section_name: "Crosslinks positions in peaks"
-    description: "The total percentage of crosslinks within peaks for each peak caller"
-    plot_type: 'bargraph'
-    cats:
-      - clippy
-      - icount
-      - paraclu
-      - pureclip
-    pconfig:
-      ylab: "Percentage of crosslinks"
-      stacking: "group"
-      cpswitch: False
-      tt_percentages: False
-      tt_decimals: 2
-      tt_suffix: "%"
   xlinksites_in_peaks:
     parent_id: peaks
     parent_name: "Peaks"
@@ -343,23 +250,23 @@ sp:
 
 table_columns_visible:
   "FASTQC (raw)":
-    median_sequence_length: True
-    total_sequences: True
+    median_sequence_length: False
+    total_sequences: False
     percent_duplicates: False
     percent_gc: False
   cutadapt:
-    percent_trimmed: True
+    percent_trimmed: False
   "FASTQC (trimmed)":
     median_sequence_length: True
     total_sequences: True
     percent_duplicates: False
     percent_gc: False
-  "BOWTIE ncRNA Alignment":
+  "BOWTIE rRNA Alignment (pre-mapping)":
     reads_aligned_percentage: True
-    reads_aligned: True
+    reads_aligned: False
   "STAR Genome Alignment":
     uniquely_mapped_percent: True
-    uniquely_mapped: True
+    uniquely_mapped: False
 
 ignore_images: false
 
