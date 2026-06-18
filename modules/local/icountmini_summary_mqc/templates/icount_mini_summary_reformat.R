@@ -9,27 +9,27 @@ files <- list(subtype_files, type_files)
 i = 1
 
 for (file in subtype_files){
-  
+
   if (i == 1) {
     df <- read.delim(file, sep = "\t", header = TRUE) %>%
       select(-Length, -`cDNA..`) %>%
-      rename(!!paste0("cDNA_percent_", str_extract(paste(subtype_files[1]), "^[^.]+")) := `cDNA...1`)
+      rename(!!paste0("cDNA_percent_", str_extract(paste(file[1]), "^[^.]+")) := `cDNA...1`)
   }
-  
+
   else if (i > 1) {
-    
+
     df_2 <- read.delim(file, sep = "\t", header = TRUE) %>%
       select(-Length, -`cDNA..`) %>%
-      rename(!!paste0("cDNA_percent_", str_extract(paste(subtype_files[1]), "^[^.]+")) := `cDNA...1`)
-    
+      rename(!!paste0("cDNA_percent_", str_extract(paste(file[1]), "^[^.]+")) := `cDNA...1`)
+
     df <- full_join(df, df_2, by = "Subtype")
-    
+
   }
-    
+
     i <- i + 1
-    
+
   }
-  
+
 # reformat to mqc requirements
 subtype_reformatted <- df %>%
   pivot_longer(starts_with("cDNA"), names_to = "sample", values_to = "value") %>%
@@ -43,25 +43,25 @@ write_delim(subtype_reformatted, "summary_subtype_qc.tsv", delim = "\t")
 i = 1
 
 for (file in type_files){
-  
+
   if (i == 1) {
     df <- read.delim(file, sep = "\t", header = TRUE) %>%
       select(-Length, -`cDNA..`) %>%
-      rename(!!paste0("cDNA_percent_", str_extract(paste(subtype_files[1]), "^[^.]+")) := `cDNA...1`)
+      rename(!!paste0("cDNA_percent_", str_extract(paste(file[1]), "^[^.]+")) := `cDNA...1`)
   }
-  
+
   else if (i > 1) {
-    
+
     df_2 <- read.delim(file, sep = "\t", header = TRUE) %>%
       select(-Length, -`cDNA..`) %>%
-      rename(!!paste0("cDNA_percent_", str_extract(paste(subtype_files[1]), "^[^.]+")) := `cDNA...1`)
-    
+      rename(!!paste0("cDNA_percent_", str_extract(paste(file[1]), "^[^.]+")) := `cDNA...1`)
+
     df <- full_join(df, df_2, by = "Type")
-    
+
   }
-  
+
   i <- i + 1
-  
+
 }
 
 subtype_reformatted <- df %>%
