@@ -315,7 +315,7 @@ table_columns_visible:
     total_sequences: True
     percent_duplicates: False
     percent_gc: False
-  bowtie1:
+  bowtie_ncrna_alignment:
     reads_aligned_percentage: True
     reads_aligned: False
   star_genome_alignment:
@@ -340,3 +340,4 @@ custom_content:
     - clipqc
     - software-versions-by-process
     - software-versions-unique
+
