@@ -93,7 +93,7 @@ def main(process_name):
     # ==========
 
     dedup_logs = sorted(["collapse/" + f for f in os.listdir("collapse") if f.endswith(".log")])
-    dedup = dict((key, []) for key in ["exp", "input_reads", "output_reads", "ratio"])
+    dedup = dict((key, []) for key in ["exp", "input_reads", "output_reads", "dedup_ratio"])
 
     for dedup_log in dedup_logs:
         with open(dedup_log, "r") as logfile:
@@ -111,14 +111,14 @@ def main(process_name):
             dedup["exp"].append(exp)
             dedup["input_reads"].append(input_reads)
             dedup["output_reads"].append(output_reads)
-            dedup["ratio"].append(round(input_reads / output_reads, 2))
+            dedup["dedup_ratio"].append(round(input_reads / output_reads, 2))
 
     dedup_df = pd.DataFrame(dedup)
     dedup_df.to_csv("dedup_metrics.tsv", sep="\t", index=False)
 
     # Subset for MultiQC plots
     dedup_df.loc[:, ["exp", "input_reads", "output_reads"]].to_csv("dedup_reads.tsv", sep="\t", index=False)
-    dedup_df.loc[:, ["exp", "ratio"]].to_csv("dedup_ratio.tsv", sep="\t", index=False)
+    dedup_df.loc[:, ["exp", "dedup_ratio"]].to_csv("dedup_ratio.tsv", sep="\t", index=False)
 
     print(dedup_df)
     print("\n\n")
