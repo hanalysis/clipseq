@@ -51,7 +51,7 @@ def plot_cosine_clustermap(zmat, out_png):
     plt.close(cg.fig)
 
 
-def plot_topk_heatmap(zmat, out_png, cluster=True, topk=20):
+def plot_topk_heatmap(zmat, out_png, cluster=True, topk):
     # select top k per sample, unique across samples
     top_kmers = set()
     for col in zmat.columns:
@@ -110,6 +110,9 @@ def main():
     zmat = pd.DataFrame(zseries)
     # print(zmat.head())
 
+    # Get top n kmers from number of samples
+    topn = max(3, round(30/len(zseries)))
+
     # 1) cosine-distance clustermap if more than 2 samples passed
     if len(zseries) > 1:
         plot_cosine_clustermap(
@@ -124,7 +127,7 @@ def main():
         zmat,
         args.outdir / 'top10_kmer_heatmap.png',
         cluster=(len(zseries) > 1),
-        topk=20
+        topk=topn
     )
 
 
