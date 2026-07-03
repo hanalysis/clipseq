@@ -100,6 +100,7 @@ include { ENCODE_MOVEUMI                                                  } from
 include { PEKA_MQC_PLOTS                                              } from '../modules/local/peka_mqc_plots'
 include { TE_QC } from '../modules/local/te_qc'
 include { ICOUNTMINI_SUMMARY_MQC } from '../modules/local/icountmini_summary_mqc'
+include {MULTIMAP_CLASS_BINNING} from '../modules/local/multimap_class_binning'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -113,6 +114,7 @@ include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as NCRNA_DEDUP                         
 include { BAM_DEDUP_SAMTOOLS_UMICOLLAPSE as NCRNA_K1_DEDUP                      } from '../subworkflows/local/bam_dedup_samtools_umicollapse'
 include { RESOLVE_GROUPS_AND_CROSSLINKS as GENOME_RESOLVE_GROUPS_AND_CROSSLINKS } from '../subworkflows/local/resolve_groupings_and_crosslinks'
 include { RESOLVE_GROUPS_AND_CROSSLINKS as NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS  } from '../subworkflows/local/resolve_groupings_and_crosslinks'
+include { RESOLVE_GROUPS_AND_CROSSLINKS as TE_RESOLVE_GROUPS_AND_CROSSLINKS     } from '../subworkflows/local/resolve_groupings_and_crosslinks'
 include { TRANSCRIPTOME_PROCESSING                                              } from '../subworkflows/local/transcriptome_processing'
 include { CONSENSUS_PEAK_TABLE as CLIPPY_CONSENSUS_PEAK_TABLE                   } from '../subworkflows/local/consensus_peak_table'
 include { CONSENSUS_PEAK_TABLE as PARACLU_CONSENSUS_PEAK_TABLE                  } from '../subworkflows/local/consensus_peak_table'
@@ -432,7 +434,6 @@ workflow CLIPSEQ {
         }
 
         ch_tetranscripts_gtf = Channel.value([[id: 'te_annotations'], file(params.tetranscripts_gtf, checkIfExists: true)])
-        ch_telescope_gtf = Channel.value([[id: 'te_annotations'], file(params.telescope_gtf, checkIfExists: true)])
 
         // Faux control .bam as not using DESeq2 aspect of TEtranscripts
         ch_bam_c = Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test.rna.paired_end.bam')
@@ -472,7 +473,42 @@ workflow CLIPSEQ {
         TE_QC(
             ch_te_qc
         )
+
     }
+
+    //
+    // BINNING TO RESOLVE MULTI-MAPPERS FOR ICOUNT SUMMARY
+
+    // telescope gtf now required
+    ch_telescope_gtf = Channel.value([[id: 'te_annotations'], file(params.telescope_gtf, checkIfExists: true)])
+
+    ch_all_mm_class_bams = GENOME_MULTI_DEDUP.out.bam
+            .map { meta, bam -> bam }
+            .collect()
+            .map { bams -> [[id: 'all_samples'], bams] }
+
+    MULTIMAP_CLASS_BINNING(
+        ch_all_mm_class_bams,
+        ch_telescope_gtf
+    )
+
+    ch_unique_and_reassigned_dedupe_bam = Channel.empty()
+    ch_unique_and_reassigned_dedupe_bam = ch_unique_and_reassigned_dedupe_bam.mix(ch_genome_unique_dedupe_bam)
+    ch_unique_and_reassigned_dedupe_bam = ch_unique_and_reassigned_dedupe_bam.mix(MULTIMAP_CLASS_BINNING.out.collapsed_bam)
+
+    ch_unique_and_reassigned_dedupe_bai = Channel.empty()
+    ch_unique_and_reassigned_dedupe_bai = ch_unique_and_reassigned_dedupe_bai.mix(ch_genome_unique_dedupe_bai)
+    ch_unique_and_reassigned_dedupe_bai = ch_unique_and_reassigned_dedupe_bai.mix(MULTIMAP_CLASS_BINNING.out.collapsed_bai)
+
+    TE_RESOLVE_GROUPS_AND_CROSSLINKS(
+        ch_unique_and_reassigned_dedupe_bam,
+        ch_unique_and_reassigned_dedupe_bai,
+        ch_fasta,
+        ch_fasta_fai
+    )
+
+    ch_unique_assigned_xlink_for_summary = TE_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_group_resolved
+
     //
     // RESOLVE GROUPS AND GET CROSSLINKS: At this point, if groups have been specified, then we need to merge corresponding BAM files
     //
@@ -509,7 +545,7 @@ workflow CLIPSEQ {
         ch_gtf_used = params.skip_filter_gtf ? ch_gtf : ch_filtered_gtf
 
         ICOUNTMINI_SUMMARY (
-            ch_genome_crosslink_group_resolved_bed,
+            ch_unique_assigned_xlink_for_summary,
             ch_regions_used.map{ it[1] }
         )
 
