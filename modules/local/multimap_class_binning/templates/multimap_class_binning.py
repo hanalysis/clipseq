@@ -294,7 +294,7 @@ def process_bam(bam_path, feature_bed_path):
     # and sort and index
 
     collapsed_sorted_bam_path = os.path.join(OUTPUT_DIR, f'{label}_collapsed.bam')
-    pysam.sort("-o", collapsed_sorted_bam_path, collapsed_bam)
+    pysam.sort("-o", collapsed_sorted_bam_path, collapsed_bam.fn)
     pysam.index(collapsed_sorted_bam_path)
 
     # -------------------------------------------------------------------------------------------
