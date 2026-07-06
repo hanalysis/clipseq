@@ -51,7 +51,7 @@ def plot_cosine_clustermap(zmat, out_png):
     plt.close(cg.fig)
 
 
-def plot_topk_heatmap(zmat, out_png, cluster=True, topk):
+def plot_topk_heatmap(zmat, out_png, cluster=True, topk = 5):
     # select top k per sample, unique across samples
     top_kmers = set()
     for col in zmat.columns:
