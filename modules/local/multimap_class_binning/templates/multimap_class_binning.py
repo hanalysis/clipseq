@@ -266,21 +266,19 @@ def process_bam(bam_path, feature_bed_path):
 
     # extract unique read names from list
 
-    assign_reads_dict = dict.fromkeys(assigned_reads, 0)
     collapsed_bed_path = os.path.join(OUTPUT_DIR, f"{label}_collapsed.bed")
+    seen = set()
 
     with open(assigned_bed_path) as assigned_out, \
         open(collapsed_bed_path, "w") as collapsed_out:
             for line in assigned_out:
                 cols = line.rstrip("\n").split("\t")
                 assigned_rn = cols[3]
-                for k in assign_reads_dict:
-                    if assigned_rn == k:
-                        assign_reads_dict[k] = assign_reads_dict[k] + 1
-                        if assign_reads_dict[k] == 1:
-                            collapsed_out.write(line)
-                    else:
-                        continue
+                if assigned_rn not in seen:
+                    seen.add(assigned_rn)
+                    collapsed_out.write(line)
+                else:
+                    continue
 
     # Also export collapsed as a bam for resolve_groups_and_crosslinks workflow
 
