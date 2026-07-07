@@ -11,7 +11,6 @@ process MULTIMAP_CLASS_BINNING {
 
     output:
     path "discarded_ambiguous_reads.tsv", emit: discarded_reads
-    path "repeat_ncRNA_read_counts.png", emit: mm_class_binned_png
     path "repeat_ncRNA_read_counts.pdf", emit: mm_class_binned_pdf
     tuple val(meta), path("*ambiguous.bed"), emit: ambiguous_bed
     tuple val(meta), path("*assigned.bed"), emit: assigned_bed
