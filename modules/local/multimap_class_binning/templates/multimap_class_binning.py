@@ -9,16 +9,13 @@ Rules:
    (class_id / gene_type), the read is discarded and logged.
  - Reads mapping to exactly one category are counted once for that category.
 
-Uses pybedtools for C-speed interval intersections, then pandas/matplotlib.
+Uses pybedtools for C-speed interval intersections, then pandas.
 """
 
 import pybedtools
 import argparse
 import pysam
 import pandas as pd
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import re
 import os
 from collections import defaultdict
@@ -347,31 +344,6 @@ def main():
                 f.write(f"{sample}\t{rname}\t{cats}\n")
     n_total_ambig = sum(len(v) for v in all_ambiguous.values())
     print(f"\n{n_total_ambig:,} ambiguous reads logged to: {log_path}")
-
-    # ── Plot: one facet per sample ──────────────────────────────────────
-    samples = sorted(df["sample"].unique())
-    n_prot = len(samples)
-
-    fig, axes = plt.subplots(
-        1, n_prot,
-        figsize=(7 * n_prot, max(6, 0.35 * df["category"].nunique())),
-        squeeze=False,
-    )
-
-    for i, prot in enumerate(samples):
-        ax = axes[0, i]
-        sub = df[df["sample"] == prot].sort_values("read_count", ascending=True)
-        ax.barh(sub["category"], sub["read_count"], color="steelblue")
-        ax.set_xlabel("Unique read count")
-        ax.set_title(prot, fontweight="bold")
-        ax.tick_params(axis="y", labelsize=8)
-
-    plt.tight_layout()
-    for ext in ("pdf", "png"):
-        p = os.path.join(OUTPUT_DIR, f"repeat_ncRNA_read_counts.{ext}")
-        plt.savefig(p, bbox_inches="tight", dpi=150)
-        print(f"Plot saved: {p}")
-    plt.close()
 
 
 if __name__ == "__main__":
