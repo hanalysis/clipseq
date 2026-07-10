@@ -228,6 +228,15 @@ custom_data:
       section_name: "Type"
       description: "Crosslinks by type"
       plot_type: 'bargraph'
+  te_mm_binning:
+      parent_id: te_mm_binning
+      parent_name: "TE quantities"
+      file_format: "tsv"
+      section_name: "Binning"
+      description: "Number of reads which mapped within specific TE families."
+      plot_type: "bargraph"
+      pconfig:
+        stacking: "normal"
   summary_type:
     parent_id: Summary
     parent_name: "Summary"
@@ -297,6 +306,8 @@ sp:
     fn: "summary_subtype_qc.tsv"
   icountmini_summary_mqc_type:
     fn: "summary_type_qc.tsv"
+  te_mm_binning:
+    fn: "repeat_ncRNA_read_counts.tsv"
   summary_type:
     fn: "summary_type_metrics.tsv"
   summary_subtype:

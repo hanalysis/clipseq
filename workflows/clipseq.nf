@@ -161,9 +161,7 @@ include { TETRANSCRIPTS                                             } from '../m
 include { TELESCOPE_ASSIGN                                          } from '../modules/nf-core/telescope/assign/main'
 include { SAMTOOLS_VIEW as FILTER_UNIQUE_MAP_UPDATED                } from '../modules/nf-core/samtools/view/main'
 include { SAMTOOLS_VIEW as FILTER_UNIQUE_MAP_OTHER                  } from '../modules/nf-core/samtools/view/main'
-include { SAMTOOLS_MERGE as MERGE_TE_BAMS                           } from '../modules/nf-core/samtools/merge/main'
-include { SAMTOOLS_SORT as SORT_TE_BAMS                           } from '../modules/nf-core/samtools/sort/main'
-include { SAMTOOLS_INDEX as INDEX_TE_BAMS                           } from '../modules/nf-core/samtools/index/main'
+include { SAMTOOLS_SORT as SORT_BAMS_FOR_TELE                       } from '../modules/nf-core/samtools/sort/main'
 
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
@@ -451,8 +449,14 @@ workflow CLIPSEQ {
             ch_tetranscripts_gtf // te GTF
         )
 
-        TELESCOPE_ASSIGN(
+        SORT_BAMS_FOR_TELE(
             GENOME_MULTI_DEDUP.out.bam,
+            (),
+            -n,
+        )
+
+        TELESCOPE_ASSIGN(
+            SORT_BAMS_FOR_TE.out.bam,
             ch_telescope_gtf
         )
 

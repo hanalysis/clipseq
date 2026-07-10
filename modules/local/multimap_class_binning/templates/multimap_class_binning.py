@@ -319,10 +319,12 @@ def main():
         all_ambiguous[sample_name] = ambig
 
     df = pd.DataFrame(all_rows)
+    df_wide = df.pivot(index="sample", columns="category", values="read_count").reset_index()
+
 
     # ── Save CSV summary ─────────────────────────────────────────────────
     csv_path = os.path.join(OUTPUT_DIR, "repeat_ncRNA_read_counts.csv")
-    df.to_csv(csv_path, index=False)
+    df_wide.to_csv(csv_path, index=False)
     print(f"\nSummary saved to: {csv_path}")
 
     pivot = df.pivot_table(
