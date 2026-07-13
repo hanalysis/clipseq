@@ -215,7 +215,7 @@ custom_data:
       parent_id: peka_mqc
       parent_name: "Motif analysis (PEKA)"
       section_name: "PEKA heatmap"
-      description: "Motif enrichment heatmap for the top 20 k-mers per sample"
+      description: "Motif enrichment heatmap for the top n k-mers per sample"
   icountmini_summary_mqc_subtype:
       parent_id: icountmini
       parent_name: "ICount-Mini summaries"
