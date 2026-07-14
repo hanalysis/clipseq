@@ -419,6 +419,10 @@ workflow CLIPSEQ {
         //ch_umi_log      = NCRNA_K1_DEDUP.out.umi_log
     }
 
+    // telescope gtf now required
+    ch_telescope_gtf = Channel.value([[id: 'te_annotations'], file(params.telescope_gtf, checkIfExists: true)])
+
+
     // TE quantifcation insert
 
     if(params.run_te) {
@@ -481,9 +485,6 @@ workflow CLIPSEQ {
 
     //
     // BINNING TO RESOLVE MULTI-MAPPERS FOR ICOUNT SUMMARY
-
-    // telescope gtf now required
-    ch_telescope_gtf = Channel.value([[id: 'te_annotations'], file(params.telescope_gtf, checkIfExists: true)])
 
     ch_all_mm_class_bams = GENOME_MULTI_DEDUP.out.bam
             .map { meta, bam -> bam }
