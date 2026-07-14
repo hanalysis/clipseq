@@ -455,7 +455,7 @@ workflow CLIPSEQ {
         )
 
         TELESCOPE_ASSIGN(
-            SORT_BAMS_FOR_TE.out.bam,
+            SORT_BAMS_FOR_TELE.out.bam,
             ch_telescope_gtf
         )
 
