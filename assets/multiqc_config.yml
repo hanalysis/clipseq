@@ -229,7 +229,7 @@ custom_data:
       description: "Crosslinks by type"
       plot_type: 'bargraph'
   te_mm_binning:
-      parent_id: te_mm_binning
+      parent_id: te_mm
       parent_name: "TE quantities"
       file_format: "tsv"
       section_name: "Binning"
@@ -307,7 +307,7 @@ sp:
   icountmini_summary_mqc_type:
     fn: "summary_type_qc.tsv"
   te_mm_binning:
-    fn: "repeat_ncRNA_read_counts.tsv"
+    fn: "repeat_ncRNA_read_counts.csv"
   summary_type:
     fn: "summary_type_metrics.tsv"
   summary_subtype:
@@ -349,6 +349,7 @@ ignore_images: false
 custom_content:
   order:
     - clipqc
+    - te_mm_binning
     - software-versions-by-process
     - software-versions-unique
 
