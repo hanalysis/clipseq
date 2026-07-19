@@ -979,6 +979,7 @@ workflow CLIPSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(CLIPQC.out.tsv.collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(ch_deseq2_qc_plots.flatten().collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(PEKA_MQC_PLOTS.out.plots.flatten().collect().ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(MULTIMAP_CLASS_BINNING.out.counted_reads.collect().ifEmpty([]))
 
         if(params.run_crosslinking) {
             ch_multiqc_files = ch_multiqc_files.mix(ICOUNTMINI_SUMMARY_MQC.out.subtype.collect().ifEmpty([]))

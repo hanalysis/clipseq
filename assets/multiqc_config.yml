@@ -231,7 +231,7 @@ custom_data:
   te_mm_binning:
       parent_id: te_mm
       parent_name: "TE quantities"
-      file_format: "tsv"
+      file_format: "csv"
       section_name: "Binning"
       description: "Number of reads which mapped within specific TE families."
       plot_type: "bargraph"
