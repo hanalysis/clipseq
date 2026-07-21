@@ -484,36 +484,6 @@ workflow CLIPSEQ {
     }
 
     //
-    // BINNING TO RESOLVE MULTI-MAPPERS FOR ICOUNT SUMMARY
-
-    ch_all_mm_class_bams = GENOME_MULTI_DEDUP.out.bam
-            .map { meta, bam -> bam }
-            .collect()
-            .map { bams -> [[id: 'all_samples'], bams] }
-
-    MULTIMAP_CLASS_BINNING(
-        ch_all_mm_class_bams,
-        ch_telescope_gtf
-    )
-
-    ch_unique_and_reassigned_dedupe_bam = Channel.empty()
-    ch_unique_and_reassigned_dedupe_bam = ch_unique_and_reassigned_dedupe_bam.mix(ch_genome_unique_dedupe_bam)
-    ch_unique_and_reassigned_dedupe_bam = ch_unique_and_reassigned_dedupe_bam.mix(MULTIMAP_CLASS_BINNING.out.collapsed_bam)
-
-    ch_unique_and_reassigned_dedupe_bai = Channel.empty()
-    ch_unique_and_reassigned_dedupe_bai = ch_unique_and_reassigned_dedupe_bai.mix(ch_genome_unique_dedupe_bai)
-    ch_unique_and_reassigned_dedupe_bai = ch_unique_and_reassigned_dedupe_bai.mix(MULTIMAP_CLASS_BINNING.out.collapsed_bai)
-
-    TE_RESOLVE_GROUPS_AND_CROSSLINKS(
-        ch_unique_and_reassigned_dedupe_bam,
-        ch_unique_and_reassigned_dedupe_bai,
-        ch_fasta,
-        ch_fasta_fai
-    )
-
-    ch_unique_assigned_xlink_for_summary = TE_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_group_resolved
-
-    //
     // RESOLVE GROUPS AND GET CROSSLINKS: At this point, if groups have been specified, then we need to merge corresponding BAM files
     //
     // ch_genome_bam.view { item -> println("Pre-branch: $item") }
@@ -549,7 +519,7 @@ workflow CLIPSEQ {
         ch_gtf_used = params.skip_filter_gtf ? ch_gtf : ch_filtered_gtf
 
         ICOUNTMINI_SUMMARY (
-            ch_unique_assigned_xlink_for_summary,
+            ch_genome_crosslink_group_resolved_bed,
             ch_regions_used.map{ it[1] }
         )
 
