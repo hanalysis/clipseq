@@ -926,6 +926,18 @@ workflow CLIPSEQ {
             ch_peka_mqc_plots.collect{ it[1] }.flatten().collect()
         )
 
+        // Run TE binning
+
+        ch_all_mm_class_bams = GENOME_MULTI_DEDUP.out.bam
+            .map { meta, bam -> bam }
+            .collect()
+            .map { bams -> [[id: 'all_samples'], bams] }
+
+        MULTIMAP_CLASS_BINNING(
+        ch_all_mm_class_bams,
+        ch_telescope_gtf
+        )
+
         //
         // MODULE: Run multiqc
         //
