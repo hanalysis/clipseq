@@ -1,4 +1,4 @@
-process GET_INIT_ALIGNED_CROSSLINKS {
+process GET_INIT_ALIGNED_XLINKS {
     tag "$meta.id"
     label 'process_medium'
 
@@ -21,7 +21,7 @@ process GET_INIT_ALIGNED_CROSSLINKS {
     """
     bedtools bamtobed -i ${bam} > dedup.bed
     bedtools shift -m 1 -p -1 -i dedup.bed -g $fai > shifted.bed
-    bedtools bedtobam shifted.bed -g ${fai} > ${prefix}_init_xl_coord.bam
+    bedtools bedtobam -i shifted.bed -g ${fai} > ${prefix}_init_xl_coord.bam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

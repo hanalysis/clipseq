@@ -19,7 +19,8 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument('-b', '--bam',
-                    help = 'Original bam file, previously run through multimap_class_binning.py')
+                    help = 'List of original bam files, previously run through multimap_class_binning.py',
+                    nargs="+")
 
 parser.add_argument('-d', '--discarded',
                     help = 'List of reads discarded by multimap_class_binning.py due to class' \
@@ -27,29 +28,48 @@ parser.add_argument('-d', '--discarded',
 
 args = parser.parse_args()
 
-bam = args.bam
-
-# Get ID
-label = os.path.splitext(os.path.basename(bam))[0]
+bams = args.bam
 
 ## Read in discarded read names
 
 discarded_reads =  pd.read_csv(args.discarded, sep='\t')
 
-discarded_read_names = set(discarded_reads['read_name'])
+discarded_reads_grouped = discarded_reads.groupby("sample")
 
-# Open original bam
+discarded_reads_dict = discarded_reads_grouped["read_name"].apply(set).to_dict()
 
-orig_bam = pysam.AlignmentFile(bam, "rb")
+def extract_sample_name(bam_filename):
+    """Sample name - everything before ."""
+    return bam_filename.split(".")[0]
 
-with pysam.AlignmentFile(f"{label}.discarded_reads.bam", "wb", template=orig_bam) as out:
-    for read in orig_bam:
-        if read.query_name in discarded_read_names:
-            out.write(read)
-        else:
-            continue
+for bam in bams:
+    # Get ID
+    label = os.path.splitext(os.path.basename(bam))[0]
 
-# sort and index
+    sample_name = extract_sample_name(label)
 
-pysam.sort("-o", f"{label}.discarded_reads_sorted.bam", f"{label}.discarded_reads.bam")
-pysam.index(f"{label}.discarded_reads_sorted.bam")
+    print(sample_name)
+
+    # Open original bam
+
+    orig_bam = pysam.AlignmentFile(bam, "rb")
+
+    # Make sure bam file has discarded reads
+
+    if sample_name not in discarded_reads_dict:
+        print(sample_name, "was found to have no discarded reads from initial bucketing")
+        continue
+
+    else:
+        with pysam.AlignmentFile(f"{label}.discarded_reads.bam", "wb", template=orig_bam) as out:
+            for read in orig_bam:
+                if read.query_name in discarded_reads_dict[sample_name]:
+                    out.write(read)
+                else:
+                    continue
+    orig_bam.close()
+
+    # sort and index
+
+    pysam.sort("-o", f"{label}.discarded_reads_sorted.bam", f"{label}.discarded_reads.bam")
+    pysam.index(f"{label}.discarded_reads_sorted.bam")

@@ -102,7 +102,7 @@ include { TE_QC                                                           } from
 include { ICOUNTMINI_SUMMARY_MQC                                          } from '../modules/local/icountmini_summary_mqc'
 include { MULTIMAP_CLASS_BINNING as BIN_ncRNA                             } from '../modules/local/multimap_class_binning'
 include { MULTIMAP_CLASS_BINNING as BIN_REGIONS                           } from '../modules/local/multimap_class_binning'
-include { GET_INIT_ALIGNED_CROSSLINKS                                     } from '../modules/local/get_init_aligned_xlinks'
+include { GET_INIT_ALIGNED_XLINKS                                         } from '../modules/local/get_init_aligned_xlinks'
 include { IDENTIFY_UNBINNED                                               } from '../modules/local/identify_unbinned'
 include { COMBINE_BINS                                                    } from '../modules/local/combine_bins'
 
@@ -411,6 +411,9 @@ workflow CLIPSEQ {
             ch_genome_multi_bam_bai
         )
         ch_versions   = ch_versions.mix(GENOME_MULTI_DEDUP.out.versions)
+        ch_genome_multi_dedupe_bam = GENOME_MULTI_DEDUP.out.bam
+        ch_genome_multi_dedupe_bai = GENOME_MULTI_DEDUP.out.bai
+        ch_genome_multi_dedupe_bam_bai = ch_genome_multi_dedupe_bam.join(ch_genome_multi_dedupe_bai, by: 0)
 
         NCRNA_DEDUP (
             ch_ncrna_bam_bai
@@ -429,16 +432,11 @@ workflow CLIPSEQ {
     // telescope gtf now required
     ch_telescope_gtf = Channel.value([[id: 'te_annotations'], file(params.telescope_gtf, checkIfExists: true)])
 
-    ch_all_multi_bams = GENOME_MULTI_DEDUP.out.bam
-        .map { meta, bam -> bam }
-        .collect()
-        .map { bams -> [[id: 'all_samples'], bams] }
-
     // Overall read assignment //
     // 1: get single xlink coordinates only
 
     GET_INIT_ALIGNED_XLINKS(
-        ch_all_multi_bams,
+        ch_genome_multi_dedupe_bam_bai,
         ch_fasta_fai
     )
 
@@ -448,6 +446,9 @@ workflow CLIPSEQ {
     )
 
     ch_init_aligned_xlinks = SORT_INIT_ALIGNED_XLINKS.out.bam
+        .map { meta, bam -> bam }
+        .collect()
+        .map { bams -> [[id: 'all_samples'], bams] }
 
     INDEX_INIT_ALIGNED_XLINKS(
         SORT_INIT_ALIGNED_XLINKS.out.bam
@@ -467,10 +468,15 @@ workflow CLIPSEQ {
         BIN_ncRNA.out.discarded_reads
     )
 
+    ch_init_unbinned_xlinks = IDENTIFY_UNBINNED.out.bam
+        .map { meta, bam -> bam }
+        .collect()
+        .map { bams -> [[id: 'all_samples'], bams] }
+
     // 4: Run binning again on unassigned reads, at regional level (e.g. 5UTR | CDS | intron)
 
     BIN_REGIONS(
-        IDENTIFY_UNBINNED.out.bam,
+        ch_init_unbinned_xlinks,
         ch_regions_resolved_gtf
     )
 
@@ -980,18 +986,6 @@ workflow CLIPSEQ {
             ch_peka_mqc_plots.collect{ it[1] }.flatten().collect()
         )
 
-        // Run TE binning
-
-        ch_all_mm_class_bams = GENOME_MULTI_DEDUP.out.bam
-            .map { meta, bam -> bam }
-            .collect()
-            .map { bams -> [[id: 'all_samples'], bams] }
-
-        MULTIMAP_CLASS_BINNING(
-        ch_all_mm_class_bams,
-        ch_telescope_gtf
-        )
-
         //
         // MODULE: Run multiqc
         //
@@ -1071,3 +1065,4 @@ workflow.onComplete {
     THE END
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+    

@@ -10,8 +10,8 @@ process MULTIMAP_CLASS_BINNING {
     tuple val(meta_gtf), path(gtf)
 
     output:
-    path "discarded_ambiguous_reads*.tsv", emit: discarded_reads
-    path "repeat_ncRNA_read_counts*.csv", emit: counted_reads
+    tuple val(meta), path "discarded_ambiguous_reads*.tsv", emit: discarded_reads
+    tuple val (meta), path "repeat_ncRNA_read_counts*.csv", emit: counted_reads
 
     when:
     task.ext.when == null || task.ext.when

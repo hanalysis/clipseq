@@ -8,7 +8,7 @@ process IDENTIFY_UNBINNED {
 
     input:
     tuple val(meta) , path(bam)
-    tuple val(meta2), path(discarded)
+    path(discarded)
 
     output:
     tuple val(meta), path("*.bam"),  emit: bam

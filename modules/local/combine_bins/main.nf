@@ -24,8 +24,8 @@ process COMBINE_BINS {
     """
 
      python ${projectDir}/modules/local/combine_bins/templates/combine_bins.py \
-     -a ${bam_a} \
-     -b ${bam_b}
+     -a ${bin_ncRNA} \
+     -b ${bin_regions}
 
 
     cat <<-END_VERSIONS > versions.yml
