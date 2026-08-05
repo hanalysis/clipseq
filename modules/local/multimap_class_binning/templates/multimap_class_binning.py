@@ -18,7 +18,6 @@ import pysam
 import pandas as pd
 import re
 import os
-from collections import defaultdict
 
 # -- Arguments ----------------------------------------------------------------
 
@@ -38,6 +37,12 @@ parser.add_argument('-o', '--outdir',
 parser.add_argument('-i', '--input',
                     help = "Comma separated list of coord-sorted bam files",
                     nargs="+")
+parser.add_argument('--classifiers',
+                    help = "Comma separated list of strings which identify classifiers for bucketing from" \
+                    "the 9th column of your GTF, e.g. 'gene_type, class'", default = "")
+parser.add_argument('--col',
+                    help= "Column which you want the features to be read from",
+                    default = 9)
 
 args = parser.parse_args()
 
@@ -46,6 +51,8 @@ GTF_PATH = args.gtf
 BAM_DIR  = args.bamdir
 BAM_FILES = args.input
 OUTPUT_DIR = args.outdir
+CLASSIFIERS = args.classifiers
+COL = args.col
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 def extract_sample_name(bam_filename):
@@ -100,17 +107,29 @@ def gtf_to_category_bed(gtf_path):
                 continue
             start = int(cols[3]) - 1    # GTF 1-based → BED 0-based
             end   = int(cols[4])
-            attrs = cols[8]
+            #print(cols[8])
+            attrs = cols[int(COL)-1]
+            cat = ""
+            classifiers = CLASSIFIERS.split(", ")
 
-            cat = parse_attr(attrs, "class_id")
-            if not cat:
-                cat = parse_attr(attrs, "gene_type")
-            if not cat:
-                continue
-            # Replace any whitespace in category with underscore
-            cat = cat.replace(" ", "_")
-            fout.write(f"{chrom}\t{start}\t{end}\t{cat}\t0\t{strand}\n")
-            n += 1
+            if COL == 9:
+                for i in classifiers:
+                    if cat:
+                        continue
+                    cat = parse_attr(attrs, i)
+                    # NTS REMOVE AFTER TESTING
+                    #print("cat = ", cat)
+                    #print("i = ", i)
+
+                # Replace any whitespace in category with underscore
+                cat = cat.replace(" ", "_")
+                fout.write(f"{chrom}\t{start}\t{end}\t{cat}\t0\t{strand}\n")
+                n += 1
+            else:
+                cat = cols[int(COL)-1]
+                cat = cat.replace(" ", "_")
+                fout.write(f"{chrom}\t{start}\t{end}\t{cat}\t0\t{strand}\n")
+                n += 1
 
     if skipped:
         print(f"  Skipped {skipped:,} lines with empty chromosome")
@@ -233,65 +252,6 @@ def process_bam(bam_path, feature_bed_path):
             if len(parts) == 2:
                 ambig_reads.append((parts[0], parts[1]))
 
-    # Make bam files of assigned and discarded reads ---------------------------------------------
-
-    # make set for faster lookup
-    ambig_reads_set = {rn for rn, _ in ambig_reads}
-
-    # output files for beds
-    ambig_bed_path = os.path.join(OUTPUT_DIR, f"{label}_ambiguous.bed")
-    assigned_bed_path = os.path.join(OUTPUT_DIR, f"{label}_assigned.bed")
-
-    assigned_reads = []
-
-    # write output files if they don't exist
-    with open(intersect_path) as intersected_bed, \
-        open(ambig_bed_path, "w") as ambig_out, \
-        open(assigned_bed_path, "w") as assigned_out:
-        for line in intersected_bed:
-            cols = line.rstrip("\n").split("\t")
-            intersect_rn = cols[3]
-            if intersect_rn in ambig_reads_set:
-                ambig_out.write(line)
-            else:
-                assigned_out.write(line)
-                assigned_reads.append(intersect_rn)
-
-    # Make "collapsed" bed file of assigned - one line per read----------------------------------
-
-    # For summarising categories which the reads align to using icount-mini, creating a bed file
-    # where each read exists once, keeping only the first occurence of each read.
-    # As bucketing assigns reads which only map within the category, it doesn't matter which of the
-    # assigned reads icount-mini counts.
-
-    # extract unique read names from list
-
-    collapsed_bed_path = os.path.join(OUTPUT_DIR, f"{label}_collapsed.bed")
-    seen = set()
-
-    with open(assigned_bed_path) as assigned_out, \
-        open(collapsed_bed_path, "w") as collapsed_out:
-            for line in assigned_out:
-                cols = line.rstrip("\n").split("\t")
-                assigned_rn = cols[3]
-                if assigned_rn not in seen:
-                    seen.add(assigned_rn)
-                    collapsed_out.write(line)
-                else:
-                    continue
-
-    # Also export collapsed as a bam for resolve_groups_and_crosslinks workflow
-
-    collapsed_bed = pybedtools.BedTool(collapsed_bed_path)
-    collapsed_bam = collapsed_bed.bedtobam(g=genome_tmp)
-    #collapsed_bam.saveas(os.path.join(OUTPUT_DIR, f'{label}_collapsed.bam'))
-
-    # and sort and index
-
-    collapsed_sorted_bam_path = os.path.join(OUTPUT_DIR, f'{label}_collapsed.bam')
-    pysam.sort("-o", collapsed_sorted_bam_path, collapsed_bam.fn)
-    pysam.index(collapsed_sorted_bam_path)
-
     # -------------------------------------------------------------------------------------------
 
     total = sum(counts.values())
@@ -314,6 +274,8 @@ def main():
         bam_path = os.path.join(BAM_DIR, bam_file)
         counts, ambig = process_bam(bam_path, feature_bed_path)
 
+        label = os.path.splitext(os.path.basename(bam_path))[0]
+
         for cat, n in counts.items():
             all_rows.append({"sample": sample_name, "category": cat, "read_count": n})
         all_ambiguous[sample_name] = ambig
@@ -323,7 +285,8 @@ def main():
 
 
     # ── Save CSV summary ─────────────────────────────────────────────────
-    csv_path = os.path.join(OUTPUT_DIR, "repeat_ncRNA_read_counts.csv")
+
+    csv_path = os.path.join(OUTPUT_DIR, f"repeat_ncRNA_read_counts_{label}.csv")
     df_wide.to_csv(csv_path, index=False)
     print(f"\nSummary saved to: {csv_path}")
 
@@ -334,7 +297,7 @@ def main():
     print(pivot.to_string())
 
     # ── Log discarded ambiguous reads ────────────────────────────────────
-    log_path = os.path.join(OUTPUT_DIR, "discarded_ambiguous_reads.tsv")
+    log_path = os.path.join(OUTPUT_DIR, f"discarded_ambiguous_reads_{label}.tsv")
     with open(log_path, "w") as f:
         f.write("sample\tread_name\tcategories\n")
         for sample, ambig_list in all_ambiguous.items():

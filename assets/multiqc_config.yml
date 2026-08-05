@@ -228,12 +228,12 @@ custom_data:
       section_name: "Type"
       description: "Crosslinks by type"
       plot_type: 'bargraph'
-  te_mm_binning:
-      parent_id: te_mm
-      parent_name: "TE quantities"
+  mm_binning:
+      parent_id: "Overall binding"
+      parent_name: "Binding assessed by binning"
       file_format: "csv"
       section_name: "Binning"
-      description: "Number of reads which mapped within specific TE families."
+      description: "Overall binding to different regions and types of RNA."
       plot_type: "bargraph"
       pconfig:
         stacking: "normal"
@@ -306,8 +306,8 @@ sp:
     fn: "summary_subtype_qc.tsv"
   icountmini_summary_mqc_type:
     fn: "summary_type_qc.tsv"
-  te_mm_binning:
-    fn: "repeat_ncRNA_read_counts.csv"
+  mm_binning:
+    fn: "multimap_binning.csv"
   summary_type:
     fn: "summary_type_metrics.tsv"
   summary_subtype:

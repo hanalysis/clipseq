@@ -12,8 +12,8 @@ process GET_CROSSLINKS {
     tuple val(meta2), path(fai)
 
     output:
-    tuple val(meta), path("*.xl.bed")               , emit: bed 
-    tuple val(meta), path("*.xl.bedgraph")          , emit: bedgraph 
+    tuple val(meta), path("*.xl.bed")               , emit: bed
+    tuple val(meta), path("*.xl.bedgraph")          , emit: bedgraph
     tuple val(meta), path("*.xl.CPMnorm.bedgraph")  , emit: norm_bedgraph
     path  "versions.yml"                            ,emit: versions
 

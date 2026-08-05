@@ -97,10 +97,13 @@ include { CLIPQC                                                          } from
 include { LINUX_COMMAND as CONSENSUS_CROSSLINKS_REORDER_BED               } from '../modules/local/linux_command'
 include { MERGE_SUMMARY                                                   } from '../modules/local/merge_summary'
 include { ENCODE_MOVEUMI                                                  } from '../modules/local/encode_moveumi/main'
-include { PEKA_MQC_PLOTS                                              } from '../modules/local/peka_mqc_plots'
-include { TE_QC } from '../modules/local/te_qc'
-include { ICOUNTMINI_SUMMARY_MQC } from '../modules/local/icountmini_summary_mqc'
-include {MULTIMAP_CLASS_BINNING} from '../modules/local/multimap_class_binning'
+include { PEKA_MQC_PLOTS                                                  } from '../modules/local/peka_mqc_plots'
+include { TE_QC                                                           } from '../modules/local/te_qc'
+include { ICOUNTMINI_SUMMARY_MQC                                          } from '../modules/local/icountmini_summary_mqc'
+include { MULTIMAP_CLASS_BINNING as BIN_ncRNA                             } from '../modules/local/multimap_class_binning'
+include { MULTIMAP_CLASS_BINNING as BIN_REGIONS                           } from '../modules/local/multimap_class_binning'
+include { GET_INIT_ALIGNED_XLINKS                                         } from '../modules/local/get_init_aligned_xlinks'
+include { COMBINE_BINS                                                    } from '../modules/local/combine_bins'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -162,6 +165,8 @@ include { TELESCOPE_ASSIGN                                          } from '../m
 include { SAMTOOLS_VIEW as FILTER_UNIQUE_MAP_UPDATED                } from '../modules/nf-core/samtools/view/main'
 include { SAMTOOLS_VIEW as FILTER_UNIQUE_MAP_OTHER                  } from '../modules/nf-core/samtools/view/main'
 include { SAMTOOLS_SORT as SORT_BAMS_FOR_TELE                       } from '../modules/nf-core/samtools/sort/main'
+include { SAMTOOLS_SORT as SORT_INIT_ALIGNED_XLINKS                 } from '../modules/nf-core/samtools/sort/main'
+include { SAMTOOLS_INDEX as INDEX_INIT_ALIGNED_XLINKS               } from '../modules/nf-core/samtools/index/main'
 
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
@@ -400,10 +405,13 @@ workflow CLIPSEQ {
         ch_genome_unique_dedupe_bai = GENOME_UNIQUE_DEDUP.out.bai
         ch_umi_log    = GENOME_UNIQUE_DEDUP.out.umi_log
 
+        // NB multi is multi and unique
         GENOME_MULTI_DEDUP (
             ch_genome_multi_bam_bai
         )
         ch_versions   = ch_versions.mix(GENOME_MULTI_DEDUP.out.versions)
+        ch_genome_multi_dedupe_bam = GENOME_MULTI_DEDUP.out.bam
+        ch_genome_multi_dedupe_bai = GENOME_MULTI_DEDUP.out.bai
 
         NCRNA_DEDUP (
             ch_ncrna_bam_bai
@@ -423,7 +431,56 @@ workflow CLIPSEQ {
     ch_telescope_gtf = Channel.value([[id: 'te_annotations'], file(params.telescope_gtf, checkIfExists: true)])
 
 
-    // TE quantifcation insert
+    // Overall read assignment //
+    // 1: get single xlink coordinates only
+
+    GET_INIT_ALIGNED_XLINKS(
+        ch_genome_multi_dedupe_bam,
+        ch_fasta_fai
+    )
+
+    SORT_INIT_ALIGNED_XLINKS(
+        GET_INIT_ALIGNED_XLINKS.out.bam,
+        ch_fasta
+    )
+
+    ch_init_aligned_xlinks = SORT_INIT_ALIGNED_XLINKS.out.bam
+
+    INDEX_INIT_ALIGNED_XLINKS(
+        SORT_INIT_ALIGNED_XLINKS.out.bam,
+
+    )
+
+    // 2: Binning to assign to TEs/ncRNA/tRNA
+
+    BIN_ncRNA(
+        ch_init_aligned_xlinks,
+        ch_telescope_gtf
+    )
+
+    // 3: Identify reads which were not assigned from 1st binning
+
+    IDENTIFY_UNBINNED(
+        ch_init_aligned_xlinks,
+        MULTIMAP_CLASS_BINNING.discarded_reads
+    )
+
+    // 4: Run binning again on unassigned reads, at regional level (e.g. 5UTR | CDS | intron)
+
+    BIN_REGIONS(
+        IDENTIFY_UNBINNED.out.bam,
+        ch_regions_resolved_gtf
+    )
+
+    // 5: Combine assignments from both bins
+
+    COMBINE_BINS(
+        BIN_ncRNA.out.bam,
+        BIN_REGIONS.out.bam
+    )
+
+
+    // TE quantifcation insert //
 
     if(params.run_te) {
         // Check rmsk GTF has been provided
@@ -962,6 +1019,7 @@ workflow CLIPSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(ch_deseq2_qc_plots.flatten().collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(PEKA_MQC_PLOTS.out.plots.flatten().collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(MULTIMAP_CLASS_BINNING.out.counted_reads.collect().ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(COMBINE_BINS.out.csv.collect().ifEmpty([]))
 
         if(params.run_crosslinking) {
             ch_multiqc_files = ch_multiqc_files.mix(ICOUNTMINI_SUMMARY_MQC.out.subtype.collect().ifEmpty([]))
