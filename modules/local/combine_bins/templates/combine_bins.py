@@ -9,8 +9,7 @@ import argparse
 
 parser = argparse.ArgumentParser(
     prog='Merge assigned reads from binning',
-    description='Creates bam from unassigned reads - reads which were discarded by previous iteration of binning due to '
-    'ambiguity.'
+    description='Merges the outputs from the two rounds of binning to produce a .csv for multiqc'
 )
 
 parser.add_argument('-a',
@@ -26,6 +25,6 @@ TE_counts = pd.read_csv(args.a)
 
 region_counts = pd.read_csv(args.b)
 
-merged = pd.merge(TE_counts, region_counts, on="sample")
+merged = pd.merge(TE_counts, region_counts, on="sample", how="left")
 
 merged.to_csv("multimap_binning.csv", index=False)

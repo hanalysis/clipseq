@@ -102,7 +102,8 @@ include { TE_QC                                                           } from
 include { ICOUNTMINI_SUMMARY_MQC                                          } from '../modules/local/icountmini_summary_mqc'
 include { MULTIMAP_CLASS_BINNING as BIN_ncRNA                             } from '../modules/local/multimap_class_binning'
 include { MULTIMAP_CLASS_BINNING as BIN_REGIONS                           } from '../modules/local/multimap_class_binning'
-include { GET_INIT_ALIGNED_XLINKS                                         } from '../modules/local/get_init_aligned_xlinks'
+include { GET_INIT_ALIGNED_CROSSLINKS                                     } from '../modules/local/get_init_aligned_xlinks'
+include { IDENTIFY_UNBINNED                                               } from '../modules/local/identify_unbinned'
 include { COMBINE_BINS                                                    } from '../modules/local/combine_bins'
 
 //
@@ -410,8 +411,6 @@ workflow CLIPSEQ {
             ch_genome_multi_bam_bai
         )
         ch_versions   = ch_versions.mix(GENOME_MULTI_DEDUP.out.versions)
-        ch_genome_multi_dedupe_bam = GENOME_MULTI_DEDUP.out.bam
-        ch_genome_multi_dedupe_bai = GENOME_MULTI_DEDUP.out.bai
 
         NCRNA_DEDUP (
             ch_ncrna_bam_bai
@@ -430,39 +429,42 @@ workflow CLIPSEQ {
     // telescope gtf now required
     ch_telescope_gtf = Channel.value([[id: 'te_annotations'], file(params.telescope_gtf, checkIfExists: true)])
 
+    ch_all_multi_bams = GENOME_MULTI_DEDUP.out.bam
+        .map { meta, bam -> bam }
+        .collect()
+        .map { bams -> [[id: 'all_samples'], bams] }
 
     // Overall read assignment //
     // 1: get single xlink coordinates only
 
     GET_INIT_ALIGNED_XLINKS(
-        ch_genome_multi_dedupe_bam,
+        ch_all_multi_bams,
         ch_fasta_fai
     )
 
     SORT_INIT_ALIGNED_XLINKS(
         GET_INIT_ALIGNED_XLINKS.out.bam,
-        ch_fasta
+        ch_fasta.map { fasta -> [[id: 'fasta'], fasta] }
     )
 
     ch_init_aligned_xlinks = SORT_INIT_ALIGNED_XLINKS.out.bam
 
     INDEX_INIT_ALIGNED_XLINKS(
-        SORT_INIT_ALIGNED_XLINKS.out.bam,
-
+        SORT_INIT_ALIGNED_XLINKS.out.bam
     )
 
     // 2: Binning to assign to TEs/ncRNA/tRNA
 
     BIN_ncRNA(
         ch_init_aligned_xlinks,
-        ch_telescope_gtf
+        ch_telescope_gtf,
     )
 
     // 3: Identify reads which were not assigned from 1st binning
 
     IDENTIFY_UNBINNED(
         ch_init_aligned_xlinks,
-        MULTIMAP_CLASS_BINNING.discarded_reads
+        BIN_ncRNA.out.discarded_reads
     )
 
     // 4: Run binning again on unassigned reads, at regional level (e.g. 5UTR | CDS | intron)
@@ -475,8 +477,8 @@ workflow CLIPSEQ {
     // 5: Combine assignments from both bins
 
     COMBINE_BINS(
-        BIN_ncRNA.out.bam,
-        BIN_REGIONS.out.bam
+        BIN_ncRNA.out.counted_reads,
+        BIN_REGIONS.out.counted_reads
     )
 
 
@@ -498,13 +500,8 @@ workflow CLIPSEQ {
         ch_bam_c = Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test.rna.paired_end.bam')
              .map { file -> [[id: 'control'], file] }
 
-        ch_all_t_bams = GENOME_MULTI_DEDUP.out.bam
-            .map { meta, bam -> bam }
-            .collect()
-            .map { bams -> [[id: 'all_samples'], bams] }
-
         TETRANSCRIPTS(
-            ch_all_t_bams, // tx bam
+            ch_all_multi_bams, // tx bam
             ch_bam_c, // control bam
             ch_gtf, // genome GTF
             ch_tetranscripts_gtf // te GTF
@@ -1007,8 +1004,6 @@ workflow CLIPSEQ {
         ch_multiqc_files = Channel.empty()
         ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
         ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
-        //ch_multiqc_files = ch_multiqc_files.mix(DUMP_SOFTWARE_VERSIONS.out.mqc_yml.collect())
-        //ch_multiqc_files = ch_multiqc_files.mix(DUMP_SOFTWARE_VERSIONS.out.mqc_unique_yml.collect())
 
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.fastqc_zip.collect{it[1]}.ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(FASTQ_FASTQC_UMITOOLS_TRIMGALORE.out.trim_zip.collect{it[1]}.ifEmpty([]))
@@ -1018,7 +1013,6 @@ workflow CLIPSEQ {
         ch_multiqc_files = ch_multiqc_files.mix(CLIPQC.out.tsv.collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(ch_deseq2_qc_plots.flatten().collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(PEKA_MQC_PLOTS.out.plots.flatten().collect().ifEmpty([]))
-        ch_multiqc_files = ch_multiqc_files.mix(MULTIMAP_CLASS_BINNING.out.counted_reads.collect().ifEmpty([]))
         ch_multiqc_files = ch_multiqc_files.mix(COMBINE_BINS.out.csv.collect().ifEmpty([]))
 
         if(params.run_crosslinking) {

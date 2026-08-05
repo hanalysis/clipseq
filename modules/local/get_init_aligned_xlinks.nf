@@ -19,9 +19,9 @@ process GET_INIT_ALIGNED_CROSSLINKS {
     script:
     def prefix = task.ext.suffix ? "${meta.id}${task.ext.suffix}" : "${meta.id}"
     """
-    bedtools bamtobed -i $bam > dedup.bed
+    bedtools bamtobed -i ${bam} > dedup.bed
     bedtools shift -m 1 -p -1 -i dedup.bed -g $fai > shifted.bed
-    bedtools bedtobam -g $fai > ${prefix}_init_xl_coord.bam
+    bedtools bedtobam shifted.bed -g ${fai} > ${prefix}_init_xl_coord.bam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

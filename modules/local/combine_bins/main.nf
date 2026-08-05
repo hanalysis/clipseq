@@ -1,15 +1,14 @@
-PROCESS COMBINE_BINS {
+process COMBINE_BINS {
     tag "$meta.id"
     label 'process_single'
 
-    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/96/96dde1efad90c922a0198cae64c642be95605c23cf1e53e3c35491817bf6c48b/data':
         'community.wave.seqera.io/library/bedtools_pybedtools_pysam_matplotlib_pruned:79786472f5bd377f' }"
 
     input:
-    tuple val(meta) , path(bam_a)
-    tuple val(meta2), path(bam_b)
+    tuple val(meta) , path(bin_ncRNA)
+    tuple val(meta2), path(bin_regions)
 
     output:
     tuple val(meta), path("*multimap_binning.csv"),  emit: csv
@@ -25,7 +24,7 @@ PROCESS COMBINE_BINS {
     """
 
      python ${projectDir}/modules/local/combine_bins/templates/combine_bins.py \
-     -a ${bam_a}
+     -a ${bam_a} \
      -b ${bam_b}
 
 

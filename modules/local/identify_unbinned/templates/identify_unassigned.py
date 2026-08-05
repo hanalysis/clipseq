@@ -32,8 +32,6 @@ bam = args.bam
 # Get ID
 label = os.path.splitext(os.path.basename(bam))[0]
 
-print({label})
-
 ## Read in discarded read names
 
 discarded_reads =  pd.read_csv(args.discarded, sep='\t')

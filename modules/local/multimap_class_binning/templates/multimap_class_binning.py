@@ -43,6 +43,9 @@ parser.add_argument('--classifiers',
 parser.add_argument('--col',
                     help= "Column which you want the features to be read from",
                     default = 9)
+parser.add_argument('--name',
+                    help = "The suffix for the name of the discarded and aligned reads files",
+                    default = "")
 
 args = parser.parse_args()
 
@@ -53,6 +56,7 @@ BAM_FILES = args.input
 OUTPUT_DIR = args.outdir
 CLASSIFIERS = args.classifiers
 COL = args.col
+NAME = args.name
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 def extract_sample_name(bam_filename):
@@ -286,7 +290,7 @@ def main():
 
     # ── Save CSV summary ─────────────────────────────────────────────────
 
-    csv_path = os.path.join(OUTPUT_DIR, f"repeat_ncRNA_read_counts_{label}.csv")
+    csv_path = os.path.join(OUTPUT_DIR, f"repeat_ncRNA_read_counts_{NAME}.csv")
     df_wide.to_csv(csv_path, index=False)
     print(f"\nSummary saved to: {csv_path}")
 
@@ -297,7 +301,7 @@ def main():
     print(pivot.to_string())
 
     # ── Log discarded ambiguous reads ────────────────────────────────────
-    log_path = os.path.join(OUTPUT_DIR, f"discarded_ambiguous_reads_{label}.tsv")
+    log_path = os.path.join(OUTPUT_DIR, f"discarded_ambiguous_reads_{NAME}.tsv")
     with open(log_path, "w") as f:
         f.write("sample\tread_name\tcategories\n")
         for sample, ambig_list in all_ambiguous.items():

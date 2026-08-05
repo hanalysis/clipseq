@@ -1,8 +1,7 @@
-PROCESS IDENTIFY_UNBINNED {
+process IDENTIFY_UNBINNED {
     tag "$meta.id"
     label 'process_single'
 
-    conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
       'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/96/96dde1efad90c922a0198cae64c642be95605c23cf1e53e3c35491817bf6c48b/data':
       'community.wave.seqera.io/library/bedtools_pybedtools_pysam_matplotlib_pruned:79786472f5bd377f' }"
@@ -33,7 +32,7 @@ PROCESS IDENTIFY_UNBINNED {
     "${task.process}":
         python: \$(python --version | sed 's/Python //')
         pandas: \$(python -c "import pandas; print(pandas.__version__)")
-        pandas: \$(python -c "import pysam; print(pysam.__version__)")
+        pysam: \$(python -c "import pysam; print(pysam.__version__)")
     END_VERSIONS
     """
 
@@ -43,7 +42,7 @@ PROCESS IDENTIFY_UNBINNED {
     "${task.process}":
         python: \$(python --version | sed 's/Python //')
         pandas: \$(python -c "import pandas; print(pandas.__version__)")
-        pandas: \$(python -c "import pysam; print(pysam.__version__)")
+        pysam: \$(python -c "import pysam; print(pysam.__version__)")
     END_VERSIONS
     """
 

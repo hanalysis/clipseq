@@ -229,7 +229,7 @@ custom_data:
       description: "Crosslinks by type"
       plot_type: 'bargraph'
   mm_binning:
-      parent_id: "Overall binding"
+      parent_id: overall_binning
       parent_name: "Binding assessed by binning"
       file_format: "csv"
       section_name: "Binning"
