@@ -12,7 +12,7 @@ process IDENTIFY_UNBINNED {
 
     output:
     tuple val(meta), path("*discarded_reads_sorted.bam"),  emit: bam
-    tuple val(meta), path("*discarded_reads_sorted.bai"),  emit: bai
+    tuple val(meta), path("*discarded_reads_sorted.bai"),  emit: bai, optional : true
     path  "versions.yml",            emit: versions
 
     when:
