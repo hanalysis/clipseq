@@ -442,7 +442,7 @@ workflow CLIPSEQ {
 
     SORT_INIT_ALIGNED_XLINKS(
         GET_INIT_ALIGNED_XLINKS.out.bam,
-        ch_fasta.map { fasta -> [[id: 'fasta'], fasta] }
+        [[],[]]
     )
 
     ch_init_aligned_xlinks = SORT_INIT_ALIGNED_XLINKS.out.bam
