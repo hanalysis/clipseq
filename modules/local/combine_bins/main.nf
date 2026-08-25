@@ -9,6 +9,7 @@ process COMBINE_BINS {
     input:
     tuple val(meta) , path(bin_ncRNA)
     tuple val(meta2), path(bin_regions)
+    path(premap_logs)
 
     output:
     tuple val(meta), path("*multimap_binning.csv"),  emit: csv
@@ -25,7 +26,8 @@ process COMBINE_BINS {
 
      python ${projectDir}/modules/local/combine_bins/templates/combine_bins.py \
      -a ${bin_ncRNA} \
-     -b ${bin_regions}
+     -b ${bin_regions} \
+     -premap ${premap_logs}
 
 
     cat <<-END_VERSIONS > versions.yml

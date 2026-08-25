@@ -484,7 +484,8 @@ workflow CLIPSEQ {
 
     COMBINE_BINS(
         BIN_ncRNA.out.counted_reads,
-        BIN_REGIONS.out.counted_reads
+        BIN_REGIONS.out.counted_reads,
+        ch_ncrna_log.map { meta, log -> log }.collect()
     )
 
 
