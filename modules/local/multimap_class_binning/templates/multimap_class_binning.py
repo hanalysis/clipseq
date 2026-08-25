@@ -183,6 +183,7 @@ def process_bam(bam_path, feature_bed_path):
     #      and prints multi-category reads to stderr.
     awk_script = r"""
     {
+        if ($10 == ".") { no_feature[$4] = 1; next }
         rn = $4
         cat = $10
         if (!(rn in cats)) {
@@ -198,6 +199,10 @@ def process_bam(bam_path, feature_bed_path):
         }
     }
     END {
+        for (rn in no_feature) {
+            if (!(rn in cats))
+            printf "NO_FEATURE\t%s\n", rn > "/dev/stderr"
+            }
         for (rn in cats) {
             n = split(cats[rn], arr, SUBSEP)
             if (n == 1) {
@@ -223,7 +228,7 @@ def process_bam(bam_path, feature_bed_path):
         f"bedtools bamtobed -i '{bam_path}' "
         f"| sort -k1,1 -k2,2n "
         f"| bedtools intersect -a stdin -b '{feature_bed_path}' "
-        f"  -wo -sorted -s -g '{genome_tmp}' "
+        f"  -loj -sorted -s -g '{genome_tmp}' "
         f"| tee '{intersect_path}' "
         f"| awk -F'\\t' -f '{OUTPUT_DIR}/_awk_dedup.awk'"
     )
@@ -251,6 +256,9 @@ def process_bam(bam_path, feature_bed_path):
     for line in ambig_lines:
         if line.startswith("AMBIG\t"):
             n_ambiguous = int(line.split("\t")[1])
+        elif line.startswith("NO_FEATURE\t"):
+            rn = line.split("\t")[1]
+            ambig_reads.append((rn, "no_feature"))
         else:
             parts = line.split("\t", 1)
             if len(parts) == 2:
