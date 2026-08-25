@@ -404,7 +404,6 @@ workflow CLIPSEQ {
         ch_versions   = ch_versions.mix(GENOME_UNIQUE_DEDUP.out.versions)
         ch_genome_unique_dedupe_bam = GENOME_UNIQUE_DEDUP.out.bam
         ch_genome_unique_dedupe_bai = GENOME_UNIQUE_DEDUP.out.bai
-        ch_umi_log    = GENOME_UNIQUE_DEDUP.out.umi_log
 
         // NB multi is multi and unique
         GENOME_MULTI_DEDUP (
@@ -414,6 +413,7 @@ workflow CLIPSEQ {
         ch_genome_multi_dedupe_bam = GENOME_MULTI_DEDUP.out.bam
         ch_genome_multi_dedupe_bai = GENOME_MULTI_DEDUP.out.bai
         ch_genome_multi_dedupe_bam_bai = ch_genome_multi_dedupe_bam.join(ch_genome_multi_dedupe_bai, by: 0)
+        ch_umi_log    = GENOME_MULTI_DEDUP.out.umi_log
 
         NCRNA_DEDUP (
             ch_ncrna_bam_bai
