@@ -3,8 +3,8 @@ process COMBINE_BINS {
     label 'process_single'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/96/96dde1efad90c922a0198cae64c642be95605c23cf1e53e3c35491817bf6c48b/data':
-        'community.wave.seqera.io/library/bedtools_pybedtools_pysam_matplotlib_pruned:79786472f5bd377f' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/9b/9b82e07dc06620144a486ca8e8b326c4594b4bc3563114235fb2ab377ee4093d/data':
+        'community.wave.seqera.io/library/pandas_pyyaml:70aa423a6e4688f5' }"
 
     input:
     tuple val(meta) , path(bin_ncRNA)
