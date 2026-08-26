@@ -26,17 +26,11 @@ run_modules:
   - star
 
 module_order:
-  - fastqc:
-      name: "FastQC (raw)"
-      anchor: "fastqc_raw"
-      info: "This section of the report shows FastQC results before adapter trimming."
-      path_filters:
-        - "*_fastqc.zip"
   - cutadapt
   - fastqc:
       name: "FastQC (trimmed)"
       anchor: "fastqc_trimmed"
-      info: "This section of the report shows FastQC results after adapter trimming."
+      info: "FastQC results after adapter trimming."
       path_filters:
         - "*_trimmed_fastqc.zip"
   - bowtie1:
@@ -63,7 +57,7 @@ custom_data:
     parent_name: "Deduplication"
     file_format: "tsv"
     section_name: "Reads"
-    description: "The number of reads before PCR deduplication, and number of cDNAs after, for each experiment"
+    description: "The number of reads before PCR deduplication, and number of cDNAs after, for each experiment. NB for this metric, multi-mapped reads are counted in multiplicate, as de-duplication is done by UMI and alignment location."
     plot_type: "bargraph"
     cats:
       - input_reads
@@ -78,7 +72,7 @@ custom_data:
     parent_name: "Crosslinks"
     file_format: "tsv"
     section_name: "Counts"
-    description: "The number of crosslinks or crosslink sites for each experiment"
+    description: "The number of crosslinks or crosslink sites for each experiments."
     plot_type: "bargraph"
     cats:
       - number_of_cDNAss
@@ -216,57 +210,16 @@ custom_data:
       parent_name: "Motif analysis (PEKA)"
       section_name: "PEKA heatmap"
       description: "Motif enrichment heatmap for the top n k-mers per sample"
-  icountmini_summary_mqc_subtype:
-      parent_id: icountmini
-      parent_name: "ICount-Mini summaries"
-      section_name: "Subtype"
-      description: "Crosslinks by subtype"
-      plot_type: 'bargraph'
-  icountmini_summary_mqc_type:
-      parent_id: icountmini
-      parent_name: "ICount-Mini summaries"
-      section_name: "Type"
-      description: "Crosslinks by type"
-      plot_type: 'bargraph'
   mm_binning:
       parent_id: overall_binning
-      parent_name: "Crosslinks by category"
+      parent_name: "Summary"
       file_format: "csv"
-      section_name: "Number of crosslinks by category"
+      section_name: "Number of cDNAs by category"
       description: "Overall binding to different regions and types of RNA, categories determined by binning (please see the documentation for more details)."
       plot_type: "bargraph"
       pconfig:
         stacking: "normal"
         id: "binning_bargraph"
-  summary_type:
-    parent_id: Summary
-    parent_name: "Summary"
-    file_format: "tsv"
-    section_name: "Percentage of cDNA premap"
-    description: "The total percentage of cDNA summary mapped"
-    plot_type: 'bargraph'
-    cats:
-      - CDS
-      - ncRNA
-      - intergenic
-      - "premapped RNA"
-    pconfig:
-      ylab: "Type"
-      stacking: "group"
-      cpswitch: False
-      tt_percentages: False
-  summary_subtype:
-    parent_id: Summary
-    parent_name: "Summary"
-    file_format: "tsv"
-    section_name: "Percentage of cDNA premap subtypes"
-    description: "The total percentage of cDNA subtypes mapped"
-    #plot_type: 'bargraph'
-    pconfig:
-      ylab: "Type"
-      #stacking: False
-      cpswitch: False
-      tt_percentages: False
 
 sp:
   mapping:
@@ -309,19 +262,8 @@ sp:
     fn: "summary_type_qc.tsv"
   mm_binning:
     fn: "multimap_binning.csv"
-  summary_type:
-    fn: "summary_type_metrics.tsv"
-  summary_subtype:
-    fn: 'summary_subtype_metrics.tsv'
 
 table_columns_visible:
-  "FASTQC (raw)":
-    median_sequence_length: False
-    total_sequences: False
-    percent_duplicates: False
-    percent_gc: False
-  cutadapt:
-    percent_trimmed: False
   "FASTQC (trimmed)":
     median_sequence_length: True
     total_sequences: True
