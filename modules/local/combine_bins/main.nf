@@ -13,6 +13,7 @@ process COMBINE_BINS {
 
     output:
     tuple val(meta), path("*multimap_binning.csv"),  emit: csv
+    path "colours_mqc_config.yaml", emit: config
     path  "versions.yml",            emit: versions
 
     when:

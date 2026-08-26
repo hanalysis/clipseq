@@ -230,13 +230,14 @@ custom_data:
       plot_type: 'bargraph'
   mm_binning:
       parent_id: overall_binning
-      parent_name: "Binding assessed by binning"
+      parent_name: "Crosslinks by category"
       file_format: "csv"
-      section_name: "Binning"
-      description: "Overall binding to different regions and types of RNA."
+      section_name: "Number of crosslinks by category"
+      description: "Overall binding to different regions and types of RNA, categories determined by binning (please see the documentation for more details)."
       plot_type: "bargraph"
       pconfig:
         stacking: "normal"
+        id: "binning_bargraph"
   summary_type:
     parent_id: Summary
     parent_name: "Summary"
