@@ -282,6 +282,7 @@ workflow CLIPSEQ {
         ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
         ch_fastq    = INPUT_CHECK.out.reads
     }
+
     //EXAMPLE CHANNEL STRUCT: [[sample_name:h3k27me3_R1, group_name:h3k27me3, input_name:input, single_end:true, fastq:dsgsgh.fq.gz], [FASTQ]]
     // ch_fastq | view
     if(params.encode_eclip){
@@ -348,7 +349,6 @@ workflow CLIPSEQ {
         ch_transcript_unique_bam   = RNA_ALIGN.out.transcript_unique_bam
         ch_transcript_unique_bai   = RNA_ALIGN.out.transcript_unique_bai
     }
-    //ch_genome_bam | view
 
     ch_paraclu_mincluster = Channel.value(params.paraclu_minValue)
     if(!params.skip_transcriptome) {
@@ -953,13 +953,6 @@ workflow CLIPSEQ {
 
     if(params.run_reporting) {
 
-        // MODULE: Collect software versions
-
-        // DUMP_SOFTWARE_VERSIONS (
-        //     ch_versions.unique().collectFile()
-        // )
-
-
        // MODULE: Run clipqc
 
         CLIPQC (
@@ -976,9 +969,6 @@ workflow CLIPSEQ {
             ch_merged_summary_subtype.collect{it[1]},
             ch_merged_summary_gene.collect{it[1]},
 
-            //ICOUNT_ANALYSE.out.bed_peaks.map{ it[1] },
-            //PARACLU_ANALYSE_GENOME.out.peaks.map{ it[1] },
-            //CLIPPY_GENOME.out.peaks.map{ it[1] }
         )
 
         // MODULE: Run peka multiqc plots
@@ -1027,18 +1017,6 @@ workflow CLIPSEQ {
         )
         multiqc_report = MULTIQC.out.report.toList()
 
-        // MULTIQC (
-        //     ch_multiqc_config,
-        //     DUMP_SOFTWARE_VERSIONS.out.mqc_yml.collect(),
-        //     DUMP_SOFTWARE_VERSIONS.out.mqc_unique_yml.collect(),
-        //     ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yml"),
-        //     FASTQC_TRIMGALORE.out.fastqc_zip.collect{it[1]}.ifEmpty([]),
-        //     FASTQC_TRIMGALORE.out.fastqc_trim_zip.collect{it[1]}.ifEmpty([]),
-        //     FASTQC_TRIMGALORE.out.trim_log.collect{it[1]}.ifEmpty([]),
-        //     ch_bt_log.collect{it[1]}.ifEmpty([]),
-        //     ch_star_log.collect{it[1]}.ifEmpty([]),
-        //     CLIPSEQ_CLIPQC.out.tsv.collect().ifEmpty([])
-        // )
     }
 }
 
