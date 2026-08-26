@@ -46,7 +46,7 @@ for logfile in args.premap:
                 first = line.find("Reported ") + 9
                 second = line.find(" alignments")
                 val = line[first:second]
-                d.append({"sample":sample_id, "pre-mapped":int(val)})
+                d.append({"sample":sample_id, "Pre-mapped (rDNA)":int(val)})
             else:
                 continue
 
