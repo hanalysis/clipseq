@@ -98,7 +98,6 @@ include { LINUX_COMMAND as CONSENSUS_CROSSLINKS_REORDER_BED               } from
 include { MERGE_SUMMARY                                                   } from '../modules/local/merge_summary'
 include { ENCODE_MOVEUMI                                                  } from '../modules/local/encode_moveumi/main'
 include { PEKA_MQC_PLOTS                                                  } from '../modules/local/peka_mqc_plots'
-include { TE_QC                                                           } from '../modules/local/te_qc'
 include { ICOUNTMINI_SUMMARY_MQC                                          } from '../modules/local/icountmini_summary_mqc'
 include { MULTIMAP_CLASS_BINNING as BIN_ncRNA                             } from '../modules/local/multimap_class_binning'
 include { MULTIMAP_CLASS_BINNING as BIN_REGIONS                           } from '../modules/local/multimap_class_binning'
@@ -542,10 +541,6 @@ workflow CLIPSEQ {
             .map { meta, log -> log }
             .mix(TETRANSCRIPTS.out.log.map { meta, log -> log })
             .collect()
-
-        TE_QC(
-            ch_te_qc
-        )
 
     }
 
@@ -1019,11 +1014,6 @@ workflow CLIPSEQ {
             ch_multiqc_files = ch_multiqc_files.mix(ICOUNTMINI_SUMMARY_MQC.out.subtype.collect().ifEmpty([]))
             ch_multiqc_files = ch_multiqc_files.mix(ICOUNTMINI_SUMMARY_MQC.out.type.collect().ifEmpty([]))
         }
-
-        if(params.run_te) {
-            ch_multiqc_files = ch_multiqc_files.mix(TE_QC.out.tele_qc.collect().ifEmpty([]))
-            ch_multiqc_files = ch_multiqc_files.mix(TE_QC.out.tetr_qc.collect().ifEmpty([]))
-            }
 
         ch_tmp = ch_ncrna_log.collect{it[1]}
 
