@@ -1007,7 +1007,7 @@ workflow CLIPSEQ {
 
         ch_tmp = ch_ncrna_log.collect{it[1]}
 
-        ch_multiqc_custom_config = ch_multiqc_custom_config.mix(COMBINE_BINS.out.config.collect().ifEmpty([]))
+        ch_multiqc_custom_config = ch_multiqc_custom_config.mix(COMBINE_BINS.out.config.ifEmpty([]))
 
         MULTIQC (
             ch_multiqc_files.collect(),
