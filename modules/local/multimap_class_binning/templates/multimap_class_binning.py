@@ -111,7 +111,7 @@ def gtf_to_category_bed(gtf_path):
                 continue
             start = int(cols[3]) - 1    # GTF 1-based → BED 0-based
             end   = int(cols[4])
-            #print(cols[8])
+            source = cols[1]
             attrs = cols[int(COL)-1]
             cat = ""
             classifiers = CLASSIFIERS.split(", ")
@@ -121,12 +121,10 @@ def gtf_to_category_bed(gtf_path):
                     if cat:
                         continue
                     cat = parse_attr(attrs, i)
-                    # NTS REMOVE AFTER TESTING
-                    #print("cat = ", cat)
-                    #print("i = ", i)
 
                 # Replace any whitespace in category with underscore
                 cat = cat.replace(" ", "_")
+                cat = source + ": " + cat
                 fout.write(f"{chrom}\t{start}\t{end}\t{cat}\t0\t{strand}\n")
                 n += 1
             else:
