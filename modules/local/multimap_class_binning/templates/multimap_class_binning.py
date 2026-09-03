@@ -97,6 +97,8 @@ def gtf_to_category_bed(gtf_path):
     bed_path = os.path.join(OUTPUT_DIR, "_features_unsorted.bed")
     n = 0
     skipped = 0
+    cats_list = []
+    sources_list = []
     with open(gtf_path) as fin, open(bed_path, "w") as fout:
         for line in fin:
             if line.startswith("#"):
@@ -111,6 +113,7 @@ def gtf_to_category_bed(gtf_path):
                 continue
             start = int(cols[3]) - 1    # GTF 1-based → BED 0-based
             end   = int(cols[4])
+            #print(cols[8])
             source = cols[1]
             attrs = cols[int(COL)-1]
             cat = ""
@@ -124,6 +127,7 @@ def gtf_to_category_bed(gtf_path):
 
                 # Replace any whitespace in category with underscore
                 cat = cat.replace(" ", "_")
+                cats_list.append(cat)
                 cat = source + ": " + cat
                 fout.write(f"{chrom}\t{start}\t{end}\t{cat}\t0\t{strand}\n")
                 n += 1
@@ -132,6 +136,18 @@ def gtf_to_category_bed(gtf_path):
                 cat = cat.replace(" ", "_")
                 fout.write(f"{chrom}\t{start}\t{end}\t{cat}\t0\t{strand}\n")
                 n += 1
+            sources_list.append(source)
+
+    # Warning if multiple sources for one category in the GTF
+    cats_source_df = pd.DataFrame({"cats": cats_list, "source": sources_list})
+    num_sources = cats_source_df.groupby("cats")["source"].transform("nunique")
+    print(num_sources.head())
+    duplicates = cats_source_df[num_sources > 1]
+    print(duplicates.head())
+    if (len(duplicates) > 0):
+        print("WARNING: Multiple sources found for one category in your GTF, this could "
+        "erroneously lead to reads being discarded.")
+        print(duplicates.drop_duplicates(subset=["cats", "source"]))
 
     if skipped:
         print(f"  Skipped {skipped:,} lines with empty chromosome")
