@@ -134,6 +134,7 @@ def gtf_to_category_bed(gtf_path):
             else:
                 cat = cols[int(COL)-1]
                 cats_list.append(cat)
+                cat = source + ": " + cat
                 cat = cat.replace(" ", "_")
                 fout.write(f"{chrom}\t{start}\t{end}\t{cat}\t0\t{strand}\n")
                 n += 1
