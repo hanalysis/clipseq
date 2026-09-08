@@ -21,7 +21,8 @@ process GET_INIT_ALIGNED_XLINKS {
     """
     bedtools bamtobed -i ${bam} > dedup.bed
     bedtools shift -m 1 -p -1 -i dedup.bed -g $fai > shifted.bed
-    bedtools bedtobam -i shifted.bed -g ${fai} > ${prefix}_init_xl_coord.bam
+    awk 'BEGIN{OFS="\t"} { if($6=="+"){ $3=$2+1 } else { $2=$3-1 } print }' shifted.bed > xlink.bed
+    bedtools bedtobam -i xlink.bed -g ${fai} > ${prefix}_init_xl_coord.bam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
