@@ -23,7 +23,7 @@ parser.add_argument('-b',
 
 parser.add_argument('-premap',
                     nargs = "+",
-                    help = "List of bowtie logs from pre-mapping")
+                    help = "List of UMIcollapse logs from pre-mapped bams")
 
 args = parser.parse_args()
 
@@ -38,17 +38,17 @@ linenum = 0
 d = []
 
 for logfile in args.premap:
-    sample_id = os.path.basename(logfile).replace(".out", "").replace("_ncrna", "")
-    with open(logfile, "rt") as myfile:
-        for line in myfile:
-            linenum += 1
-            if line.find("Reported ") != -1 :
-                first = line.find("Reported ") + 9
-                second = line.find(" alignments")
-                val = line[first:second]
-                d.append({"sample":sample_id, "Pre-mapped (rDNA)":int(val)})
-            else:
-                continue
+        sample_id = os.path.basename(logfile).replace(".log", "").replace(".ncRNA.dedup_UMICollapse", "")
+        with open(logfile, "rt") as myfile:
+            for line in myfile:
+                linenum += 1
+                if line.find("Number of reads after deduplicating") != -1 :
+                    first = line.find("Number of reads after deduplicating") + len("Number of reads after deduplicating")
+                    second = len(line)
+                    val = line[first:second]
+                    d.append({"sample":sample_id, "pre-mapped":int(val)})
+                else:
+                    continue
 
 df = pd.DataFrame(d)
 

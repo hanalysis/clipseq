@@ -425,7 +425,7 @@ workflow CLIPSEQ {
         ch_versions     = ch_versions.mix(NCRNA_K1_DEDUP.out.versions)
         ch_ncrna_k1_bam = NCRNA_K1_DEDUP.out.bam
         ch_ncrna_k1_bai = NCRNA_K1_DEDUP.out.bai
-        //ch_umi_log      = NCRNA_K1_DEDUP.out.umi_log
+        ch_umi_ncrna_log      = NCRNA_K1_DEDUP.out.umi_log
     }
 
     // telescope gtf now required
@@ -484,7 +484,7 @@ workflow CLIPSEQ {
     COMBINE_BINS(
         BIN_ncRNA.out.counted_reads,
         BIN_REGIONS.out.counted_reads,
-        ch_ncrna_log.map { meta, log -> log }.collect()
+        ch_umi_ncrna_log.map { meta, log -> log }.collect()
     )
 
 
