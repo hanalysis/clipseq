@@ -512,7 +512,7 @@ workflow CLIPSEQ {
             .map { bams -> [[id: 'all_samples'], bams] }
 
         TETRANSCRIPTS(
-            ch_all_t_bams, // tx bam
+            ch_init_aligned_xlinks, // tx bam
             ch_bam_c, // control bam
             ch_gtf, // genome GTF
             ch_tetranscripts_gtf // te GTF
@@ -535,14 +535,6 @@ workflow CLIPSEQ {
 
     ch_genome_unique_dedupe_bam = MERGE_AND_SORT_TELESCOPE_BAMS.out.bam
     ch_genome_unique_dedupe_bai = MERGE_AND_SORT_TELESCOPE_BAMS.out.bai
-
-        // Collect and merge for TE QC
-        ch_te_qc = TELESCOPE_ASSIGN.out.log
-            .map { meta, log -> log }
-            .mix(TETRANSCRIPTS.out.log.map { meta, log -> log })
-            .collect()
-
-    }
 
     //
     // RESOLVE GROUPS AND GET CROSSLINKS: At this point, if groups have been specified, then we need to merge corresponding BAM files
