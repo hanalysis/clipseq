@@ -21,8 +21,7 @@ process GET_CROSSLINKS {
     script:
     def prefix = task.ext.suffix ? "${meta.id}${task.ext.suffix}" : "${meta.id}"
     """
-    bedtools bamtobed -i $bam > dedup.bed
-    bedtools shift -m 1 -p -1 -i dedup.bed -g $fai > shifted.bed
+    bedtools bamtobed -i $bam >  shifted.bed
     bedtools genomecov -dz -strand + -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{print \$1, \$2, \$2+1, ".", \$3, "+"}' > pos.bed
     bedtools genomecov -dz -strand - -5 -i shifted.bed -g $fai | awk '{OFS="\t"}{print \$1, \$2, \$2+1, ".", \$3, "-"}' > neg.bed
     cat pos.bed neg.bed | sort -k1,1 -k2,2n -k3,3 -k6,6 > ${prefix}.xl.bed

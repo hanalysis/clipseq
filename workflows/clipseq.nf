@@ -519,7 +519,7 @@ workflow CLIPSEQ {
         )
 
         SORT_BAMS_FOR_TELE(
-            GENOME_MULTI_DEDUP.out.bam,
+            SORT_INIT_ALIGNED_XLINKS.out.bam,
             [[],[]]
         )
 
