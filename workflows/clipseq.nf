@@ -102,6 +102,7 @@ include { ICOUNTMINI_SUMMARY_MQC                                          } from
 include { MULTIMAP_CLASS_BINNING as BIN_ncRNA                             } from '../modules/local/multimap_class_binning'
 include { MULTIMAP_CLASS_BINNING as BIN_REGIONS                           } from '../modules/local/multimap_class_binning'
 include { GET_INIT_ALIGNED_XLINKS                                         } from '../modules/local/get_init_aligned_xlinks'
+include { GET_INIT_ALIGNED_XLINKS as GET_INIT_ALIGNED_XLINKS_ncRNA        } from '../modules/local/get_init_aligned_xlinks'
 include { IDENTIFY_UNBINNED                                               } from '../modules/local/identify_unbinned'
 include { COMBINE_BINS                                                    } from '../modules/local/combine_bins'
 
@@ -167,6 +168,8 @@ include { SAMTOOLS_VIEW as FILTER_UNIQUE_MAP_OTHER                  } from '../m
 include { SAMTOOLS_SORT as SORT_BAMS_FOR_TELE                       } from '../modules/nf-core/samtools/sort/main'
 include { SAMTOOLS_SORT as SORT_INIT_ALIGNED_XLINKS                 } from '../modules/nf-core/samtools/sort/main'
 include { SAMTOOLS_INDEX as INDEX_INIT_ALIGNED_XLINKS               } from '../modules/nf-core/samtools/index/main'
+include { SAMTOOLS_SORT as SORT_INIT_ALIGNED_XLINKS_ncRNA           } from '../modules/nf-core/samtools/sort/main'
+include { SAMTOOLS_INDEX as INDEX_INIT_ALIGNED_XLINKS_ncRNA         } from '../modules/nf-core/samtools/index/main'
 
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
@@ -369,8 +372,6 @@ workflow CLIPSEQ {
         ch_paraclu_transcriptome_peaks   = TRANSCRIPTOME_PROCESSING.out.paraclu_peaks
     }
 
-    //ch_genome_umi_log = Channel.empty()
-
     // DEDUPLICATION //
     if(params.source == "fastq" & params.run_dedup) {
         // PREPARE CHANNELS
@@ -518,13 +519,8 @@ workflow CLIPSEQ {
             ch_tetranscripts_gtf // te GTF
         )
 
-        SORT_BAMS_FOR_TELE(
-            SORT_INIT_ALIGNED_XLINKS.out.bam,
-            [[],[]]
-        )
-
         TELESCOPE_ASSIGN(
-            SORT_BAMS_FOR_TELE.out.bam,
+            SORT_INIT_ALIGNED_XLINKS.out.bam,
             ch_telescope_gtf
         )
 
@@ -535,6 +531,34 @@ workflow CLIPSEQ {
 
     ch_genome_unique_dedupe_bam = MERGE_AND_SORT_TELESCOPE_BAMS.out.bam
     ch_genome_unique_dedupe_bai = MERGE_AND_SORT_TELESCOPE_BAMS.out.bai
+
+    }
+
+    // Crosslinks for ncRNA
+    // genome-aligned files get crosslinks for bucketing, os ncRNA files get crosslinks here
+    // to balance
+
+    // join .bam and .bai into one channel
+
+    ch_ncrna_k1_bam_bai_joined = ch_ncrna_k1_bam.join(ch_ncrna_k1_bai, by: 0)
+
+    GET_INIT_ALIGNED_XLINKS_ncRNA(
+        ch_ncrna_k1_bam_bai_joined,
+        ch_ncrna_fasta_fai
+    )
+
+    SORT_INIT_ALIGNED_XLINKS_ncRNA(
+        GET_INIT_ALIGNED_XLINKS_ncRNA.out.bam,
+        [[],[]]
+    )
+
+    INDEX_INIT_ALIGNED_XLINKS_ncRNA(
+        SORT_INIT_ALIGNED_XLINKS_ncRNA.out.bam
+    )
+
+    ch_ncrna_k1_bam =     SORT_INIT_ALIGNED_XLINKS_ncRNA.out.bam
+    ch_ncrna_k1_bai =     INDEX_INIT_ALIGNED_XLINKS_ncRNA.out.bai
+
 
     //
     // RESOLVE GROUPS AND GET CROSSLINKS: At this point, if groups have been specified, then we need to merge corresponding BAM files
