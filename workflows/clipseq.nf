@@ -436,8 +436,7 @@ workflow CLIPSEQ {
     // 1: get single xlink coordinates only
 
     GET_INIT_ALIGNED_XLINKS(
-        ch_genome_multi_dedupe_bam_bai,
-        ch_fasta_fai
+        ch_genome_multi_dedupe_bam_bai
     )
 
     SORT_INIT_ALIGNED_XLINKS(
@@ -543,8 +542,7 @@ workflow CLIPSEQ {
     ch_ncrna_k1_bam_bai_joined = ch_ncrna_k1_bam.join(ch_ncrna_k1_bai, by: 0)
 
     GET_INIT_ALIGNED_XLINKS_ncRNA(
-        ch_ncrna_k1_bam_bai_joined,
-        ch_ncrna_fasta_fai
+        ch_ncrna_k1_bam_bai_joined
     )
 
     SORT_INIT_ALIGNED_XLINKS_ncRNA(
