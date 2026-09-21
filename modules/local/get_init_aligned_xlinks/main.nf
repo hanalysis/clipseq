@@ -27,3 +27,4 @@ process GET_INIT_ALIGNED_XLINKS {
         pysam: \$(python -c "import pysam; print(pysam.__version__)")
     END_VERSIONS
     """
+}
