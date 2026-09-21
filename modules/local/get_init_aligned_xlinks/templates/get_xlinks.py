@@ -42,7 +42,8 @@ for BAM in BAM_FILES:
         if read.is_reverse:
             xlink_site = read.reference_end
         else:
-            xlink_site = read.reference_start -1
+            # clamp to avoid negative coords for reads starting at position 0
+            xlink_site = max(read.reference_start - 1, 0)
 
         read.reference_start = xlink_site
         read.cigar = [(0,1)]
