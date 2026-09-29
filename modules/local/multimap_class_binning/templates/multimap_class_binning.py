@@ -244,7 +244,7 @@ def process_bam(bam_path, feature_bed_path):
         f"bedtools bamtobed -i '{bam_path}' "
         f"| sort -k1,1 -k2,2n "
         f"| bedtools intersect -a stdin -b '{feature_bed_path}' "
-        f"  -loj -sorted -s -g '{genome_tmp}' "
+        f"  -loj -sorted -S -g '{genome_tmp}' "
         f"| tee '{intersect_path}' "
         f"| awk -F'\\t' -f '{OUTPUT_DIR}/_awk_dedup.awk'"
     )
