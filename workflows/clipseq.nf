@@ -518,8 +518,13 @@ workflow CLIPSEQ {
             ch_tetranscripts_gtf // te GTF
         )
 
-        TELESCOPE_ASSIGN(
+        SORT_BAMS_FOR_TELE(
             SORT_INIT_ALIGNED_XLINKS.out.bam,
+            [[],[]]
+        )
+
+        TELESCOPE_ASSIGN(
+            SORT_BAMS_FOR_TELE.out.bam,
             ch_telescope_gtf
         )
 
