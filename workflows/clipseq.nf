@@ -372,6 +372,12 @@ workflow CLIPSEQ {
         ch_paraclu_transcriptome_peaks   = TRANSCRIPTOME_PROCESSING.out.paraclu_peaks
     }
 
+    // Filling deduplication channels in case dedup not run
+
+    ch_genome_multi_dedupe_bam = ch_genome_multi_bam
+    ch_genome_multi_dedupe_bai = ch_genome_multi_bai
+    ch_genome_multi_dedupe_bam_bai = ch_genome_multi_dedupe_bam.join(ch_genome_multi_dedupe_bai, by: 0)
+
     // DEDUPLICATION //
     if(params.source == "fastq" & params.run_dedup) {
         // PREPARE CHANNELS
