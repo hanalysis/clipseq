@@ -531,10 +531,19 @@ workflow CLIPSEQ {
         ch_bam_c = Channel.fromPath('https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test.rna.paired_end.bam')
              .map { file -> [[id: 'control'], file] }
 
+        if (params.run_dedup){
         ch_all_t_bams = GENOME_MULTI_DEDUP.out.bam
             .map { meta, bam -> bam }
             .collect()
             .map { bams -> [[id: 'all_samples'], bams] }
+        }
+
+        if(!params.run_dedup){
+        ch_all_t_bams = RNA_ALIGN.out.genome_multi_bam
+            .map { meta, bam -> bam }
+            .collect()
+            .map { bams -> [[id: 'all_samples'], bams] }
+        }
 
         TETRANSCRIPTS(
             ch_init_aligned_xlinks, // tx bam
