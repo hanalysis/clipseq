@@ -92,7 +92,11 @@ def main(process_name):
     # Deduplication
     # ==========
 
-    dedup_logs = sorted(["collapse/" + f for f in os.listdir("collapse") if f.endswith(".log")])
+    if os.path.isdir("collapse") :
+        dedup_logs = sorted(["collapse/" + f for f in os.listdir("collapse") if f.endswith(".log")])
+    else:
+        dedup_logs = []
+
     dedup = dict((key, []) for key in ["exp", "input_reads", "output_reads", "dedup_ratio"])
 
     for dedup_log in dedup_logs:
@@ -113,15 +117,16 @@ def main(process_name):
             dedup["output_reads"].append(output_reads)
             dedup["dedup_ratio"].append(round(input_reads / output_reads, 2))
 
-    dedup_df = pd.DataFrame(dedup)
-    dedup_df.to_csv("dedup_metrics.tsv", sep="\t", index=False)
+    if dedup_logs:
+        dedup_df = pd.DataFrame(dedup)
+        dedup_df.to_csv("dedup_metrics.tsv", sep="\t", index=False)
 
-    # Subset for MultiQC plots
-    dedup_df.loc[:, ["exp", "input_reads", "output_reads"]].to_csv("dedup_reads.tsv", sep="\t", index=False)
-    dedup_df.loc[:, ["exp", "dedup_ratio"]].to_csv("dedup_ratio.tsv", sep="\t", index=False)
+        # Subset for MultiQC plots
+        dedup_df.loc[:, ["exp", "input_reads", "output_reads"]].to_csv("dedup_reads.tsv", sep="\t", index=False)
+        dedup_df.loc[:, ["exp", "dedup_ratio"]].to_csv("dedup_ratio.tsv", sep="\t", index=False)
 
-    print(dedup_df)
-    print("\n\n")
+        print(dedup_df)
+        print("\n\n")
 
     # ==========
     # Crosslinks

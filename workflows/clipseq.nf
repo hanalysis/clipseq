@@ -170,6 +170,7 @@ include { SAMTOOLS_SORT as SORT_INIT_ALIGNED_XLINKS                 } from '../m
 include { SAMTOOLS_INDEX as INDEX_INIT_ALIGNED_XLINKS               } from '../modules/nf-core/samtools/index/main'
 include { SAMTOOLS_SORT as SORT_INIT_ALIGNED_XLINKS_ncRNA           } from '../modules/nf-core/samtools/sort/main'
 include { SAMTOOLS_INDEX as INDEX_INIT_ALIGNED_XLINKS_ncRNA         } from '../modules/nf-core/samtools/index/main'
+include { SAMTOOLS_VIEW as COUNT_PREMAPPED_READS                    } from '../modules/nf-core/samtools/view/main'
 
 //
 // SUBWORKFLOW: Consisting entirely of nf-core/modules
@@ -372,11 +373,17 @@ workflow CLIPSEQ {
         ch_paraclu_transcriptome_peaks   = TRANSCRIPTOME_PROCESSING.out.paraclu_peaks
     }
 
-    // Filling deduplication channels in case dedup not run
+    // Filling "final use" channels for when deduplication isn't run
 
-    ch_genome_multi_dedupe_bam = ch_genome_multi_bam
-    ch_genome_multi_dedupe_bai = ch_genome_multi_bai
-    ch_genome_multi_dedupe_bam_bai = ch_genome_multi_dedupe_bam.join(ch_genome_multi_dedupe_bai, by: 0)
+    ch_genome_multi_final_bam = ch_genome_multi_bam
+    ch_genome_multi_final_bai = ch_genome_multi_bai
+    ch_genome_multi_final_bam_bai = ch_genome_multi_final_bam.join(ch_genome_multi_final_bai, by: 0)
+
+    ch_genome_unique_final_bam = ch_genome_unique_bam
+    ch_genome_unique_final_bai = ch_genome_unique_bai
+
+    // Filling umi log as empty channel if dedup didn't run
+    ch_umi_log = []
 
     // DEDUPLICATION //
     if(params.source == "fastq" & params.run_dedup) {
@@ -408,17 +415,17 @@ workflow CLIPSEQ {
             ch_genome_unique_bam_bai
         )
         ch_versions   = ch_versions.mix(GENOME_UNIQUE_DEDUP.out.versions)
-        ch_genome_unique_dedupe_bam = GENOME_UNIQUE_DEDUP.out.bam
-        ch_genome_unique_dedupe_bai = GENOME_UNIQUE_DEDUP.out.bai
+        ch_genome_unique_final_bam = GENOME_UNIQUE_DEDUP.out.bam
+        ch_genome_unique_final_bai = GENOME_UNIQUE_DEDUP.out.bai
 
         // NB multi is multi and unique
         GENOME_MULTI_DEDUP (
             ch_genome_multi_bam_bai
         )
         ch_versions   = ch_versions.mix(GENOME_MULTI_DEDUP.out.versions)
-        ch_genome_multi_dedupe_bam = GENOME_MULTI_DEDUP.out.bam
-        ch_genome_multi_dedupe_bai = GENOME_MULTI_DEDUP.out.bai
-        ch_genome_multi_dedupe_bam_bai = ch_genome_multi_dedupe_bam.join(ch_genome_multi_dedupe_bai, by: 0)
+        ch_genome_multi_final_bam = GENOME_MULTI_DEDUP.out.bam
+        ch_genome_multi_final_bai = GENOME_MULTI_DEDUP.out.bai
+        ch_genome_multi_final_bam_bai = ch_genome_multi_final_bam.join(ch_genome_multi_final_bai, by: 0)
         ch_umi_log    = GENOME_MULTI_DEDUP.out.umi_log
 
         NCRNA_DEDUP (
@@ -442,7 +449,7 @@ workflow CLIPSEQ {
     // 1: get single xlink coordinates only
 
     GET_INIT_ALIGNED_XLINKS(
-        ch_genome_multi_dedupe_bam_bai
+        ch_genome_multi_final_bam_bai
     )
 
     SORT_INIT_ALIGNED_XLINKS(
@@ -485,12 +492,24 @@ workflow CLIPSEQ {
         ch_regions_resolved_gtf
     )
 
+    // 5: Count pre-mapped reads
+
+    COUNT_PREMAPPED_READS(
+        ch_ncrna_k1_bam.map { meta, bam -> [meta, bam, []] },
+        [[],[]],
+        []
+    )
+
+    ch_premapped_counts = COUNT_PREMAPPED_READS.out.bam
+        .map { meta, bam -> bam}
+        .collect()
+
     // 5: Combine assignments from both bins
 
     COMBINE_BINS(
         BIN_ncRNA.out.counted_reads,
         BIN_REGIONS.out.counted_reads,
-        ch_umi_ncrna_log.map { meta, log -> log }.collect()
+        ch_premapped_counts
     )
 
 
@@ -539,8 +558,8 @@ workflow CLIPSEQ {
             TELESCOPE_ASSIGN.out.other_bam
         )
 
-    ch_genome_unique_dedupe_bam = MERGE_AND_SORT_TELESCOPE_BAMS.out.bam
-    ch_genome_unique_dedupe_bai = MERGE_AND_SORT_TELESCOPE_BAMS.out.bai
+    ch_genome_unique_final_bam = MERGE_AND_SORT_TELESCOPE_BAMS.out.bam
+    ch_genome_unique_final_bai = MERGE_AND_SORT_TELESCOPE_BAMS.out.bai
 
     }
 
@@ -575,8 +594,8 @@ workflow CLIPSEQ {
     // ch_genome_bam.view { item -> println("Pre-branch: $item") }
     if(params.run_crosslinking) {
         GENOME_RESOLVE_GROUPS_AND_CROSSLINKS(
-            ch_genome_unique_dedupe_bam ,
-            ch_genome_unique_dedupe_bai ,
+            ch_genome_unique_final_bam ,
+            ch_genome_unique_final_bai ,
             ch_fasta,
             ch_fasta_fai
         )
