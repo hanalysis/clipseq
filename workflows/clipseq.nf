@@ -436,7 +436,7 @@ workflow CLIPSEQ {
     }
 
     // telescope gtf now required
-    ch_telescope_gtf = Channel.value([[id: 'te_annotations'], file(params.telescope_gtf, checkIfExists: true)])
+    ch_rpt_annotation_gtf = Channel.value([[id: 'te_annotations'], file(params.ch_rpt_annotation_gtf, checkIfExists: true)])
 
     // Overall read assignment //
     // 1: get single xlink coordinates only
@@ -463,7 +463,7 @@ workflow CLIPSEQ {
 
     BIN_ncRNA(
         ch_init_aligned_xlinks,
-        ch_telescope_gtf,
+        ch_rpt_annotation_gtf,
     )
 
     // 3: Identify reads which were not assigned from 1st binning
@@ -502,8 +502,8 @@ workflow CLIPSEQ {
             error "ERROR: --tetranscripts_gtf is required when --run_te is specified"
         }
         // Check rmsk GTF has been provided
-        if (!params.telescope_gtf) {
-            error "ERROR: --telescope_gtf is required when --run_te is specified"
+        if (!params.ch_rpt_annotation_gtf) {
+            error "ERROR: --ch_rpt_annotation_gtf is required when --run_te is specified"
         }
 
         ch_tetranscripts_gtf = Channel.value([[id: 'te_annotations'], file(params.tetranscripts_gtf, checkIfExists: true)])
@@ -531,7 +531,7 @@ workflow CLIPSEQ {
 
         TELESCOPE_ASSIGN(
             SORT_BAMS_FOR_TELE.out.bam,
-            ch_telescope_gtf
+            ch_rpt_annotation_gtf
         )
 
         MERGE_AND_SORT_TELESCOPE_BAMS(
