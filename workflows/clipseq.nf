@@ -105,6 +105,7 @@ include { GET_INIT_ALIGNED_XLINKS                                         } from
 include { GET_INIT_ALIGNED_XLINKS as GET_INIT_ALIGNED_XLINKS_ncRNA        } from '../modules/local/get_init_aligned_xlinks'
 include { IDENTIFY_UNBINNED                                               } from '../modules/local/identify_unbinned'
 include { COMBINE_BINS                                                    } from '../modules/local/combine_bins'
+include { rDNA_SUMMARY                                                    } from '../modules/local/rDNA_summary'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -627,6 +628,17 @@ workflow CLIPSEQ {
         ch_ncrna_k1_crosslink_INDIVIDUAL_bed           = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_INDIVIDUAL
         ch_ncrna_k1_crosslink_INDIVIDUAL_HASGROUP_bed  = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_INDIVIDUAL_HASGROUP
         ch_ncrna_k1_crosslink_GROUP_HASGROUP_bed       = NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.crosslink_GROUP_HASGROUP
+
+
+        // rDNA SUMMARY OUTPUT
+
+        if(params.run_rDNA_summary) {
+            rDNA_SUMMARY(
+                NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.ncRNA_CPMnorm_bedgraph
+                .map( it [1] )
+                .collect()
+            )
+        }
 
         // If filtering of GTF by transcripts is enabled, use the filtered GTF and its resolved regions, if not use those made by iCount-Mini
         ch_regions_used = params.skip_filter_gtf ? ch_regions_gtf : ch_regions_resolved_gtf
