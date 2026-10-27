@@ -1,6 +1,7 @@
 process IDENTIFY_UNBINNED {
     tag "$meta.id"
-    label 'process_single'
+    label 'process_low'
+    label 'process_high_memory'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
       'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/96/96dde1efad90c922a0198cae64c642be95605c23cf1e53e3c35491817bf6c48b/data':
