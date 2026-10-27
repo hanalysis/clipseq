@@ -522,7 +522,7 @@ workflow CLIPSEQ {
         .flatten()
         .map { bed -> [[id: bed.name.replace('_intersected.bed', '')], bed] }
         tRNA_SUMMARY(
-            BIN_ncRNA.out.bed
+            ch_intersected_bed
         )
     }
 
