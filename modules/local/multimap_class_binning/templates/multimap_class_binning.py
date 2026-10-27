@@ -46,6 +46,9 @@ parser.add_argument('--col',
 parser.add_argument('--name',
                     help = "The suffix for the name of the discarded and aligned reads files",
                     default = "")
+parser.add_argument('--strand',
+                    help = "Strandedness argument for bedtools intersect, either -s or -S",
+                    default = "")
 
 args = parser.parse_args()
 
@@ -57,6 +60,7 @@ OUTPUT_DIR = args.outdir
 CLASSIFIERS = args.classifiers
 COL = args.col
 NAME = args.name
+STRAND = args.strand
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 def extract_sample_name(bam_filename):
@@ -244,7 +248,7 @@ def process_bam(bam_path, feature_bed_path):
         f"bedtools bamtobed -i '{bam_path}' "
         f"| sort -k1,1 -k2,2n "
         f"| bedtools intersect -a stdin -b '{feature_bed_path}' "
-        f"  -loj -sorted -S -g '{genome_tmp}' "
+        f"  -loj -sorted {STRAND} -g '{genome_tmp}' "
         f"| tee '{intersect_path}' "
         f"| awk -F'\\t' -f '{OUTPUT_DIR}/_awk_dedup.awk'"
     )
