@@ -648,7 +648,7 @@ workflow CLIPSEQ {
         if(params.run_rDNA_summary) {
             rDNA_SUMMARY(
                 NCRNA_RESOLVE_GROUPS_AND_CROSSLINKS.out.ncRNA_CPMnorm_bedgraph
-                .map( it [1] )
+                .map( it[1] )
                 .collect()
             )
         }
