@@ -32,5 +32,4 @@ process tRNA_SUMMARY {
     END_VERSIONS
 
     """
-
-
+}
