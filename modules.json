@@ -20,6 +20,11 @@
                         "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
                     },
+                    "bedtools/intersect": {
+                        "branch": "master",
+                        "git_sha": "06054b469d0997aa3442ba1373e17a641260f451",
+                        "installed_by": ["modules"]
+                    },
                     "bedtools/map": {
                         "branch": "master",
                         "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
@@ -66,11 +71,6 @@
                         "installed_by": ["modules"]
                     },
                     "custom/getchromsizes": {
-                        "branch": "master",
-                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
-                        "installed_by": ["modules"]
-                    },
-                    "deseq2/differential": {
                         "branch": "master",
                         "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
                         "installed_by": ["modules"]
@@ -178,6 +178,11 @@
                     "star/genomegenerate": {
                         "branch": "master",
                         "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "installed_by": ["modules"]
+                    },
+                    "telescope/assign": {
+                        "branch": "master",
+                        "git_sha": "8619727fd0c3c5216b3df6a078459463b448e6b9",
                         "installed_by": ["modules"]
                     },
                     "tetranscripts": {

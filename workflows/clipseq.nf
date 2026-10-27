@@ -163,6 +163,7 @@ include { PEKA as PEKA_PURECLIP                                     } from '../m
 include { ICOUNTMINI_SUMMARY                                        } from '../modules/nf-core/icountmini/summary/main'
 include { ICOUNTMINI_METAGENE                                       } from '../modules/nf-core/icountmini/metagene/main'
 
+include { BEDTOOLS_INTERSECT                                        } from '../modules/nf-core/bedtools/intersect/main'
 include { TETRANSCRIPTS                                             } from '../modules/nf-core/tetranscripts/main'
 include { TELESCOPE_ASSIGN                                          } from '../modules/nf-core/telescope/assign/main'
 include { SAMTOOLS_VIEW as FILTER_UNIQUE_MAP_UPDATED                } from '../modules/nf-core/samtools/view/main'
@@ -518,14 +519,20 @@ workflow CLIPSEQ {
     // tRNA summary insert //
 
     if(params.run_tRNA_summary) {
-        ch_intersected_bed = BIN_ncRNA.out.bed
-        .flatten()
-        .map { bed -> [[id: bed.name.replace('_intersected.bed', '')], bed] }
+
+        ch_for_intersection = SORT_INIT_ALIGNED_XLINKS.out.bam
+            .combine(ch_rpt_annotation_gtf.map { meta_gtf, gtf -> gtf })
+            .map { meta, bed, gtf -> [meta, bed, gtf] }
+
+        BEDTOOLS_INTERSECT(
+            ch_for_intersection,
+            [[],[]]
+        )
+
         tRNA_SUMMARY(
-            ch_intersected_bed
+           BEDTOOLS_INTERSECT.out.intersect
         )
     }
-
 
     // TE quantifcation insert //
 
