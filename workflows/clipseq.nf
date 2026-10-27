@@ -105,6 +105,7 @@ include { GET_INIT_ALIGNED_XLINKS                                         } from
 include { GET_INIT_ALIGNED_XLINKS as GET_INIT_ALIGNED_XLINKS_ncRNA        } from '../modules/local/get_init_aligned_xlinks'
 include { IDENTIFY_UNBINNED                                               } from '../modules/local/identify_unbinned'
 include { COMBINE_BINS                                                    } from '../modules/local/combine_bins'
+include { tRNA_SUMMARY                                                    } from '../modules/local/tRNA_summary'
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -511,6 +512,18 @@ workflow CLIPSEQ {
         BIN_REGIONS.out.counted_reads,
         ch_premapped_counts
     )
+
+
+    // tRNA summary insert //
+
+    if(params.run_tRNA_summary) {
+        ch_intersected_bed = BIN_ncRNA.out.bed
+        .flatten()
+        .map { bed -> [[id: bed.name.replace('_intersected.bed', '')], bed] }
+        tRNA_SUMMARY(
+            BIN_ncRNA.out.bed
+        )
+    }
 
 
     // TE quantifcation insert //
