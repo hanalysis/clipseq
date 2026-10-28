@@ -526,7 +526,8 @@ workflow CLIPSEQ {
 
         BEDTOOLS_INTERSECT(
             ch_for_intersection,
-            [[],[]]
+            [[],[]],
+            "bed"
         )
 
         tRNA_SUMMARY(
