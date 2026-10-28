@@ -151,7 +151,6 @@ ignore_index = True)
 
 # -- 4. Export ------------------------------------------------------------------------------
 
-transcript_details = transcript_summary.split("-")
 sample_name = os.path.basename(bedfile).split("_intersect")[0]
 
 all_df.to_csv(f"{sample_name}_tRNA_summary.csv", index=False)
