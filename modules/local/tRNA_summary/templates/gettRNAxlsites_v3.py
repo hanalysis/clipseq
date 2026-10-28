@@ -42,11 +42,11 @@ with open(bedfile) as bf:
     for line in bf:
         f = line.rstrip("\n").split("\t")
         # check for tRNA
-        if f[7] != "tRNA_db":
+        if f[13] != "tRNA_db":
             continue
         # Make dictionary
         read_name = f[3]
-        transcript_summary = re.search(r'transcript_id "([^"]+)"', f[14]).group(1)
+        transcript_summary = re.search(r'transcript_id "([^"]+)"', f[20]).group(1)
         transcript_details = transcript_summary.split("-")
         # take amino acid, anticodon, isocoder, copy number
         mapping = (transcript_details[1], transcript_details[2], transcript_details[3], transcript_details[4])
