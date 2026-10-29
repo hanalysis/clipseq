@@ -315,12 +315,23 @@ def main():
     df = pd.DataFrame(all_rows)
     df_wide = df.pivot(index="sample", columns="category", values="read_count").reset_index()
 
+    # Filter so only categories with > 5% reads are on multiQC graph
+    df_5percent = df.copy()
+    df_5percent['read_percent']= (df_5percent['read_count']/df_5percent.groupby('sample')['read_count'].transform('sum'))*100
+    df_5percent = df_5percent[df_5percent['read_percent'] > 5]
+    del df_5percent['read_percent']
+
+    df_5perc_wide = df_5percent.pivot(index="sample", columns="category", values="read_count").reset_index()
+
 
     # ── Save CSV summary ─────────────────────────────────────────────────
 
     csv_path = os.path.join(OUTPUT_DIR, f"repeat_ncRNA_read_counts_{NAME}.csv")
     df_wide.to_csv(csv_path, index=False)
     print(f"\nSummary saved to: {csv_path}")
+
+    csv_path_5p = os.path.join(OUTPUT_DIR, f"repeat_ncRNA_read_counts5_perc_{NAME}.csv")
+    df_5perc_wide.to_csv(csv_path_5p, index=False)
 
     pivot = df.pivot_table(
         index="category", columns="sample",

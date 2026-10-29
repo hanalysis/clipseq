@@ -13,7 +13,8 @@ process MULTIMAP_CLASS_BINNING {
     output:
     path "discarded_ambiguous_reads*.tsv", emit: discarded_reads
     path("*_intersected.bed"), emit: bed
-    tuple val (meta), path("repeat_ncRNA_read_counts*.csv"), emit: counted_reads
+    tuple val (meta), path("repeat_ncRNA_read_counts_*.csv"), emit: all_reads
+    tuple val (meta), path("repeat_ncRNA_read_counts5*.csv"), emit: counted_reads
 
     when:
     task.ext.when == null || task.ext.when
